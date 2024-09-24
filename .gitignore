@@ -1,0 +1,8 @@
+node_modules
+/out
+/docs
+/dist
+/tests/**/*.js
+/tests/**/*.js.map
+.VSCodeCounter
+*.tsbuildinfo

@@ -1,19 +1,8 @@
-import {Repeat, RepeatRenderFn} from './repeat'
-import {PartialRenderer} from './helpers/partial-renderer'
-import {DOMEvents, LayoutWatcher, UpdateQueue, effect, input} from '@pucelle/ff'
-
-
-export interface LiveRepeatEvents {
-
-	/** 
-	 * Fired after every time live data was updated.
-	 * After the standard event `updated` fired,
-	 * `<LiveRepeat>` may need more time to check rendering size,
-	 * and adjust render result to cover scroll viewport.
-	 * after all ready, this event is fired.
-	 */
-	'live-updated': (scrollDirection: 'start' | 'end' | null) => void
-}
+import {PartCallbackParameterMask} from '@pucelle/lupos.js'
+import {Repeat} from './repeat'
+import {PartialRenderer} from './repeat-helpers/partial-renderer'
+import {DOMEvents, LayoutWatcher, TransitionEasingName, effect, immediateWatch, untilComplete} from '@pucelle/ff'
+import {html} from '@pucelle/lupos.js'
 
 
 /** 
@@ -26,187 +15,184 @@ export interface LiveRepeatEvents {
  * - `<LiveRepeat>` must in `absolute` position
  * - The scroller element must not in `static` position.
  */
-export class LiveRepeat<T = any, E = any> extends Repeat<T, E & LiveRepeatEvents> {
+export class LiveRepeat<T = any, E = any> extends Repeat<T, E> {
 
 	/**
 	* Rate of how many items to render compare with the minimum items that can cover scroll viewport.
-	* - Set it small like less than `1.5` can render fewer contents each time, but update more frequently when scrolling.
-    * - Set it large like more than `2` cause render more contents each time, but update less frequently when scrolling.
+	* - Set it small like `1.25` can render fewer contents each time, but update more frequently when scrolling.
+    * - Set it large like `2` cause render more contents each time, but update less frequently when scrolling.
 	* 
 	* Must larger than `1`.
 	*/
-	@input renderCountRate: number = 1.2
+	coverageRate: number = 1.5
 
-	/** 
-	 * Specify overflow direction.
-	 * - If not specified, try to detect from scroller element.
-	 * - If specified, scroller element's scroll direction but keep consistent with it.
-	 * 
-	 * If scroller element has scroll css property set in both direction,
-	 * you must specify this property explicitly.
-	 */
-	@input overflowDirection: HVDirection | null = null
-
-	/** The parent element of slider, which has a `overflow` value like `auto` or `scroll` set. */
-	protected scroller: HTMLElement = null as any
 
 	/** 
 	 * Placeholder element, sibling of slider.
-	 * as here it renders only partial content,
+	 * Since here it renders only partial content,
 	 * slider element has no enough size to expand scrolling area,
-	 * so use it instead to expand scrolling area to the full size.
+	 * so use this placeholder to expand scrolling area to full size.
 	 */
-	protected palceholder: HTMLDivElement = null as any
+	placeholder: HTMLDivElement | null = null
 
 	/** Partial content renderer. */
-	protected renderer: PartialRenderer = null as any
+	protected renderer: PartialRenderer | null = null as any
 
-	/**
-	 * Render function to generate template result by each item.
-	 * Please ensure it renders only one child element,
-	 * and don't apply `:transition` to this element.
-	 */
-	declare renderFn: RepeatRenderFn<T>
-
-	/** The start index of the first item in the whole data. */
-	startIndex: number = 0
-
-	/** The end index of next position of the last item in the whole data. */
-	endIndex: number = 0
-
-	/** Current rendered partial of full data. */
-	liveData: T[] = []
-
-	/** Transfer `renderCountRate` property to renderer. */
-	@effect protected onRenderCountRateChange() {
-		this.renderer.setRenderCountRate(this.renderCountRate)
+	/** The start index of the first item. */
+	get startIndex(): number {
+		return this.renderer!.startIndex
 	}
 
-	/** Transfer `data.length` property to renderer. */
-	@effect protected onDataCountChange() {
-		this.renderer.setDataCount(this.data.length)
+	/** The end slicing index of the live data. */
+	get endIndex(): number {
+		return this.renderer!.endIndex
+	}
+
+	/** Latest scroll direction. */
+	get scrollDirection(): 'start' | 'end' | null {
+		return this.renderer!.alignDirection
+	}
+
+	/** Update after data change. */
+	update() {
+		this.renderer!.update()
+	}
+
+	/** Update live data by new indices. */
+	protected updateLiveData() {
+		super.update()
+	}
+
+	protected render() {
+		let liveData = this.data.slice(this.startIndex, this.endIndex)
+		return html`<lupos:for ${liveData}>${this.renderFn}</lupos:for>`
+	}
+
+	locateVisibleIndex(direction: 'start' | 'end') {
+		return super.locateVisibleIndex(direction) + this.startIndex
+	}
+
+	
+	beforeDisconnectCallback(param: PartCallbackParameterMask): void {
+		super.beforeDisconnectCallback(param)
+
+		// If remove current element directly, remove placeholder also.
+		if ((param & PartCallbackParameterMask.DirectNodeToMove) > 0) {
+			this.placeholder!.remove()
+			this.placeholder = null
+		}
 	}
 
 	protected onConnected(this: LiveRepeat<any, {}>) {
 		super.onConnected()
-		this.updateScroller()
+		this.initPlaceholderIfNot()
+		DOMEvents.on(this.scroller!, 'scroll', this.checkCoverage, this, {passive: true})
 
-		DOMEvents.on(this.scroller, 'scroll', this.checkCoverage, this, {passive: true})
+		let unwatchScrollerSize = LayoutWatcher.watch(this.scroller!, 'size', this.checkCoverage.bind(this))
+		this.once('will-disconnect', unwatchScrollerSize)
+	}
 
-		let unwatchScrollerSize = LayoutWatcher.watch(this.scroller, 'size', this.checkCoverage.bind(this))
-		this.once('disconnected', unwatchScrollerSize)
+	protected initPlaceholderIfNot() {
+		if (this.placeholder) {
+			return
+		}
+
+		this.placeholder = document.createElement('div')
+		this.placeholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
+		this.scroller!.prepend(this.placeholder)
+	}
+
+	protected onWillDisconnect() {
+		super.onWillDisconnect()
+		DOMEvents.off(this.scroller!, 'scroll', this.checkCoverage, this)
+	}
+
+	
+	/** Init renderer when connected. */
+	@immediateWatch('scroller', 'placeholder', 'overflowDirection')
+	protected initRenderer(scroller: HTMLElement, placeholder: HTMLDivElement | null, overflowDirection: HVDirection | null) {
+		this.renderer = new PartialRenderer(
+			scroller!,
+			this.el,
+			placeholder!,
+			overflowDirection,
+			this.updateLiveData.bind(this)
+		)
 	}
 	
-	protected updateScroller() {
-		if (this.scroller) {
-			if (this.scroller !== this.el.parentElement) {
-				this.palceholder.remove()
-				this.initScroller()
-			}
-		}
-		else {
-			this.initScroller()
-		}
+	/** After `coverageRate` property change. */
+	@effect protected applyCoverageRate() {
+		this.renderer!.setCoverageRate(this.coverageRate)
 	}
 
-	protected initScroller() {
-		let scroller = this.el.parentElement
-
-		if (!scroller || scroller.children.length !== 1) {
-			throw new Error(
-				`"<LiveRepeat>" must be contained in a scroller element with style "overflow: scroll / auto", and must be it's only child!`
-			)
-		}
-		
-		this.scroller = scroller
-		this.initPlaceholder()
-		this.renderer = new PartialRenderer(scroller, this.el, this.palceholder, this.updateByIndices.bind(this), this.overflowDirection)
+	/** After `data` property change. */
+	@effect protected applyDataChange() {
+		this.renderer!.setDataCount(this.data.length)
+		this.willUpdate()
 	}
 
-	protected initPlaceholder() {
-		this.palceholder = document.createElement('div')
-		this.palceholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
-		this.scroller.prepend(this.palceholder)
-	}
-
-	protected onDisconnected() {
-		super.onDisconnected()
-		DOMEvents.off(this.scroller, 'scroll', this.checkCoverage, this)
-	}
 
 	/** Check whether current rendering can cover scroll viewport. */
 	protected checkCoverage() {
-		this.renderer.updateCoverage()
+		this.renderer!.updateCoverage()
 	}
 
-	protected doUpdateRendering() {
-		this.renderer.updateRendering()
-	}
+	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: TransitionEasingName): Promise<boolean> {
+		// No need to worry about coverage, set scroll position cause scroll event emitted.
 
-	/** Update data by new indices. */
-	protected updateByIndices(startIndex: number, endIndex: number, scrollDirection: 'start' | 'end' | null) {
-		this.startIndex = startIndex
-		this.endIndex = endIndex
-		this.updateData(this.data.slice(startIndex, endIndex))
+		if (!this.isIndexRendered(index)) {
+			let renderCount = this.endIndex - this.startIndex
+			let startIndex: number
+			let scrollingDown = index > this.startIndex
 
-		;(this as LiveRepeat<T, {}>).fire('live-updated', scrollDirection)
-	}
+			if (scrollingDown) {
+				let transitionCount = 0
+				if (duration) {
+					transitionCount = Math.max(Math.floor((this.coverageRate - 1) / this.coverageRate * renderCount), 1)
+				}
 
-	async setStartIndex(index: number): Promise<boolean> {
-		this.renderer.setStartIndex(index)
-		this.willUpdate()
-		await UpdateQueue.untilComplete()
+				startIndex = Math.max(index - transitionCount, 0)
+			}
+			else {
+				startIndex = index
+			}
 
-		return true
-	}
+			let endIndex = startIndex + renderCount
+			this.renderer!.setRenderPart(startIndex, endIndex, scrollingDown ? 'start' : 'end')
 
-	/** 
-	 * Get the index of the first visible element in scroll viewport,
-	 * which can be used to restore scrolling position by `setStartIndex`.
-	 * May cause page reflow.
-	 */
-	getFirstVisibleIndex(): number {
-		return this.renderer.locateVisibleIndex('start')
-	}
-
-	/** 
-	 * Get the index of the last visible element in scroll viewport.
-	 * May cause page reflow.
-	 */
-	getLastVisibleIndex(): number {
-		return this.renderer.locateVisibleIndex('end')
-	}
-
-	/** 
-	 * Make rendered item at the specified index becomes fully visible by scrolling minimum distance in X/Y direction.
-	 * Adjust immediately, so you will need to ensure elements have been rendered.
-	 * Returns a promise, which will be resolved by whether scrolled.
-	 */
-	async scrollIndexToView(index: number): Promise<boolean> {
-		if (this.isIndexRendered(index)) {
-			return super.scrollIndexToView(index - this.startIndex)
+			this.willUpdate()
+			await untilComplete()
 		}
-		else {
-			return this.setStartIndex(index)
+
+		return super.scrollIndexToStart(index - this.startIndex, gap, duration, easing)
+	}
+
+	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: TransitionEasingName): Promise<boolean> {
+		if (!this.isIndexRendered(index)) {
+			let renderCount = this.endIndex - this.startIndex
+			let startIndex: number
+			let scrollingDown = index > this.startIndex
+
+			// Item at index will be finally located at bottom edge of scroller.
+			if (scrollingDown) {
+				startIndex = Math.max(index - renderCount + 1, 0)
+			}
+			else {
+				startIndex = index
+			}
+
+			let endIndex = startIndex + renderCount
+			this.renderer!.setRenderPart(startIndex, endIndex, scrollingDown ? 'start' : 'end')
+
+			this.willUpdate()
+			await untilComplete()
 		}
+
+		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)
 	}
 
 	/** Get if item with specified index is rendered. */
 	protected isIndexRendered(index: number) {
 		return index >= this.startIndex && index < this.endIndex
-	}
-
-	/** 
-	 * Make rendered item at the specified index located in the topest or left most of scroll viewport.
-	 * Adjust immediately, so you will need to ensure elements have been rendered.
-	 * Returns a promise, which will be resolved by whether scrolled.
-	 */
-	async scrollIndexToStart(index: number): Promise<boolean> {
-		if (this.isIndexRendered(index)) {
-			return super.scrollIndexToStart(index - this.startIndex)
-		}
-		else {
-			return this.setStartIndex(index)
-		}
 	}
 }

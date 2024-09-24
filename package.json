@@ -1,0 +1,34 @@
+{
+	"name": "@pucelle/ff",
+	"version": "1.0.0",
+	"description": "A light weight Web UI Framework, based on lupos.js",
+	"author": "pucelle",
+	"license": "MIT",
+	"homepage": "https://github.com/pucelle/lupos.ui",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/pucelle/lupos.ui.git"
+	},
+	"type": "module",
+	"main": "out/index.js",
+	"types": "out/index.d.ts",
+	"sideEffects": false,
+	"scripts": {
+		"build": "tspc",
+		"watch": "tspc -w",
+		"test": "jest",
+		"prepublish": "tspc"
+	},
+	"dependencies": {
+		"@pucelle/ff": "^2.0.0",
+		"@pucelle/lupos.js": "^1.0.0",
+		"@pucelle/lupos.compiler": "^1.0.0"
+	},
+	"devDependencies": {
+		"@types/jest": "^29.5.12",
+		"jest": "^29.7.0",
+		"jest-environment-jsdom": "^29.7.0",
+		"ts-patch": "^3.2.1",
+		"typescript": "^5.4.5"
+	}
+}
