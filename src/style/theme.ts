@@ -260,10 +260,7 @@ const defaultMediumThemeOptions: Partial<ThemeOptions> = {
 	popupBorderRadius: 4,
 	popupShadowBlurRadius: 6,
 	focusBlurRadius: 6,
-
-	// Should also set `font-size` and `line-height` on html or body early to avoid page flushing.
 	fontSize: 14,
-
 	lineHeight: 28,
 }
 

@@ -1,4 +1,4 @@
-import {Binding, defineBinding} from '../../lupos.js/src/bindings/define'
+import {Binding} from '@pucelle/lupos.js'
 
 
 /** Caches global loaded URLs. */
@@ -6,15 +6,15 @@ const SrcLoadedURLs: Set<string> = new Set()
 
 
 /**
- * `:src` binding will update the `src` property of media element after this resource is fully loaded.
+ * `:src` binding will update the `src` property of media element after this resource has been fully loaded.
  * - `:src=${URL}`
  * 
- * You may set `src="..."` for thumbnail, and `:src="..."` for full size.
+ * You may set `src="..."` for thumbnail, and `:src="..."` for full sized source.
  * 
- * Note after reuse an `<image>` and reset it's src, it will keep old image until the new one loaded.
+ * Note after reusing an `<image>` and reset it's src, it will keep old image until the new one loaded.
  * Use `<keyed ${url}>` can avoid this.
  */
-export class SrcBinding implements Binding {
+export class src implements Binding {
 
 	private readonly el: HTMLMediaElement
 
@@ -50,8 +50,4 @@ export class SrcBinding implements Binding {
 			img.src = value
 		}
 	}
-
-	remove() {}
 }
-
-export const src = defineBinding(SrcBinding)
