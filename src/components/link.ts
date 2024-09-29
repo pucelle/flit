@@ -1,0 +1,3 @@
+a[primary]{
+	color: ${mainColor};
+}

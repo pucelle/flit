@@ -1,15 +1,12 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilComplete, LayoutWatcher, DOMUtils, noop} from '@pucelle/ff'
+import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilComplete, LayoutWatcher, DOMUtils, noop, DOMEvents} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
 import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-trigger-binder'
 
 
-/** Specified keys become partial, others persist as original. */
-type PartialKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
-
-
+/** Options for `:popup` */
 export interface PopupOptions extends AlignerOptions {
 
 	/** 
@@ -117,13 +114,14 @@ interface PopupBindingEvents {
 
 /** Default popup options. */
 export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> = {
+	alignPosition: 'b',
+
 	gap: 4,
 	stickToEdges: true,
 	canSwapPosition: true,
 	canShrinkOnY: true,
 	fixTriangle: false,
 
-	alignPosition: 'b',
 	trigger: 'hover',
 	showDelay: 100,
 	hideDelay: 200,
@@ -189,8 +187,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.binder.setTriggerType(this.options.trigger)
 		this.binder.bindEnter()
 
-		if (this.options.showImmediately) {
-			this.showPopupLater()
+		if (this.shouldShowImmediately()) {
+
+			// If window is not loaded, page scroll position may not determined yet.
+			DOMEvents.untilWindowLoaded().then(() => {
+				this.showPopupLater()
+			})
 		}
 	}
 
@@ -203,6 +205,16 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.binder.unbindLeave()
 		this.unwatchRect()
 		this.preventedHiding = false
+	}
+
+	/** Whether should show popup content immediately after connected. */
+	protected shouldShowImmediately(): boolean {
+		return this.options.showImmediately
+	}
+
+	/** Whether should keep popup content visible always. */
+	protected shouldKeepVisible(): boolean {
+		return this.options.keepVisible
 	}
 
 	protected initEvents() {
@@ -223,7 +235,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Like mouse leave, and need to hide soon. */
 	protected onWillHide() {
-		if (this.options.keepVisible) {
+		if (this.shouldKeepVisible()) {
 			this.preventedHiding = true
 			return
 		}
@@ -246,7 +258,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Like trigger element become out-view, and need to hide immediately. */
 	protected onImmediateHide() {
-		if (this.options.keepVisible) {
+		if (this.shouldKeepVisible()) {
 			this.preventedHiding = true
 			return
 		}
@@ -279,6 +291,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Show popup content after a short time out. */
 	showPopupLater() {
+		if (!this.renderer) {
+			return
+		}
+
 		let showDelay = this.options.showDelay
 		let key = this.options.key
 
@@ -300,6 +316,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Send a request to show popup content, can be called repeatedly. */
 	showPopup() {
+		if (!this.renderer) {
+			return
+		}
+
 		this.state.show()
 	}
 
@@ -315,7 +335,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 
-	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
+	update(renderer: RenderResultRenderer | null, options: Partial<PopupOptions> = {}) {
 		this.renderer = renderer
 		this.options = {...DefaultPopupOptions, ...options}
 
@@ -325,7 +345,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		// Options changed and no need to persist visible.
-		if (this.preventedHiding && !this.options.keepVisible) {
+		if (this.preventedHiding && !this.shouldKeepVisible()) {
 			this.hidePopupLater()
 		}
 	}
@@ -487,7 +507,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Get options for Aligner. */
 	protected getAlignerOptions(): AlignerOptions {
-		let triangle = this.popup!.el.querySelector("[class$='-triangle']") as HTMLElement | null
+		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
 
 		return {
 			gap: this.options.gap,
@@ -518,7 +538,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			return false
 		}
 		
-		if (this.options.keepVisible) {
+		if (this.shouldKeepVisible()) {
 			return !this.state.opened
 		}
 

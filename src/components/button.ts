@@ -12,7 +12,7 @@ export class Button<E = {}> extends Component<E> {
 		.button{
 			display: inline-flex;
 			justify-content: center;
-			height: ${theme.adjustSize(28)}px;
+			height: 1lh;
 			line-height: ${theme.adjustSize(28) - 2}px;
 			border: 1px solid ${borderColor};
 			color: ${textColor};

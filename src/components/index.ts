@@ -14,3 +14,4 @@ export * from './radio'
 export * from './radio-group'
 
 export * from './popup'
+export * from './tooltip'
