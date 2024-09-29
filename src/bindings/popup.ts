@@ -1,19 +1,26 @@
-import {Binding, TemplateResult, Template, html, render, RenderResult, RenderResultRenderer} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade} from '@pucelle/ff'
+import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
+import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilComplete, LayoutWatcher, DOMUtils, noop} from '@pucelle/ff'
 import {Popup} from '../components'
-import {SharedPopups} from './popup-helpers/shared-popups'
+import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
 import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-trigger-binder'
+
+
+/** Specified keys become partial, others persist as original. */
+type PartialKeys<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
 
 export interface PopupOptions extends AlignerOptions {
 
 	/** 
 	 * If specified, all the `:popup` binding with same key will
-	 * try to share and reuse one popup component.
+	 * try to share and reuse one popup content.
 	 * Even can't reuse, it also destroy old one immediately and create new one.
 	 * 
-	 * It's useful when there are many same-type popup contents existing.
+	 * If `key` provided, all same-keyed share popup content, `cacheable` will not work.
+	 * 
+	 * It's useful when there are many same-type popup contents existing,
+	 * and you'd like only one of them exist to reduce disturb.
 	 */
 	readonly key: string
 
@@ -79,8 +86,12 @@ export interface PopupOptions extends AlignerOptions {
 	pointable: boolean
 
 	/** 
-	 * Whether caches the popup component after it hides,
+	 * Whether caches the popup content after it hides,
 	 * So later my reuse it when rendering same content.
+	 * Especially when the popup-content is expensive to render.
+	 * 
+	 * If `key` provided, all same-keyed share popup content, `cacheable` will not work.
+	 * 
 	 * Default value is `false`.
 	 */
 	cacheable: boolean
@@ -105,10 +116,11 @@ interface PopupBindingEvents {
 
 
 /** Default popup options. */
-export const DefaultPopupOptions: Omit<PopupOptions, 'key' | 'alignTo'> = {
+export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> = {
 	gap: 4,
-	canShrinkOnY: true,
 	stickToEdges: true,
+	canSwapPosition: true,
+	canShrinkOnY: true,
 	fixTriangle: false,
 
 	alignPosition: 'b',
@@ -131,49 +143,69 @@ export const DefaultPopupOptions: Omit<PopupOptions, 'key' | 'alignTo'> = {
  * `:popup=${html`<Popup />`, ?{...}}`
  * `:popup=${() => html`<Popup />`, ?{...}}`
  */
-export class popup extends EventFirer<PopupBindingEvents> implements Binding {
+export class popup extends EventFirer<PopupBindingEvents> implements Binding, Part {
 
 	readonly el: HTMLElement
-	private readonly context: any
-	
-	private readonly state: PopupState
-	private readonly binder: PopupTriggerBinder
-	private options: Omit<PopupOptions, 'key' | 'alignTo'> = DefaultPopupOptions
-	private renderer: RenderResultRenderer | null = null
+
+	protected readonly state: PopupState
+	protected readonly binder: PopupTriggerBinder
+	protected readonly transition: Transition
+
+	protected options: PartialKeys<PopupOptions, 'key' | 'alignTo' | 'transition'> = DefaultPopupOptions
+	protected renderer: RenderResultRenderer | null = null
 
 	/** Used to watch rect change after popup opened. */
-	private unwatchRect: (() => void) | null = null
+	protected unwatchRect: (() => void) = noop
 
-	/** Current popup. */
-	private popup: Popup | null = null
+	/** Help to update popup content by newly rendered result. */
+	protected rendered: RenderedComponentLike | null = null
 
-	/** Controls current popup. */
-	private popupTemplate: Template | null = null
+	/** Current popup component. */
+	protected popup: Popup | null = null
 
 	/** Align to current popup. */
-	private aligner: Aligner | null = null
-
-	/** Cached popup for reusing when `cacheable` is `true`. */
-	private cachedPopup: Popup | null = null
-
-	/** Cached popup template for reusing when `cacheable` is `true`. */
-	private cachedPopupTemplate: Template | null = null
+	protected aligner: Aligner | null = null
 
 	/** Whether have prevent hiding popup content. */
-	private preventedHiding: boolean = false
+	protected preventedHiding: boolean = false
 
-	constructor(el: Element, context: any) {
+	constructor(el: Element) {
 		super()
 
 		this.el = el as HTMLElement
-		this.context = context
 		this.binder = new PopupTriggerBinder(this.el)
 		this.state = new PopupState()
+		this.transition = new Transition(this.el)
 
 		this.initEvents()
 	}
 
-	private initEvents() {
+	/** Whether popup content is opened. */
+	get opened() {
+		return this.state.opened
+	}
+
+	afterConnectCallback(_param: PartCallbackParameterMask | 0) {
+		this.binder.setTriggerType(this.options.trigger)
+		this.binder.bindEnter()
+
+		if (this.options.showImmediately) {
+			this.showPopupLater()
+		}
+	}
+
+    beforeDisconnectCallback(_param: PartCallbackParameterMask | 0) {
+		if (this.state.opened && this.popup) {
+			this.popup.remove()
+		}
+
+		this.state.clear()
+		this.binder.unbindLeave()
+		this.unwatchRect()
+		this.preventedHiding = false
+	}
+
+	protected initEvents() {
 		this.binder.on('will-show', this.onWillShow, this)
 		this.binder.on('will-hide', this.onWillHide, this)
 		this.binder.on('cancel-show', this.onCancelShow, this)
@@ -185,12 +217,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding {
 	}
 
 	/** Like mouse enter, and need to show soon. */
-	private onWillShow() {
+	protected onWillShow() {
 		this.showPopupLater()
 	}
 
 	/** Like mouse leave, and need to hide soon. */
-	private onWillHide() {
+	protected onWillHide() {
 		if (this.options.keepVisible) {
 			this.preventedHiding = true
 			return
@@ -203,7 +235,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding {
 	 * Although we call it `cancel showing`,
 	 * May still be in opened state right now.
 	 */
-	private onCancelShow() {
+	protected onCancelShow() {
 		if (this.state.opened) {
 			this.hidePopup()
 		}
@@ -213,7 +245,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding {
 	}
 
 	/** Like trigger element become out-view, and need to hide immediately. */
-	private onImmediateHide() {
+	protected onImmediateHide() {
 		if (this.options.keepVisible) {
 			this.preventedHiding = true
 			return
@@ -222,8 +254,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding {
 		this.hidePopup()
 	}
 
-	/** Toggle opened state and show or hide popup component immediately. */
-	private onToggleShowHide() {
+	/** Toggle opened state and show or hide popup content immediately. */
+	protected onToggleShowHide() {
 		if (this.state.opened) {
 			this.state.hide()
 		}
@@ -232,50 +264,30 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding {
 		}
 	}
 
-
-	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
-		let firstTimeUpdate = this.options === DefaultPopupOptions
-
-		this.renderer = renderer
-		this.options = {...DefaultPopupOptions, ...options}
-
-		// Bind events after known trigger way.
-		if (firstTimeUpdate) {
-			this.bindEventsForFirstTimeUpdate()
-		}
-
-		// If popup has popped-up, should also update it.
-		if (this.state.opened && this.popup) {
-			this.updatePopup()
-		}
-
-		// Options changed and no need to persist visible.
-		if (this.preventedHiding && !this.options.keepVisible) {
-			this.hidePopupLater()
-		}
+	/** Do show popup action. */
+	protected doShowPopup() {
+		this.doingShowPopup()
+		this.fire('opened-change', true)
+	}
+	
+	/** Do hide popup action. */
+	protected doHidePopup() {
+		this.doingHidePopup()
+		this.fire('opened-change', false)
 	}
 
-	/** When first-time update, bind events and may show. */
-	private bindEventsForFirstTimeUpdate() {
-		this.binder.setTriggerType(this.options.trigger)
-		this.binder.bindEnter()
 
-		if (this.options.showImmediately) {
-			this.showPopupLater()
-		}
-	}
-
-	/** Show popup component after a short time out. */
+	/** Show popup content after a short time out. */
 	showPopupLater() {
 		let showDelay = this.options.showDelay
 		let key = this.options.key
 
 		// If can reuse exist, show without delay.
-		if (SharedPopups.isKeyInUse(key)) {
+		if (key && SharedPopups.isCacheOpened(key)) {
 			showDelay = 0
 		}
 
-		// If give a delay for `click` type trigger, it will feel like a stuck or slow responsive.
+		// If have delay for `click` type trigger, it will feel like a stuck or slow responsive.
 		if (this.binder.trigger === 'click' || this.binder.trigger === 'focus') {
 			showDelay = 0
 		}
@@ -286,83 +298,128 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding {
 		}
 	}
 
-	/** Show popup component, can be called repeatedly. */
+	/** Send a request to show popup content, can be called repeatedly. */
 	showPopup() {
 		this.state.show()
 	}
 
-	/** Truly show popup when required. */
-	private doShowPopup() {
-		enqueueUpdatableInOrder(this, this.context, QueueUpdateOrder.Directive)
-		this.fire('opened-change', true)
+	/** Send a request to hide popup content after a short time out. */
+	hidePopupLater() {
+		let hideDelay = this.options.hideDelay
+		this.state.willHide(hideDelay)
 	}
-	
-	__updateImmediately() {
+
+	/** Send a request to hide popup content, can be called repeatedly. */
+	hidePopup() {
+		this.state.hide()
+	}
+
+
+	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
+		this.renderer = renderer
+		this.options = {...DefaultPopupOptions, ...options}
+
+		// If popup has popped-up, should also update it.
+		if (this.state.opened) {
+			this.updatePopup()
+		}
+
+		// Options changed and no need to persist visible.
+		if (this.preventedHiding && !this.options.keepVisible) {
+			this.hidePopupLater()
+		}
+	}
+
+	/** Show popup immediately, currently in opened. */
+	protected async doingShowPopup() {
+		await this.updatePopup()
+		this.alignPopup()
+	}
+
+	/** Hide popup immediately, currently not in opened. */
+	protected async doingHidePopup() {
+
+		// Play leave transition if need.
+		if (this.options.transition) {
+			let finish = await this.transition.leave(this.options.transition)
+			if (finish) {
+				this.popup?.remove()
+			}
+		
+			if (this.state.opened) {
+				return
+			}
+		}
+
+		this.binder.unbindLeave()
+		this.unwatchRect()
+		this.preventedHiding = false
+	}
+
+	/** Update popup content, if haven't rendered, render it firstly. */
+	protected async updatePopup() {
+		this.updateRenderedProperty()
+		await untilComplete()
+
+		// May soon become un-opened.
 		if (!this.state.opened) {
 			return
 		}
 
-		if (this.popup) {
-			this.updatePopup()
+		let popup = Popup.from(this.rendered!.el.firstElementChild!)
+		if (!popup) {
+			throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
 		}
-		else {
-			this.renderPopup()
+
+		// Update `pointable`.
+		popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
+
+		// Popup content get updated.
+		if (popup !== this.popup) {
+			this.updatePopupProperty(popup)
+		}
+
+		/** Append popup element into document. */
+		this.appendPopup()
+
+		if (this.options.key) {
+			SharedPopups.add(this.options.key, {popup, rendered: this.rendered!})
+			SharedPopups.setUser(popup, this)
 		}
 	}
 
-	/** Update popup component, calls when updating an outer component. */
-	private updatePopup() {
-		let result = this.renderer()
-		let key = this.options.key
-		let popup = this.popup!
-		let template = this.popupTemplate!
-
-		if (!(result instanceof TemplateResult)) {
-			result = html`${result}`
+	/** Update rendered property, and may use cache. */
+	protected updateRenderedProperty() {
+		if (this.rendered) {
+			this.rendered.renderer = this.renderer!
 		}
 
-		if (template.canPatchBy(result)) {
-			template.patch(result)
-		}
-		else {
-			popup.el.remove()
-			
-			let template = this.popupTemplate = render(result, this.context)
-			popup = getRenderedAsComponent(template) as Popup
-
-			if (key) {
-				SharedPopups.addCache(key, {popup, template})
+		if (!this.rendered) {
+			let cache = this.options.key ? SharedPopups.find(this.options.key) : null
+			if (cache) {
+				this.rendered = cache.rendered
+				this.popup = cache.popup
 			}
 		}
 
-		onRenderComplete(() => {
-			if (this.popup) {
-				this.alignPopup()
-			}
-		})
-	}
-
-	/** Render the popup component. */
-	private renderPopup() {
-		let isOldExist = this.ensurePopup()
-		let popupEl = this.popup!.el
-
-		popupEl.style.pointerEvents = this.options.pointerable ? '' : 'none'
-		popupEl.style.visibility = 'hidden'
-		
-		this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
-
-		onRenderComplete(() => {
-			this.afterPopupRendered(isOldExist)
-		})
-	}
-
-	/** Align and play transition after popup rendered. */
-	private afterPopupRendered(isOldExist: boolean) {
-		// May do something in the handlers of `'opened-change'` event and make it closed.
-		if (!this.state.opened || !this.popup) {
-			return
+		if (!this.rendered) {
+			this.rendered = render(this.renderer!)
 		}
+	}
+
+	/** After popup first time updated. */
+	protected updatePopupProperty(popup: Popup) {
+		popup.setBinding(this)
+		this.binder.bindLeave(this.options.hideDelay, popup.el)
+		this.popup = popup
+	}
+
+	/** Append popup element into document. */
+	protected appendPopup() {
+		let inDomAlready = !!this.popup!.el.ownerDocument
+
+		// Although in document, need append too.
+		this.popup!.applyAppendTo()
 
 		// May align not successfully.
 		let aligned = this.alignPopup()
@@ -370,220 +427,120 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding {
 			return
 		}
 
-		this.popup.el.style.visibility = ''
 		this.mayGetFocus()
 
-		// Plays transition.
-		if (!isOldExist) {
-			new Transition(this.popup.el, this.options.transition).enter()
+		// Play enter transition.
+		if (!inDomAlready && this.options.transition) {
+			this.transition.enter(this.options.transition)
 		}
 
 		// Watch it's rect changing.
-		this.unwatchRect = watchLayout(this.el, 'rect', this.onTriggerRectChanged.bind(this))
+		this.unwatchRect = LayoutWatcher.watch(this.el, 'rect', this.onTriggerRectChanged.bind(this))
 	}
 
 	/** After trigger element position changed. */
-	private onTriggerRectChanged() {
-		if (isVisibleInViewport(this.el, 0.1, this.popup!.el)) {
-			if (this.popup) {
-				this.alignPopup()
-			}
+	protected onTriggerRectChanged() {
+		if (DOMUtils.isRectIntersectWithViewport(this.el.getBoundingClientRect())) {
+			this.alignPopup()
 		}
 		else {
-			this.hidePopupLater()
+			this.hidePopup()
 		}
+
+		this.unwatchRect = noop
 	}
 
-	/** 
-	 * Get a cached popup component, or create a new one.
-	 * Returns whether old popup in same key is existing.
-	 */
-	private ensurePopup(): boolean {
-
-		// Here no need to watch the renderFn, it will be watched from the outer component.
-		let result = this.renderer()
-
-		let key = this.options.key
-		let popup: Popup | null = null
-		let template: Template | null = null
-		let cache = key ? SharedPopups.findCache(key, this.el) : null
-
-		// Make sure the render result is a template result.
-		if (!(result instanceof TemplateResult)) {
-			result = html`${result}`
+	/** Align popup content, returns whether align successfully. */
+	protected alignPopup(): boolean {
+		if (!this.state.opened) {
+			return false
 		}
-
-		// Uses cache.
-		if (this.cachedPopup && this.cachedPopupTemplate) {
-			popup = this.cachedPopup
-
-			if (this.cachedPopupTemplate.canPatchByContextual(result, this.context)) {
-				this.cachedPopupTemplate.patch(result)
-				popup = this.cachedPopup
-				template = this.cachedPopupTemplate
-				this.cachedPopup = null
-				this.cachedPopupTemplate = null
-			}
-		}
-
-		// Uses shared cache by `key`.
-		if (!popup && cache) {
-			if (cache.template.canPatchByContextual(result, this.context)) {
-				popup = cache.popup
-				template = cache.template
-				template.patch(result)
-			}
-		}
-		
-		// Create new popup.
-		if (!popup || !template) {
-			template = render(result, this.context)
-			popup = getRenderedAsComponent(template) as Popup
-		}
-
-		// Cleans old popups, and cut it's relationship with other popup-binding.
-		if (key && cache) {
-			SharedPopups.cleanPopupControls(key, cache, popup, this)
-		}
-
-		// Add as cache.
-		if (key) {
-			SharedPopups.addCache(key, {popup, template})
-			SharedPopups.setPopupUser(popup, this)
-		}
-
-		this.popup = popup
-		this.popupTemplate = template
-
-		popup.setBinding(this)
-		popup.applyAppendTo()
-
-		let isOldExist = !!cache?.popup
-		return isOldExist
-	}
-
-	/** Align popup component, returns whether aligns it successfully. */
-	private alignPopup(): boolean {
-		let popup = this.popup!
-		let alignToFn = this.options.alignTo
-		let alignTo = alignToFn ? alignToFn(this.el) : this.el
 
 		this.fire('will-align')
+		let alignTo = this.getAlignToElement()
 
-		// Create a aligner since align too much times for a tooltip.
-		if (!this.aligner) {
-			this.aligner = new Aligner(popup.el, alignTo, this.options.alignPosition, this.getAlignOptions())
+		// Update aligner if required.
+		if (!this.aligner || this.aligner.anchor !== alignTo || this.aligner.content !== this.popup!.el) {
+			this.aligner = new Aligner(this.popup!.el, alignTo, this.options.alignPosition, this.getAlignerOptions())
 		}
 
 		let aligned = this.aligner.align()
 		if (!aligned) {
 			this.hidePopup()
+		}
+
+		return aligned
+	}
+
+	/** Get element popup will align to. */
+	protected getAlignToElement(): Element {
+		if (!this.options.alignTo) {
+			return this.el
+		}
+		else if (typeof this.options.alignTo === 'function') {
+			return this.options.alignTo(this.el) ?? this.el
+		}
+		else {
+			return this.el.querySelector(this.options.alignTo) ?? this.el
+		}
+	}
+
+	/** Get options for Aligner. */
+	protected getAlignerOptions(): AlignerOptions {
+		let triangle = this.popup!.el.querySelector("[class$='-triangle']") as HTMLElement | null
+
+		return {
+			gap: this.options.gap,
+			stickToEdges: this.options.stickToEdges,
+			canSwapPosition: this.options.stickToEdges,
+			canShrinkOnY: this.options.canShrinkOnY,
+			fixTriangle: this.options.fixTriangle,
+			triangle: triangle ?? undefined,
+		}
+	}
+
+	/** Make element of popup content get focus if possible. */
+	protected mayGetFocus() {
+		let trigger = this.binder.trigger
+		let popupEl = this.popup!.el
+
+		if (this.options.autoFocus
+			&& (trigger !== 'hover' && trigger !== 'focus')
+			&& popupEl.tabIndex >= 0
+		) {
+			popupEl.focus()
+		}
+	}
+
+	/** Returns whether the popup-content can be reused by key. */
+	canContentReuse(): boolean {
+		if (!this.options.key) {
 			return false
+		}
+		
+		if (this.options.keepVisible) {
+			return !this.state.opened
 		}
 
 		return true
 	}
 
-	/** Get align options. */
-	private getAlignOptions(): AlignerOptions {
-		let triangle = this.popup!.refElements.triangle as HTMLElement
-
-		return {
-			margin: this.options.alignMargin,
-			canShrinkOnY: this.options.canShrinkOnY,
-			triangle,
-			fixTriangle: this.options.fixTriangle,
-			stickToEdges: this.options.stickToEdges,
-		}
-	}
-
-	/** Make element of popup component get focus if possible. */
-	private mayGetFocus() {
-		let trigger = this.binder.trigger
-		if (this.options.autoFocus && (trigger !== 'hover' && trigger !== 'focus') && this.popup && this.popup.el.tabIndex >= 0) {
-			this.popup.el.focus()
-		}
-	}
-
-	/** Hide popup component after a short time out. */
-	hidePopupLater() {
-		let hideDelay = this.options.hideDelay
-		this.state.willHide(hideDelay)
-	}
-
-	/** Hide popup component, can be called repeatedly. */
-	hidePopup() {
-		this.state.hide()
-	}
-
-	/** Truly Hide popup when required. */
-	private doHidePopup() {
-		if (!this.popup) {
-			return
+	/** Clears popup content, reset to initial state. */
+	clearContent() {
+		if (this.state.opened && this.popup) {
+			this.popup.remove()
 		}
 
-		let popup = this.popup!
-		let popupEl = popup.el
-
-		this.clean()
-
-		new Transition(popupEl, this.options.transition).leave().then(finish => {
-			if (finish) {
-				popupEl.remove()
-			}
-		})
-
-		this.fire('opened-change', false)
-	}
-
-	/** Returns whether the popup-binding can lose control of popup. */
-	__canLoseControl() {
-		return !this.keepingVisible
-	}
-
-	/** Rlease control with it's popup component after another popup-binding take it. */
-	__losePopupControl() {
-		this.clean()
-	}
-
-	/** Cleans all popup properties. */
-	private clean() {
-		let key = this.options.key
-		let popup = this.popup
-		let popupTemplate = this.popupTemplate
-
-		if (key && popup) {
-			SharedPopups.deleteCache(key, popup)
-		}
-
-		if (popup && popupTemplate && this.options.cacheable) {
-			this.cachedPopup = popup
-			this.cachedPopupTemplate = popupTemplate
+		if (this.options.key && this.popup) {
+			SharedPopups.clearUser(this.popup)
 		}
 
 		this.binder.unbindLeave()
-
-		if (this.unwatchRect) {
-			this.unwatchRect()
-			this.unwatchRect = null
-		}
-
 		this.state.clear()
+		this.unwatchRect()
+		this.rendered = null
 		this.popup = null
-		this.popupTemplate = null
 		this.aligner = null
-	}
-	
-	remove() {
-		off(this.el, 'mouseenter', this.showPopupLater, this)
-
-		if (this.state.opened) {
-			this.hidePopup()
-		}
-		else {
-			this.clean()
-		}
-
-		this.binder.unbindEnter()
+		this.preventedHiding = false
 	}
 }

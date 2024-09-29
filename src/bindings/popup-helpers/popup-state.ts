@@ -30,7 +30,7 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 
 	/** 
 	 * Send a request to show popup after a few milliseconds delay.
-	 * Returns whether the request is the first show request.
+	 * Returns whether the request sent.
 	 */
 	willShow(showDelay: number): boolean {
 		if (this.opened || this.willShowSoon) {
