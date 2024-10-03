@@ -41,11 +41,13 @@ export abstract class RemoteStore<T = any> implements RemoteStoreOptions<T>, Obs
 		Object.assign(this, options)
 	}
 
-	@computed protected get dataLoader(): PageDataLoader<T> {
+	@computed
+	protected get dataLoader(): PageDataLoader<T> {
 		return new PageDataLoader(this.pageSize, this.dataCountGetter.bind(this), this.pageDataGetter.bind(this))
 	}
 
-	@effect protected applyPreloadPageCount() {
+	@effect
+	protected applyPreloadPageCount() {
 		this.dataLoader.setPreloadPageCount(this.preloadPageCount)
 	}
 

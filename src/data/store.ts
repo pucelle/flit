@@ -35,7 +35,8 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 
 
 	/** To do data items ordering. */
-	@computed get listOrder(): ListUtils.Order<T> | null {
+	@computed
+	get listOrder(): ListUtils.Order<T> | null {
 		if (this.orders) {
 			return new ListUtils.Order(...this.orders as any)
 		}
@@ -45,7 +46,8 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 	}
 
 	/** Get current data, after filtered and ordered. */
-	@computed get currentData(): T[] {
+	@computed
+	get currentData(): T[] {
 		let data = this.data
 
 		if (this.filter) {

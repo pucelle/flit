@@ -1,23 +1,22 @@
 import {Component, css, html, TemplateResult} from '@pucelle/lupos.js'
-import {theme} from '../style'
+import {theme, ThemeSize} from '../style'
 
 
 /** `<Button>` is nearly equals <button> element. */
 export class Button<E = {}> extends Component<E> {
 
 	static style() {
-		let {mainColor, textColor, borderColor, borderRadius, focusBlurRadius, backgroundColor} = theme
+		let {mainColor, textColor, borderColor, borderRadius, focusBlurRadius, backgroundColor, fontSize, lineHeight} = theme
 		
 		return css`	
 		.button{
 			display: inline-flex;
 			justify-content: center;
 			height: 1lh;
-			line-height: ${theme.adjustSize(28) - 2}px;
 			border: 1px solid ${borderColor};
 			color: ${textColor};
 			border-radius: ${borderRadius}px;
-			padding: 0 ${theme.adjustSize(12)}px;
+			padding: 0 1em;
 			background: ${backgroundColor};
 			text-align: center;
 			cursor: pointer;
@@ -32,14 +31,14 @@ export class Button<E = {}> extends Component<E> {
 				color: #fff;
 			}
 
+			&:focus{
+				box-shadow: 0 0 ${focusBlurRadius}px ${mainColor};
+			}
+
 			&:active{
 				background: ${textColor};
 				border-color: ${textColor};
 				color: ${backgroundColor};
-			}
-
-			&:focus{
-				box-shadow: 0 0 ${focusBlurRadius}px ${mainColor};
 			}
 
 			.icon, .icon-loading{
@@ -47,11 +46,13 @@ export class Button<E = {}> extends Component<E> {
 				top: -1px;
 
 				&:first-child{
-					margin-right: ${theme.adjustSize(6)}px;
+					margin-right: 0.5em;
+					margin-left: 0.25em;
 				}
 
 				&:last-child{
-					margin-left: ${theme.adjustSize(6)}px;
+					margin-left: 0.5em;
+					margin-right: 0.25em;
 				}
 
 				&:only-child{
@@ -66,13 +67,13 @@ export class Button<E = {}> extends Component<E> {
 				color: #fff;
 
 				&:hover, &:focus{
-					background: ${mainColor.darken(15)};
-					border-color: ${mainColor.darken(15)};
+					background: ${mainColor.darken(15/255)};
+					border-color: ${mainColor.darken(15/255)};
 				}
 			
 				&:active{
-					background: ${mainColor.darken(30)};
-					border-color: ${mainColor.darken(30)};
+					background: ${mainColor.darken(30/255)};
+					border-color: ${mainColor.darken(30/255)};
 				}
 			}
 
@@ -80,7 +81,6 @@ export class Button<E = {}> extends Component<E> {
 				border: none;
 				padding-left: 0;
 				padding-right: 0;
-				line-height: ${theme.adjustSize(28)}px;
 
 				&:hover, &:focus{
 					background: none;
@@ -100,6 +100,8 @@ export class Button<E = {}> extends Component<E> {
 	}
 
 
+	size: ThemeSize = 'default'
+
 	/** Whether be primary button. */
 	primary: boolean = false
 
@@ -109,7 +111,7 @@ export class Button<E = {}> extends Component<E> {
 	protected render(): TemplateResult {
 		return html`
 			<template
-				class="button"
+				class="button size-${this.size}"
 				tabindex="0"
 				:class.primary=${this.primary}
 				:class.flat=${this.flat}

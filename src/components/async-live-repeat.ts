@@ -18,7 +18,7 @@ export interface AsyncLiveRepeatEvents {
  * Compare with `<LiveRepeat>`,
  * `<AsyncLiveRepeat>` can render remote data which was splitted to pages.
  */
-export class AsyncLiveRepeat<T = any, E = any> extends LiveRepeat<T | null, E & AsyncLiveRepeatEvents> {
+export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & AsyncLiveRepeatEvents> {
 
 	/** 
 	 * If specified `pageSize` larger than `0`, will load each page data one by one.
@@ -50,7 +50,8 @@ export class AsyncLiveRepeat<T = any, E = any> extends LiveRepeat<T | null, E & 
 		this.needsUpdateDataCount = true
 	}
 
-	@effect protected applyPreloadPageCount() {
+	@effect
+	protected applyPreloadPageCount() {
 		this.dataLoader.setPreloadPageCount(this.preloadPageCount)
 	}
 

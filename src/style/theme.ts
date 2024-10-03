@@ -74,8 +74,15 @@ type ColorOptions = {[key in
 
 type NotColorOptions = {[key in Exclude<keyof ThemeOptions, keyof ColorOptions>]: ThemeOptions[key]}
 
-/** Theme size enums, all components should implements size property according to this. */
-export type ThemeSize = 'small' | 'medium' | 'large'
+/** 
+ * Theme size enums, all components should implements size property according to this.
+ * If specified as `default`, will use current theme size. 
+ */
+export type ThemeSize = 'small' | 'medium' | 'large' | 'default' | 'inherit'
+
+
+/** All theme size list. */
+export const ThemeSizes: ThemeSize[] = ['small', 'medium', 'large', 'default']
 
 
 export class Theme implements ColorOptions, NotColorOptions, Observed {
@@ -86,6 +93,9 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 	protected options: ThemeOptions
 	protected names: string[] = []
 
+	/** Light mode, light or dark. */
+	lightMode: 'light' | 'dark' = 'light'
+
 	constructor() {
 		this.options = {...DefaultColorThemeOptions, ...DefaultSizeThemeOptions} as ThemeOptions
 	}
@@ -94,15 +104,15 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 	 * Define a new theme by overwritten default options.
 	 * @param prefix: When setting theme, will overwrite same prefixed theme.
 	 */
-	defineTheme(name: string, prefix: string, options: Partial<ThemeOptions>) {
+	define(name: string, prefix: string, options: Partial<ThemeOptions>) {
 		this.themeMap.set(name, options)
 		this.prefixMap.set(name, prefix)
 		this.ofPrefixMap.add(prefix, name)
 	}
 
-	/** Get options of a defined theme. */
-	getThemeOptions(name: string): Partial<ThemeOptions> {
-		return this.themeMap.get(name)!
+	/** Get current theme options. */
+	getOptions(): ThemeOptions {
+		return this.options
 	}
 
 	/** Get a single value of option. */
@@ -110,8 +120,13 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 		return this.options[key] as ThemeOptions[K]
 	}
 
-	/** Overwrite whole theme list. */
-	setTheme(...names: string[]) {
+	/** Get options of a defined theme. */
+	getOptionsOf(name: string): Partial<ThemeOptions> {
+		return this.themeMap.get(name)!
+	}
+
+	/** Overwrite whole theme list by new theme names. */
+	set(...names: string[]) {
 		this.options = {} as ThemeOptions
 
 		for (let name of names) {
@@ -123,13 +138,14 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 		}
 
 		this.names = names
+		this.lightMode = this.backgroundColor.gray > 0.5 ? 'light' : 'dark'
 	}
 
 	/** 
 	 * Apply more themes to current by name and assign their defined theme options.
 	 * Same prefixed theme will be overwritten.
 	 */
-	applyTheme(...names: string[]) {
+	apply(...names: string[]) {
 		let prefixes = names.map(n => this.prefixMap.get(n)).filter(v => v) as string[]
 		if (prefixes.length > 0) {
 			let surviveNames = this.names.filter(n => {
@@ -140,7 +156,7 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 			names = [...surviveNames, ...names]
 		}
 
-		this.setTheme(...names)
+		this.set(...names)
 	}
 
 	/** Main highlight color. */
@@ -227,6 +243,15 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 	get lineHeight() {
 		return this.get('lineHeight')
 	}
+
+	/** 
+	 * Mix background color with foreground(text) color.
+	 * When `foregroundRate` is `0`, return background color.
+	 * When `foregroundRate` is `1`, return text color.
+	 */
+	getMixedColor(foregroundRate: number) {
+		return this.backgroundColor.mix(this.textColor, foregroundRate)
+	}
 }
 
 
@@ -248,7 +273,7 @@ const DefaultSizeThemeOptions: Partial<ThemeOptions> = {
 /** `theme` can help to specify and toggle like primary color, font size.... */
 export const theme = new Theme()
 
-theme.defineTheme('light', 'color', {
+theme.define('light', 'color', {
 	...DefaultColorThemeOptions,
 	mainColor: '#3a6cf6',
 	backgroundColor: '#fff',
@@ -259,7 +284,7 @@ theme.defineTheme('light', 'color', {
 	popupShadowColor: 'rgba(0, 0, 0, 0.4)',
 })
 
-theme.defineTheme('dark', 'color', {
+theme.define('dark', 'color', {
 	...DefaultColorThemeOptions,
 	mainColor: '#3a6cf6',
 	backgroundColor: '#333',
@@ -270,19 +295,19 @@ theme.defineTheme('dark', 'color', {
 	popupShadowColor: 'rgba(0, 0, 0, 0.6)',
 })
 
-theme.defineTheme('small', 'size', {
+theme.define('small', 'size', {
 	...DefaultSizeThemeOptions,
 	fontSize: 13,
 	lineHeight: 24,
 })
 
-theme.defineTheme('medium', 'size', {
+theme.define('medium', 'size', {
 	...DefaultSizeThemeOptions,
 	fontSize: 14,
 	lineHeight: 28,
 })
 
-theme.defineTheme('large', 'size', {
+theme.define('large', 'size', {
 	...DefaultSizeThemeOptions,
 	fontSize: 16,
 	lineHeight: 32,

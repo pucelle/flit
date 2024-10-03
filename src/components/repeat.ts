@@ -12,7 +12,7 @@ export type RepeatRenderFn<T> = (item: T, index: number) => RenderResult
  * `<Repeat>` creates repetitive contents by a `renderFn` and an iterable data.
  * it works just like a `<for>...` block, but gives more controllable based on component.
  */
-export class Repeat<T = any, E = any> extends Component<E> {
+export class Repeat<T = any, E = {}> extends Component<E> {
 
 	/** Current data list to repeat. */
 	data: T[] = []
@@ -36,7 +36,8 @@ export class Repeat<T = any, E = any> extends Component<E> {
 	 * Help to read and write element's scrolling properties.
 	 * Use it only when required.
 	 */
-	@computed get doa(): DirectionalOverflowAccessor {
+	@computed
+	get doa(): DirectionalOverflowAccessor {
 		return new DirectionalOverflowAccessor(this.overflowDirection)
 	}
 
@@ -44,7 +45,8 @@ export class Repeat<T = any, E = any> extends Component<E> {
 	 * Scroller element.
 	 * It refreshes after re-connected.
 	 */
-	@computed get scroller(): HTMLElement {
+	@computed
+	get scroller(): HTMLElement {
 		return this.el.parentElement!
 	}
 

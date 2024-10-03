@@ -104,18 +104,18 @@ export interface PopupOptions extends AlignerOptions {
 
 interface PopupBindingEvents {
 	
-	/** Fired after `opened` state of popup binding changed. */
-	'opened-change'?: (opened: boolean) => void
+	/** Fire after `opened` state of popup binding changed. */
+	'opened-change': (opened: boolean) => void
 
-	/** Fired before align popup content with trigger element. */
-	'will-align'?: () => void
+	/** Fire before align popup content with trigger element. */
+	'will-align': (content: Popup) => void
 }
 
 
 /** Default popup options. */
 export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> = {
-	alignPosition: 'b',
 
+	alignPosition: 'b',
 	gap: 4,
 	stickToEdges: true,
 	canSwapPosition: true,
@@ -149,6 +149,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected readonly binder: PopupTriggerBinder
 	protected readonly transition: Transition
 
+	protected rawOptions: Partial<PopupOptions> | null = null
 	protected options: PartialKeys<PopupOptions, 'key' | 'alignTo' | 'transition'> = DefaultPopupOptions
 	protected renderer: RenderResultRenderer | null = null
 
@@ -337,6 +338,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	update(renderer: RenderResultRenderer | null, options: Partial<PopupOptions> = {}) {
 		this.renderer = renderer
+		this.rawOptions = options
 		this.options = {...DefaultPopupOptions, ...options}
 
 		// If popup has popped-up, should also update it.
@@ -386,7 +388,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			return
 		}
 
-		let popup = Popup.from(this.rendered!.el.firstElementChild!)
+		let firstElement = this.rendered!.el.firstElementChild!
+		let popup = firstElement ? Popup.from(firstElement) : this.popup
 		if (!popup) {
 			throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
 		}
@@ -429,7 +432,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** After popup first time updated. */
 	protected updatePopupProperty(popup: Popup) {
-		popup.setBinding(this)
 		this.binder.bindLeave(this.options.hideDelay, popup.el)
 		this.popup = popup
 	}
@@ -476,7 +478,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			return false
 		}
 
-		this.fire('will-align')
+		this.fire('will-align', this.popup!)
 		let alignTo = this.getAlignToElement()
 
 		// Update aligner if required.
@@ -510,11 +512,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
 
 		return {
-			gap: this.options.gap,
-			stickToEdges: this.options.stickToEdges,
-			canSwapPosition: this.options.stickToEdges,
-			canShrinkOnY: this.options.canShrinkOnY,
-			fixTriangle: this.options.fixTriangle,
+			gap: this.rawOptions?.gap ?? this.popup!.defaultPopupOptions.gap ?? DefaultPopupOptions.gap,
+			stickToEdges: this.rawOptions?.stickToEdges ?? this.popup!.defaultPopupOptions.stickToEdges ?? DefaultPopupOptions.stickToEdges,
+			canSwapPosition: this.rawOptions?.canSwapPosition ?? this.popup!.defaultPopupOptions.canSwapPosition ?? DefaultPopupOptions.canSwapPosition,
+			canShrinkOnY: this.rawOptions?.canShrinkOnY ?? this.popup!.defaultPopupOptions.canShrinkOnY ?? DefaultPopupOptions.canShrinkOnY,
+			fixTriangle: this.rawOptions?.fixTriangle ?? this.popup!.defaultPopupOptions.fixTriangle ?? DefaultPopupOptions.fixTriangle,
 			triangle: triangle ?? undefined,
 		}
 	}

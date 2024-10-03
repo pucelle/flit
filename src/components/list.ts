@@ -1,62 +1,55 @@
-import {css, Component, html, TemplateResult} from '@pucelle/lupos.js'
-import {theme} from '../style/theme'
-import {add, remove} from '@pucelle/ff'
-import {tooltip} from '../bindings2/tooltip'
-import {TreeDataNavigator} from '../components2/helpers/tree-data-navigator'
+import {css, Component, html, RenderResult} from '@pucelle/lupos.js'
+import {theme, ThemeSize} from '../style'
+import {computed, DOMEvents, effect, EventKeys, immediateWatch} from '@pucelle/ff'
+import {ListDataNavigator} from './list-helpers/list-data-navigator'
+import {Icon} from './icon'
 
 
-export interface ListItem<T = any> {
-
-	/** 
-	 * Unique value to identify current item.
-	 * If value be `undefined`, and have any children, clicking it will cause it been opened.
-	 */
-	value?: T
-
-	/** List item content, can be a template result. */
-	text: string | TemplateResult
-
-	/** 
-	 * Text for searching, especially when `text` is a `TemplateResult` and can't do searching.
-	 * Should be in lowercase type.
-	 */
-	searchText?: string
-
-	/** Shows as tooltip content when mouse hover. */
-	tip?: string | TemplateResult
-
-	/** List item icon type. */
-	icon?: string
-
-	/** To render subsection list. */
-	children?: ListItem<T>[]
-
-	/** Whether current list is opened. */
-	opened?: boolean
+/** Base type of list item. */
+export type ListItem<T> = {
+	children?: T[]
 }
 
-interface ListEvents<T> {
+export interface ListEvents<T extends ListItem<T>> {
 
-	/** Triggers after selected items changed. */
-	select: (selected: T | T[]) => void
+	/** 
+	 * Fires after selected items changed.
+	 * Only available for `selection` mode.
+	 */
+	select: (selected: ReadonlyArray<T>) => void
 
-	/** Triggers after navigated item changed. */
+	/** 
+	 * Fires after navigated item changed.
+	 * Only available for `navigation` mode.
+	 */
 	navigate: (navigated: T) => void
 
-	/** Triggers after clicking list item. */
+	/** Fires after clicked a list item. */
 	click: (clicked: T) => void
 }
 
 
 /** 
- * `<f-list>` will render data items to a list,
- * and provide single or multiple selection.
- * It shouldn't include too many levels, since it doesn't have overflow setting like `f-tree`.
+ * `<List>` will render data items as a list,
+ * and supports sub list.
+ * Otherwise it provides single or multiple selection,
+ * and direction key navigation.
  */
-export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
+export class List<T extends ListItem<T> = any, E = {}> extends Component<E & ListEvents<T>> {
+
+	/** Walk item and all descendant items recursively. */
+	static *walkItems<T extends ListItem<T>>(item: T): Iterable<T> {
+		yield item
+
+		if (item.children) {
+			for (let child of item.children) {
+				yield* List.walkItems(child)
+			}
+		}
+	}
 
 	static style() {
-		let {mainColor, adjust, borderColor, adjustFontSize} = theme
+		let {mainColor, borderColor} = theme
 
 		return css`
 		.list{
@@ -64,11 +57,11 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			border-bottom: 1px solid ${borderColor.alpha(0.4)};
 		}
 		
-		.list-option{
+		.list-item{
 			position: relative;
 			display: flex;
-			padding-top: ${adjust(2)}px;
-			padding-bottom: ${adjust(2)}px;
+			padding-top: 2px;
+			padding-bottom: 2px;
 			cursor: pointer;
 			border-top: 1px solid ${borderColor.alpha(0.4)};
 
@@ -90,8 +83,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				&::after{
 					content: '';
 					position: absolute;
-					top: ${adjust(3)}px;
-					bottom: ${adjust(3)}px;
+					top: 3px;
+					bottom: 3px;
 					right: 0;
 					width: 2px;
 					background: ${mainColor.alpha(0.8)};
@@ -103,18 +96,18 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			}
 		}
 
-		.toggle{
+		.list-toggle-placeholder{
 			display: flex;
-			width: ${adjust(22)}px;
+			width: 1.6em;
 			opacity: 0.7;
 		}
 
-		.icon{
+		.list-icon-placeholder{
 			display: flex;
-			width: ${adjust(22)}px;
+			width: 1.6em;
 		}
 
-		.text{
+		.list-text{
 			flex: 1;
 			min-width: 0;
 			padding-right: 4px;
@@ -123,34 +116,34 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			text-overflow: ellipsis;
 		}
 
-		.selected-icon{
-			margin: 0 ${adjust(6)}px;
+		.list-selected-icon{
+			margin: 0 0.5em;
 		}
 
-		.subsection{
-			padding-left: ${adjust(22)}px;
-			padding-bottom: ${adjust(4)}px;
+		.list-subsection{
+			padding-left: 1.6em;
+			padding-bottom: 4px;
 			overflow: hidden;
-			font-size: ${adjustFontSize(13)}px;
+			font-size: 0.92em;
 
-			.option{
+			.list-option{
 				padding-top: 0;
 				padding-bottom: 0;
 				border-top: none;
-				line-height: ${adjust(26)}px;
+				line-height: calc(1lh - 2px);
 			}
 
-			.subsection{
+			.list-subsection{
 				padding-top: 0;
 			}
 
-			.subsection:not(:last-child){
-				padding-bottom: ${adjust(3)}px;
-				margin-bottom: ${adjust(3)}px;
+			.list-subsection:not(:last-child){
+				padding-bottom: 3px;
+				margin-bottom: 3px;
 				border-bottom: 1px solid ${borderColor.alpha(0.4)};
 			}
 
-			.subsection:last-child{
+			.list-subsection:last-child{
 				padding-bottom: 0;
 				margin-bottom: 0;
 			}
@@ -158,187 +151,123 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	/** Selected indices by keyboard navigation. */
-	protected treeNavigationIndices: number[] = []
 
-	/** Whether watching keyboard navigation events. */
-	protected watchingKeyBoardNavigation: boolean = false
+	size: ThemeSize = 'default'
 
-	/** List type:
-	 * `selection`: provide single item or multiple items selection with a checkbox icon.
-	 * `navigation`: provide single item navigation with a vertical line icon.
+	/** List mode:
+	 * - `selection`: provide single item or multiple items selection with a check icon.
+	 * - `navigation`: provide single item navigation with a vertical line icon on the right.
 	 * Default value is `selection`.
 	 */
-	type: 'selection' | 'navigation' = 'selection'
+	mode: 'selection' | 'navigation' = 'selection'
 
 	/** 
-	 * Whether each item is selectable, only when at `selection` mode.
+	 * Whether each item is selectable, only available for `selection` mode.
 	 * Default value is `false`.
 	 */
 	selectable: boolean = false
 
 	/** 
-	 * Whether can select multiple items, only for type `selection`.
+	 * Whether can select multiple items, only available for `selection` mode.
 	 * Default value is `false`.
 	 */
 	multipleSelect: boolean = false
 
 	/** Input data list. */
-	data: ListItem<T>[] = []
+	data: T[] = []
+
+	/** Renderer to render each item display content. */
+	renderer: (item: T) => RenderResult | string = JSON.stringify
 
 	/** Indicates current select values. */
 	selected: T[] = []
 
-	/** 
-	 * Unique active value for `navigation` type.
-	 * If this value set when initializing, will make the associated item visible.
-	 * Otherwise you can call `ensureActiveItemVisible()` to do same thing.
-	 */
-	active: T | null = null
+	/** Currently expanded items. */
+	expanded: T[] = []
 
-	/** If specified, when the element get focus, you can use keyboard arrow keys to navigate inside current list. */
-	navigateFrom: HTMLInputElement | HTMLTextAreaElement | null | (() => HTMLInputElement | HTMLTextAreaElement | null) = null
+	/** 
+	 * Latest navigated item for `navigation` mode.
+	 * Set this value will make the associated item become visible.
+	 */
+	navigated: T | null = null
+
+	/** 
+	 * If specified, when this element get focus,
+	 * you can use keyboard arrow keys to navigate across current list.
+	 */
+	keyComeFrom: HTMLInputElement | HTMLTextAreaElement | null = null
+
+	/** 
+	 * Selected and all parental indices by keyboard navigation.
+	 * Only the last index is the truly selected.
+	 */
+	protected keyNavigator: ListDataNavigator<T> = new ListDataNavigator()
+
+	/** Whether watching keyboard navigation events. */
+	private inKeyNavigating: boolean = false
+
+	/** Apply data and expanded to navigator. */
+	@effect
+	protected applyNavigator() {
+		this.keyNavigator.update(this.data, this.expanded)
+	}
 
 	protected render() {
-		return html`${this.renderOptions(this.data, this.treeNavigationIndices)}`
-	}
-
-	protected renderOptions(items: ListItem<T>[], indices: number[] | null): DirectiveResult {
-		let siblingsHaveIcon = items.some(item => item.icon)
-		let siblingsHaveChildren = items.some(item => item.children)
-
-		let options = repeat(items, (item, index) => {
-			let childIndices = indices?.[0] === index ? indices.slice(1) : null
-			return this.renderOption(item, siblingsHaveIcon, siblingsHaveChildren, childIndices)
-		})
-
-		return options
-	}
-
-	protected renderOption(item: ListItem<T>, siblingsHaveIcon: boolean, siblingsHaveChildren: boolean, indices: number[] | null) {
-		let subsection = item.children && item.opened ? html`
-			<div class="subsection">${this.renderOptions(item.children, indices)}</div>
-		` : null
-
-		let tip = item.tip ? tooltip(item.tip) : null
-
 		return html`
-			<div
-				class="option"
-				:class=${this.renderClassName(item)}
-				:class.arrow-selected=${indices?.length === 0}
-				@click.prevent=${() => this.onClickOption(item)}
-				${tip}
-
-			>
-				${item.children ? html`
-					<div class='toggle' @click.stop=${() => this.toggleOpened(item)}>
-						<f-icon .type=${item.opened ? 'triangle-down' : 'triangle-right'} />
-					</div>
-				` : siblingsHaveChildren ? html`
-					<div class='toggle' />
-				` : ''}
-
-				${siblingsHaveIcon ? html`
-					<div class='icon'>
-						<f-icon .type=${item.icon} />
-					</div>
-				` : ''}
-		
-				<div class="text">
-					${item.text}
-				</div>
-
-				${this.isSelected(item) ? html`<f-icon class="selected-icon" .type="checked" />` : ''}
-			</div>
-
-			${toggle(subsection, {properties: ['height', 'marginBottom', 'paddingBottom', 'opacity']})}
+		<template class="list">
+			${this.renderItems(this.data)}
+		</template>
 		`
 	}
 
-	protected onCreated() {
-		if (this.active) {
-			this.ensureActiveItemVisible()
-		}
+	protected renderItems(items: T[]): RenderResult[] {
+		let anySiblingsHaveChildren = items.some(item => item.children)
+
+		return items.map((item: T) => {
+			return this.renderItem(item, anySiblingsHaveChildren)
+		})
 	}
 
-	protected onReady() {
-		if (this.navigateFrom) {
-			let lastElement: HTMLElement | null = null
+	protected renderItem(item: T, anySiblingsHaveChildren: boolean): RenderResult {
+		let expanded = this.expanded.includes(item)
 
-			this.watchImmediately(() => {
-				if (typeof this.navigateFrom === 'function') {
-					return this.navigateFrom()
-				}
-				else {
-					return this.navigateFrom
-				}
-			}, navigateFrom => {
-				if (lastElement) {
-					off(lastElement, 'keydown', this.moveArrowSelectedByEvent as any, this)
-					off(lastElement, 'blur', this.onNavigateFromElementBlur as any, this)
-				}
+		return html`
+			<div
+				class="list-item"
+				:class=${this.renderActiveSelectedClassName(item)}
+				:class.arrow-selected=${item === this.keyNavigator.current}
+				@click.prevent=${() => this.onClickItem(item)}
+			>
+				<lu:if ${item.children && item.children.length > 0}>
+					<div class='list-toggle-placeholder'
+						@click.stop=${() => this.toggleExpanded(item)}
+					>
+						<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} />
+					</div>
+				</lu:if>
 
-				if (navigateFrom) {
-					on(navigateFrom, 'keydown', this.moveArrowSelectedByEvent as any, this)
-					on(navigateFrom, 'blur', this.onNavigateFromElementBlur as any, this)
-				}
+				<lu:elseif ${anySiblingsHaveChildren}>
+					<div class='list-toggle-placeholder' />
+				</lu:elseif>
 
-				lastElement = navigateFrom
-			})
-		}
+				<div class="list-text">
+					${this.renderer(item)}
+				</div>
+
+				<lu:if ${this.isSelected(item)}>
+					<Icon class="list-selected-icon" .type="checked" />
+				</lu:if>
+			</div>
+
+			<lu:if ${item.children && expanded}>
+				<div class="list-subsection">${this.renderItems(item.children!)}</div>
+			</lu:if>
+		`
 	}
 
-	/** Moves arrow selected by a keyboard event. */
-	protected moveArrowSelectedByEvent(event: KeyboardEvent) {
-		if (event.key === 'ArrowUp') {
-			this.watchingKeyBoardNavigation = true
-			this.treeNavigationIndices = TreeDataNavigator.moveArrowUp(this.data, this.treeNavigationIndices)
-		}
-		else if (event.key === 'ArrowDown') {
-			this.watchingKeyBoardNavigation = true
-			this.treeNavigationIndices = TreeDataNavigator.moveArrowDown(this.data, this.treeNavigationIndices)
-		}
-		else if (event.key === 'ArrowLeft') {
-			if (this.watchingKeyBoardNavigation) {
-				this.treeNavigationIndices = TreeDataNavigator.moveArrowLeft(this.data, this.treeNavigationIndices)
-			}
-		}
-		else if (event.key === 'ArrowRight') {
-			if (this.watchingKeyBoardNavigation && this.treeNavigationIndices) {
-				let item = TreeDataNavigator.getItemByIndices(this.data, this.treeNavigationIndices)
-				if (item && !item.opened && item.children) {
-					this.toggleOpened(item)
-					this.treeNavigationIndices = TreeDataNavigator.moveArrowRight(this.data, this.treeNavigationIndices)
-				}
-			}
-		}
-		else if (event.key === 'Enter') {
-			if (this.watchingKeyBoardNavigation && this.treeNavigationIndices) {
-				let el = this.el.querySelector(this.scopeClassName('.arrow-selected'))
-				if (el) {
-					let box = el.getBoundingClientRect()
-					let centerEl = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2) as HTMLElement
-					if (centerEl instanceof HTMLElement) {
-						centerEl.click()
-					}
-				}
-			}
-		}
-		else {
-			this.watchingKeyBoardNavigation = false
-			this.treeNavigationIndices = []
-		}
-	}
-
-	protected onNavigateFromElementBlur() {
-		this.watchingKeyBoardNavigation = false
-		this.treeNavigationIndices = []
-	}
-
-	protected renderClassName(item: ListItem<T>) {
-		if (this.type === 'navigation') {
-			if (this.active === item.value) {
+	protected renderActiveSelectedClassName(item: T) {
+		if (this.mode === 'navigation') {
+			if (this.navigated === item) {
 				return 'active'
 			}
 		}
@@ -351,65 +280,145 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		return ''
 	}
 
-	protected isSelected(item: ListItem<T>) {
-		return this.selected.includes(item.value!)
+	/** Whether an item has been selected.  */
+	protected isSelected(item: T): boolean {
+		return this.selected.includes(item)
 	}
 
-	protected onClickOption(this: List, item: ListItem<T>) {
-		if (item.value === undefined) {
-			this.toggleOpened(item)
+	/** Toggle expanded state. */
+	protected toggleExpanded(item: T) {
+		if (this.expanded.includes(item)) {
+			this.expanded.splice(this.expanded.indexOf(item), 1)
 		}
-		else if (this.type === 'navigation') {
-			this.active = item.value!
-			this.emit('navigate', item.value)
+		else {
+			this.expanded.push(item)
+		}
+	}
+
+	/** Do selection or navigation. */
+	protected onClickItem(this: List, item: T) {
+		if (this.mode === 'navigation') {
+			this.navigated = item
+			this.fire('navigate', item)
 		}
 		else if (this.selectable) {
 			if (this.multipleSelect) {
-				if (this.selected.includes(item.value!)) {
-					remove(this.selected, item.value)
+				if (this.selected.includes(item)) {
+					this.selected.splice(this.selected.indexOf(item), 1)
 				}
 				else {
-					add(this.selected, item.value)
+					this.selected.push(item)
 				}
 			}
 			else {
-				this.selected = [item.value!]
+				this.selected = [item]
 			}
 
-			this.emit('select', this.multipleSelect ? this.selected : this.selected[0])
+			this.fire('select', this.selected)
 		}
-		else {
-			this.emit('click', item.value)
+
+		this.fire('click', item)
+	}
+
+	/** On `navigated` property change. */
+	@immediateWatch('navigated')
+	protected onChangeNavigated() {
+		if (this.navigated) {
+			this.applyExpandedRecursively(this.data, this.navigated)
 		}
 	}
 
-	protected toggleOpened(item: ListItem<T>) {
-		if (item.children) {
-			item.opened = !item.opened
-		}
-	}
-
-	/** Open sub list recursively to make sure active item becomes visible. */
-	ensureActiveItemVisible() {
-		if (this.active) {
-			this.ensureActiveItemVisibleRecursively(this.data)
-		}
-	}
-
-	private ensureActiveItemVisibleRecursively(items: ListItem<T>[]) {
+	/** 
+	 * Make active item been expanded recursively.
+	 * Returns whether any of items has expanded descendants.
+	  */
+	private applyExpandedRecursively(items: T[], active: T): boolean {
 		return items.some(item => {
-			if (item.value === this.active) {
+			if (item === active) {
 				return true
 			}
 
 			if (item.children) {
-				let hasActiveChildItem = this.ensureActiveItemVisibleRecursively(item.children)
+				let hasActiveChildItem = this.applyExpandedRecursively(item.children, active)
 				if (hasActiveChildItem) {
-					item.opened = true
+					if (!this.expanded.includes(item)) {
+						this.expanded.push(item)
+					}
 				}
 			}
 
-			return item.opened
+			return false
 		})
+	}
+
+
+	private lastKeyComeFrom: HTMLElement | null = null
+
+	/** On `keyComeFrom` property change. */
+	@immediateWatch('keyComeFrom')
+	protected onKeyComeFromChange(keyComeFrom: HTMLElement | null) {
+		if (!keyComeFrom) {
+			return
+		}
+
+		if (this.lastKeyComeFrom) {
+			DOMEvents.off(this.lastKeyComeFrom, 'keydown', this.keyNavigateByEvent as any, this)
+			DOMEvents.off(this.lastKeyComeFrom, 'blur', this.onKeyComeFromBlur, this)
+		}
+
+		if (keyComeFrom) {
+			DOMEvents.on(keyComeFrom, 'keydown', this.keyNavigateByEvent as any, this)
+			DOMEvents.on(keyComeFrom, 'blur', this.onKeyComeFromBlur, this)
+		}
+
+		this.lastKeyComeFrom = keyComeFrom
+	}
+
+	/** Moves arrow selected by a keyboard event. */
+	protected keyNavigateByEvent(event: KeyboardEvent) {
+		let key = EventKeys.getShortcutKey(event)
+
+		// Active key navigation if not yet.
+		if (key === 'ArrowUp' || key === 'ArrowDown') {
+			this.inKeyNavigating = true
+		}
+		
+		if (key === 'ArrowUp') {
+			this.keyNavigator.moveUp()
+		}
+		else if (key === 'ArrowDown') {
+			this.keyNavigator.moveDown()
+		}
+		else if (key === 'ArrowLeft') {
+			if (this.inKeyNavigating) {
+				this.keyNavigator.moveLeft()
+			}
+		}
+		else if (key === 'ArrowRight') {
+			if (this.inKeyNavigating) {
+				let item = this.keyNavigator.current
+				if (item && !this.expanded.includes(item) && item.children) {
+					this.toggleExpanded(item)
+					this.keyNavigator.moveRight()
+				}
+			}
+		}
+		else if (key === 'Enter') {
+			if (this.inKeyNavigating) {
+				let item = this.keyNavigator.current
+				if (item) {
+					this.onClickItem(item)
+				}
+			}
+		}
+		else if (key === 'Escape') {
+			this.inKeyNavigating = false
+			this.keyNavigator.clear()
+		}
+	}
+
+	protected onKeyComeFromBlur() {
+		this.inKeyNavigating = false
+		this.keyNavigator.clear()
 	}
 }

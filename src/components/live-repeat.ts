@@ -15,7 +15,7 @@ import {html} from '@pucelle/lupos.js'
  * - `<LiveRepeat>` must in `absolute` position
  * - The scroller element must not in `static` position.
  */
-export class LiveRepeat<T = any, E = any> extends Repeat<T, E> {
+export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/**
 	* Rate of how many items to render compare with the minimum items that can cover scroll viewport.
@@ -121,12 +121,14 @@ export class LiveRepeat<T = any, E = any> extends Repeat<T, E> {
 	}
 	
 	/** After `coverageRate` property change. */
-	@effect protected applyCoverageRate() {
+	@effect
+	protected applyCoverageRate() {
 		this.renderer!.setCoverageRate(this.coverageRate)
 	}
 
 	/** After `data` property change. */
-	@effect protected applyDataChange() {
+	@effect
+	protected applyDataChange() {
 		this.renderer!.setDataCount(this.data.length)
 		this.willUpdate()
 	}

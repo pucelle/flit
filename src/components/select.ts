@@ -160,8 +160,8 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 		}
 	}
 
-	protected setOpened(opened: boolean) {
-		super.setOpened(opened)
+	protected onOpenedChange(opened: boolean) {
+		super.onOpenedChange(opened)
 
 		if (this.searchable && !opened && this.editing) {
 			this.endEditing()

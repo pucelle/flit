@@ -46,7 +46,10 @@ export class tooltip extends popup {
 		let rendered = typeof renderer === 'function' ? renderer() : renderer
 
 		return html`
-			<Tooltip .type=${this.options.type}>
+			<Tooltip
+				.type=${this.options.type}
+				@to-close=${this.hidePopupLater}
+			>
 				${rendered}
 			</Tooltip>
 		`

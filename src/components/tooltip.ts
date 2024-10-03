@@ -1,6 +1,6 @@
 import {Color} from '@pucelle/ff'
 import {css, html} from '@pucelle/lupos.js'
-import {theme} from '../style'
+import {theme, ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Icon} from './icon'
 
@@ -14,8 +14,15 @@ import {Icon} from './icon'
 export type TooltipType = 'default' | 'prompt' | 'error'
 
 
+export interface TooltipEvents {
+
+	/** Request to close tooltip. */
+	'to-close'(): void
+}
+
+
 /** `<Tooltip>` shows a short text or html type message beside it's trigger element. */
-export class Tooltip<E = {}> extends Popup<E> {
+export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 
 	static style() {
 		let {popupBackgroundColor, textColor, errorColor} = theme
@@ -29,32 +36,31 @@ export class Tooltip<E = {}> extends Popup<E> {
 		return css`
 		.tooltip{
 			display: flex;
-			font-size: ${theme.adjustFontSize(13)}px;
-			max-width: ${theme.adjustSize(220)}px;
-			padding: ${theme.adjustSize(4)}px ${theme.adjustSize(8)}px;
-			line-height: ${theme.adjustSize(20)}px;
+			max-width: 15em;
+			padding: 0.3em 0.6em;
+		}
 
-			&-text{
-				flex: 1;
-				min-width: 0;
+		.tooltip-text{
+			flex: 1;
+			min-width: 0;
+			line-height: ${20/28}em;
+		}
+
+		.tooltip-close{
+			display: flex;
+			width: 1lh;
+			height: 1lh;
+			margin-top: -0.3em;
+			margin-bottom: -0.3em;
+			margin-right: -0.6em;
+			cursor: pointer;
+
+			&:active{
+				transform: translateY(1px);
 			}
 
-			&-close{
-				display: flex;
-				width: ${theme.adjustSize(28)}px;
-				height: ${theme.adjustSize(28)}px;
-				margin-top: ${theme.adjustSize(-4)}px;
-				margin-bottom: ${theme.adjustSize(-4)}px;
-				margin-right: ${theme.adjustSize(-8)}px;
-				cursor: pointer;
-
-				&:active{
-					transform: translateY(1px);
-				}
-
-				.icon{
-					margin: auto;
-				}
+			.icon{
+				margin: auto;
 			}
 		}
 
@@ -79,6 +85,9 @@ export class Tooltip<E = {}> extends Popup<E> {
 		`
 	}
 
+	
+	size: ThemeSize = 'default'
+
 	/** 
 	 * Tooltip type:
 	 * 
@@ -90,7 +99,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 
 	protected render() {
 		return html`
-			<template class="popup tooltip type-${this.type}">
+			<template class="popup tooltip size-${this.size} type-${this.type}">
 				<lu:if ${this.triangle}>
 					<div class="triangle" />
 				</lu:if>
@@ -101,13 +110,17 @@ export class Tooltip<E = {}> extends Popup<E> {
 
 				<lu:if ${this.type === 'prompt'}>
 					<div class="tooltip-close"
-						@click=${this.close}
+						@click=${this.toClose}
 					>
-						<Icon .type="close" />
+						<Icon .type="close" .size="inherit" />
 					</div>
 				</lu:if>
 			</template>
 		`
+	}
+
+	protected toClose(this: Tooltip) {
+		this.fire('to-close')
 	}
 }
 
