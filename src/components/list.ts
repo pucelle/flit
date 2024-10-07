@@ -1,12 +1,33 @@
-import {css, Component, html, RenderResult} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {computed, DOMEvents, effect, EventKeys, immediateWatch} from '@pucelle/ff'
+import {DOMEvents, effect, EventKeys, immediateWatch} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
+import {tooltip} from '../bindings'
 
 
 /** Base type of list item. */
 export type ListItem<T> = {
+
+	/** List item content, can be a pre-generated template result. */
+	text?: string | TemplateResult
+
+	/** Plain text to do search and filter. */
+	searchText?: string
+
+	/** 
+	 * List item icon type.
+	 * Can be empty string to make it not show icon, but have a icon placeholder.
+	 */
+	icon?: string
+
+	/** 
+	 * Tooltip content to show as tooltip when mouse hover,
+	 * can be a pre-generated template result.
+	 */
+	tip?: string | TemplateResult
+
+	/** To render subsection list. */
 	children?: T[]
 }
 
@@ -14,15 +35,9 @@ export interface ListEvents<T extends ListItem<T>> {
 
 	/** 
 	 * Fires after selected items changed.
-	 * Only available for `selection` mode.
+	 * Only user interaction can cause `select` event get triggered.
 	 */
 	select: (selected: ReadonlyArray<T>) => void
-
-	/** 
-	 * Fires after navigated item changed.
-	 * Only available for `navigation` mode.
-	 */
-	navigate: (navigated: T) => void
 
 	/** Fires after clicked a list item. */
 	click: (clicked: T) => void
@@ -34,6 +49,9 @@ export interface ListEvents<T extends ListItem<T>> {
  * and supports sub list.
  * Otherwise it provides single or multiple selection,
  * and direction key navigation.
+ * 
+ * `<List .data=${[{text, icon?, tip?}]}>` or
+ * `<List .data=${[...]} .itemRenderer=${(item) => html`...`}>`
  */
 export class List<T extends ListItem<T> = any, E = {}> extends Component<E & ListEvents<T>> {
 
@@ -77,7 +95,7 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 				color: ${mainColor};
 			}
 
-			&.active{
+			&.navigated{
 				color: ${mainColor};
 
 				&::after{
@@ -107,13 +125,18 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 			width: 1.6em;
 		}
 
-		.list-text{
+		.list-icon{
+			display: flex;
+			width: 1.6em;
+		}
+
+		.list-content{
 			flex: 1;
 			min-width: 0;
-			padding-right: 4px;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
+			padding-right: 4px;
 		}
 
 		.list-selected-icon{
@@ -155,8 +178,8 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 	size: ThemeSize = 'default'
 
 	/** List mode:
-	 * - `selection`: provide single item or multiple items selection with a check icon.
-	 * - `navigation`: provide single item navigation with a vertical line icon on the right.
+	 * - `selection`: provide single item or multiple items selection with a check icon to indicate.
+	 * - `navigation`: provide single item navigation with a vertical line icon on the right to indicate.
 	 * Default value is `selection`.
 	 */
 	mode: 'selection' | 'navigation' = 'selection'
@@ -173,23 +196,27 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 	 */
 	multipleSelect: boolean = false
 
+	/** 
+	 * Whether can select directory.
+	 * If specifies as `false`, items have children will not be selected.
+	 * Default value is `true`.
+	 */
+	dirSelectable: boolean = true
+
 	/** Input data list. */
 	data: T[] = []
 
-	/** Renderer to render each item display content. */
-	renderer: (item: T) => RenderResult | string = JSON.stringify
+	/** 
+	 * Renderer to render each item display content.
+	 * If specifies, it overwrites default action of rendering item content.
+	 */
+	itemRenderer: ((item: T) => RenderResult | string | number) | null = null
 
 	/** Indicates current select values. */
 	selected: T[] = []
 
 	/** Currently expanded items. */
 	expanded: T[] = []
-
-	/** 
-	 * Latest navigated item for `navigation` mode.
-	 * Set this value will make the associated item become visible.
-	 */
-	navigated: T | null = null
 
 	/** 
 	 * If specified, when this element get focus,
@@ -206,12 +233,6 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 	/** Whether watching keyboard navigation events. */
 	private inKeyNavigating: boolean = false
 
-	/** Apply data and expanded to navigator. */
-	@effect
-	protected applyNavigator() {
-		this.keyNavigator.update(this.data, this.expanded)
-	}
-
 	protected render() {
 		return html`
 		<template class="list">
@@ -221,14 +242,14 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 	}
 
 	protected renderItems(items: T[]): RenderResult[] {
-		let anySiblingsHaveChildren = items.some(item => item.children)
+		let anySiblingHaveChildren = items.some(item => item.children)
 
 		return items.map((item: T) => {
-			return this.renderItem(item, anySiblingsHaveChildren)
+			return this.renderItem(item, anySiblingHaveChildren)
 		})
 	}
 
-	protected renderItem(item: T, anySiblingsHaveChildren: boolean): RenderResult {
+	protected renderItem(item: T, anySiblingHaveChildren: boolean): RenderResult {
 		let expanded = this.expanded.includes(item)
 
 		return html`
@@ -246,12 +267,20 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 					</div>
 				</lu:if>
 
-				<lu:elseif ${anySiblingsHaveChildren}>
+				<lu:elseif ${anySiblingHaveChildren}>
 					<div class='list-toggle-placeholder' />
 				</lu:elseif>
 
-				<div class="list-text">
-					${this.renderer(item)}
+				<lu:if ${item.icon !== undefined}>
+					<div class='text-list-icon'>
+						<lu:if ${item.icon}>
+							<Icon .type=${item.icon} />
+						</lu:if>
+					</div>
+				</lu:if>
+
+				<div class="list-content">
+					${this.renderItemContent(item)}
 				</div>
 
 				<lu:if ${this.isSelected(item)}>
@@ -267,8 +296,8 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 
 	protected renderActiveSelectedClassName(item: T) {
 		if (this.mode === 'navigation') {
-			if (this.navigated === item) {
-				return 'active'
+			if (this.isSelected(item)) {
+				return 'navigated'
 			}
 		}
 		else {
@@ -278,6 +307,36 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 		}
 		
 		return ''
+	}
+
+	/** 
+	 * Render item content, can be overwritten for sub classes
+	 * who know about more details about data items.
+	 */
+	protected renderItemContent(item: T) {
+		if (this.itemRenderer) {
+			return html`
+			<div class="list-content">
+				${this.itemRenderer(item)}
+			</div>
+			`
+		}
+		else {
+			return html`
+				<lu:if ${item.icon !== undefined}>
+					<div class='text-list-icon'>
+						<lu:if ${item.icon}>
+							<Icon .type=${item.icon} />
+						</lu:if>
+					</div>
+				</lu:if>
+				<div class="list-content text-list-content"
+					:?tooltip=${item.tip, item.tip}
+				>
+					${item.text}
+				</div>
+			`
+		}
 	}
 
 	/** Whether an item has been selected.  */
@@ -297,11 +356,7 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 
 	/** Do selection or navigation. */
 	protected onClickItem(this: List, item: T) {
-		if (this.mode === 'navigation') {
-			this.navigated = item
-			this.fire('navigate', item)
-		}
-		else if (this.selectable) {
+		if (this.selectable && (this.dirSelectable || !item.children)) {
 			if (this.multipleSelect) {
 				if (this.selected.includes(item)) {
 					this.selected.splice(this.selected.indexOf(item), 1)
@@ -320,12 +375,9 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 		this.fire('click', item)
 	}
 
-	/** On `navigated` property change. */
-	@immediateWatch('navigated')
-	protected onChangeNavigated() {
-		if (this.navigated) {
-			this.applyExpandedRecursively(this.data, this.navigated)
-		}
+	/** Expand item, and all of it's ancestors recursively. */
+	expandDeeply(item: T) {
+		this.applyExpandedRecursively(this.data, item)
 	}
 
 	/** 

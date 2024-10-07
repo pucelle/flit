@@ -83,8 +83,8 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 
 	protected onConnected() {
 		super.onConnected()
-
-		let group = RadioGroup.fromClosest(this.el.parentElement!)
+		
+		let group = RadioGroup.fromClosest(this.el.parentElement!, 3)
 		if (group) {
 			this.group = group
 			this.checked = this.group.value == this.value

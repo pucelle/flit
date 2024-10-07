@@ -1,35 +1,39 @@
-import {scrollToTop, getScrollDirection} from '@pucelle/ff'
-import {css, html, untilRenderComplete, define, TemplateResult, onRenderComplete} from '@pucelle/flit'
-import {theme} from '../style/theme'
+import {computed, DOMScroll, untilComplete} from '@pucelle/ff'
+import {css, html, TemplateResult} from '@pucelle/lupos.js'
+import {theme, ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
-import {ListItem} from './list'
+import {ListItem, List} from './list'
+import {Popup} from './popup'
+import {Icon} from './icon'
+import {popup} from '../bindings'
 
 
-interface SelectEvents<T> {
+interface SelectEvents<V> {
 
 	/** 
-	 * Trigger after selected value changed.
-	 * `value` parameter is an array filled with selected values when `multiple` is `true`.
+	 * Fire after selected value changed.
+	 * Only user interaction can cause `change` event get triggered.
 	 */
-	change: (value: T | T[]) => void
+	change: (value: V[]) => void
 }
 
 
-/** `<f-select>` works just like `<select>`, you can select one or multiple option from it. */
-@define('f-select')
-export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
+/** 
+ * `<Select>` works just like `<select>` element, you can select one or multiple option from it.
+ * `<Select .data=${[{text, icon?, tip?}]} .value=${[ItemOfData]}>`
+ */
+export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & SelectEvents<V>> {
 	
 	static style() {
-		let {mainColor, adjust, borderColor, popupShadowBlurRadius, fieldBackgroundColor, popupShadowColor} = theme
+		let {mainColor, borderColor, popupShadowBlurRadius, fieldBackgroundColor, popupShadowColor} = theme
 
 		return css`
-		:host{
+		.select{
 			display: inline-flex;
 			vertical-align: top;
-			width: ${adjust(200)}px;
-			height: ${adjust(28)}px;
+			width: calc(20em + 20px);
+			height: 1lh;
 			background: ${fieldBackgroundColor};
-			line-height: ${adjust(28)}px;
 			justify-content: space-between;
 			align-items: center;
 			cursor: pointer;
@@ -38,25 +42,25 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 			&:hover, &.opened{
 				box-shadow: inset 0 -1px 0 0 ${mainColor};
 
-				.icon{
+				.select-down-icon{
 					color: ${mainColor};
 				}
 			}
 
-			&.not-inputable input{
+			&.cant-input input{
 				cursor: pointer;
 			}
 		}
 
-		.down-icon{
+		.select-down-icon{
 			margin-left: 3px;
 			margin-right: 4px;
 		}
 	
-		.display, .input{
+		.select-display, .select-input{
 			flex: 1;
 			min-width: 0;
-			padding: 0 0 0 ${adjust(8)}px;
+			padding: 0 0 0 0.57em;
 			height: 100%;
 			border: none;
 			background: transparent;
@@ -70,67 +74,46 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 			}
 		}
 
-		.placeholder{
+		.select-placeholder{
 			opacity: 0.5;
 		}
 	
-		.popup{
+		.select-popup{
 			padding: 0;
 			border-radius: 0;
 			filter: none;
 			box-shadow: 0 1px ${popupShadowBlurRadius}px ${popupShadowColor};
 		}
 
-		.list{
+		.select-list{
 			border-bottom: none;
 
-			.option__f-list{
-				padding-left: ${adjust(8)}px;
+			.list-item{
+				padding-left: 0.57em;
 				border-top: none;
 			}
 		}
 
-		.selected-icon{
+		.select-selected-icon{
 			margin-right: -4px;
 		}
-		`.extends(super.style())
+		`
 	}
 
-	readonly refElements!: {
 
-		/** The element of popup component. */
-		popup: HTMLElement
-
-		/** Input element to input text to filter list items. */
-		input: HTMLInputElement
-
-		/** List element. */
-		list: HTMLElement
-	}
-
-	/** Inputted text for filtering list items. */
-	protected inputted: string = ''
-
-	/** Is in editing mode, in which you can input text to filter list items. */
-	protected editing: boolean = false
-
-	/** Trigger event type. Default value is `click`. */
+	size: ThemeSize = 'default'
 	trigger: 'click' | 'contextmenu' = 'click'
-
+	gap: number | number[] = 0
+	
+	
 	/** Whether shows triangle. Default value is `false`. */
 	triangle: boolean = false
 
 	/** 
-	 * Align margin betweens trigger element and popup content.
-	 * Default value is '0' in pixels.
-	 */
-	alignMargin: number | number[] = 0
-
-	/** 
-	 * Whether can select multiple items, only for type `selection`.
+	 * Whether can select multiple items.
 	 * Default value is `false`.
 	 */
-	multipleSelect: boolean = false
+	multiple: boolean = false
 
 	/** Whether can input to search from all option text. */
 	searchable: boolean = false
@@ -138,65 +121,89 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 	/** Placeholder for search input. */
 	placeholder: string = ''
 
-	/** Input data list. */
-	data: ListItem<T>[] = []
-
-	/** Current selected value or multiple values when `multipleSelect` is `true`. */
-	value: T | T[] | null = null
+	/** Input text data list. */
+	data: V[] = []
+	
+	/** Current selected value or values. */
+	value: V[] = []
 
 	/** 
-	 * Whether close pop-up after selected.
-	 * Only works when doing single-selection.
+	 * Whether close pop-up content after selected any item.
+	 * If omitted as `null`, equals `true` when single selection, `false` otherwise.
 	 */
-	hideAfterSelected: boolean = true
+	hideAfterSelected: boolean | null = null
 
-	protected onCreated() {
-		this.initializeStartValue()
-	}
 
-	protected initializeStartValue() {
-		if (this.multipleSelect && !Array.isArray(this.value)) {
-			this.value = []
-		}
-	}
+	/** The element of popup component. */
+	protected popupEl: HTMLElement | null = null
+
+	/** Input element to input text to filter list items. */
+	protected inputEl: HTMLInputElement | null = null
+
+	/** List element. */
+	protected listEl: HTMLElement | null = null
+
+	/** Inputted text at input element to filter list items. */
+	protected inputtedText: string = ''
+
+	/** Whether in editing mode, in which mode you can input text to filter list items. */
+	protected editing: boolean = false
+
 
 	protected onOpenedChange(opened: boolean) {
 		super.onOpenedChange(opened)
 
-		if (this.searchable && !opened && this.editing) {
+		// End editing after closed popup.
+		if (!opened && this.editing) {
 			this.endEditing()
 		}
 	}
 
+	protected onWillAlign() {
+		this.syncPopupWidth()
+	}
+
+	/** Sync popup width with select element. */
+	protected syncPopupWidth() {
+		if (this.popupEl) {
+			this.popupEl.style.minWidth = String(this.el.offsetWidth) + 'px'
+		}
+	}
+
+
 	protected render() {
 		return html`
-			<template :class.not-inputable=${!this.searchable}>
+			<template :class.opened=${this.opened}
+				:class.cant-input=${!this.searchable}
+				:popup=${this.getPopupOptions()}
+				:ref.binding=${this.refBinding.bind(this)}
+			>
 				${this.renderDisplayOrInput()}
+				<Icon class="dropdown-icon" .type="down" .size="inherit" />
 			</template>
-		`.extends(super.render())
+		`
 	}
 
 	protected renderDisplayOrInput(): TemplateResult | string | number {
 		if (this.editing) {
 			return html`
-				<input type="text"
-					class="input"
-					:refElement="input"
-					.value=${this.inputted}
+				<input type="text" autofocus
+					class="select-input"
+					:ref=${this.inputEl}
+					.value=${this.inputtedText}
 					.placeholder=${this.placeholder}
-					?readonly=${!this.editing}
 					@click=${this.onClick}
 					@input=${this.onInput}
 				>
 			`
 		}
 		else {
-			let text = this.renderCurrentDisplay()
+			let text = this.renderDisplay()
 
 			return html`
 				<div
-					class="input"
-					:class.placeholder=${!text}
+					class="select-display"
+					:class.select-placeholder=${!text}
 					@click=${this.onClick}
 				>
 					${text || this.placeholder}
@@ -206,55 +213,34 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 	}
 
 	protected renderPopup() {
-		let data = this.getDisplayData()
+		let data = this.getFilteredData()
 
 		return html`
-			<f-popup
-				class="popup"
-				:refElement="popup"
-				.triangle="false"
-			>
-				<f-list class="list"
-					:refElement="list"
-					.type="selection"
+			<Popup class="popup" .triangle=${false}>
+				<List class="select-list"
+					:ref=${this.listEl}
+					.mode="selection"
 					.selectable
 					.data=${data}
-					.multipleSelect=${this.multipleSelect}
-					.selected=${this.multipleSelect ? this.value : [this.value]}
-					.navigateFrom=${() => this.refElements.input}
-					@@select=${this.onSelected}
+					.selected=${this.value}
+					.multiple=${this.multiple}
+					.keyComeFrom=${() => this.inputEl}
+					@select=${this.onSelected}
 				/>
-			</f-popup>
+			</Popup>
 		`
 	}
 
-	protected renderCurrentDisplay(): string | number | TemplateResult {
-		if (this.multipleSelect) {
-			let displays: (string | number)[] = []
-
-			for (let {value, text} of this.data) {
-				if ((this.value! as T[]).includes(value!)) {
-					displays.push(text.toString())
-				}
-			}
-
-			return displays.join('; ')
-		}
-		else {
-			for (let {value, text} of this.data) {
-				if (this.value === value) {
-					return text
-				}
-			}
-
-			return ''
-		}
+	/** Render text display to represent currently selected. */
+	protected renderDisplay(): string {
+		let displays = this.value.map(item => String(item.text))
+		return displays.join('; ')
 	}
 
-	protected getDisplayData(): Iterable<ListItem<T>> {
-		if (this.searchable && this.inputted) {
-			let lowerSearchWord = this.inputted.toLowerCase()
-			let filteredData: ListItem<T>[] = []
+	protected getFilteredData(): V[] {
+		if (this.searchable && this.inputtedText) {
+			let lowerSearchWord = this.inputtedText.toLowerCase()
+			let filteredData: V[] = []
 
 			for (let item of this.data) {
 				let searchText = item.searchText ?? String(item.text).toLowerCase()
@@ -276,66 +262,49 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 		}
 	}
 
-	protected onSelected(this: Select, selected: T | T[]) {
-		if (this.multipleSelect) {
-			this.value = selected as T[]
-		}
-		else {
-			this.value = selected as T
+	protected onSelected(this: Select, selected: V[]) {
+		this.value = selected
 
-			if (this.hideAfterSelected) {
-				this.hidePopup()
-			}
+		let hideAfterSelected = this.hideAfterSelected ?? !this.multiple
+		if (hideAfterSelected) {
+			this.opened = false
 		}
 		
-		this.emit('change', this.value!)
+		this.fire('change', this.value)
 	}
 
 	protected async startEditing() {
 		this.editing = true
-		await untilRenderComplete()
-		this.refElements.input.focus()
 	}
 
 	protected endEditing() {
 		this.editing = false
-		this.inputted = ''
+		this.inputtedText = ''
 	}
 
-	protected onPopupOpened() {
-		onRenderComplete(() => {
-			this.mayFocusInput()
-			this.scrollToViewSelectedOption()
-		})
+	protected async onPopupOpened() {
+		await untilComplete()
+		this.mayFocusInput()
+		this.scrollToViewSelectedItem()
 	}
 
 	protected mayFocusInput() {
-		if (this.editing && this.refElements.input) {
-			this.refElements.input.focus()
+		if (this.editing && this.inputEl) {
+			this.inputEl.focus()
 		}
 	}
 	
-	protected onWillAlign() {
-		this.syncPopupWidth()
-	}
-
-	protected syncPopupWidth() {
-		if (this.refElements.popup) {
-			this.refElements.popup.style.minWidth = String(this.el.offsetWidth) + 'px'
-		}
-	}
-
-	protected scrollToViewSelectedOption() {
-		if (this.refElements.list) {
-			let selectedOption = this.refElements.list.querySelector('[class*=selected]') as HTMLElement | null
-			if (selectedOption && getScrollDirection(this.refElements.list) === 'y') {
-				scrollToTop(selectedOption)
+	protected scrollToViewSelectedItem() {
+		if (this.listEl) {
+			let selectedItem = this.listEl.querySelector('[class*=selected]') as HTMLElement | null
+			if (selectedItem && DOMScroll.getSizedOverflowDirection(this.listEl) === 'vertical') {
+				DOMScroll.scrollToTop(selectedItem)
 			}
 		}
 	}
 
 	protected onInput() {
-		this.inputted = (this.refElements.input as HTMLInputElement).value
-		this.showPopup()
+		this.inputtedText = this.inputEl!.value
+		this.opened = true
 	}
 }

@@ -4,10 +4,18 @@ import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
 import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-trigger-binder'
+export {TriggerType}
 
 
 /** Options for `:popup` */
 export interface PopupOptions extends AlignerOptions {
+
+	/** 
+	 * How the popup content would align with the trigger element.
+	 * Reference to `AlignerPosition` type for more details.
+	 * Default value is `b`, means align to the bottom position of trigger element.
+	 */
+	alignPosition: AlignerPosition
 
 	/** 
 	 * If specified, all the `:popup` binding with same key will
@@ -37,13 +45,6 @@ export interface PopupOptions extends AlignerOptions {
 	 * If omit, use current element to align to.
 	 */
 	alignTo: string | ((trigger: Element) => Element)
-
-	/** 
-	 * How the popup content would align with the trigger element.
-	 * Reference to `AlignerPosition` type for more details.
-	 * Default value is `b`, means align to the bottom position of trigger element.
-	 */
-	alignPosition: AlignerPosition
 
 	/** 
 	 * Delay showing in milliseconds, such that mouse hover unexpected will not cause layer popup.
@@ -151,7 +152,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	protected rawOptions: Partial<PopupOptions> | null = null
 	protected options: PartialKeys<PopupOptions, 'key' | 'alignTo' | 'transition'> = DefaultPopupOptions
-	protected renderer: RenderResultRenderer | null = null
+	protected renderer: RenderResultRenderer = null as any
 
 	/** Used to watch rect change after popup opened. */
 	protected unwatchRect: (() => void) = noop
@@ -336,7 +337,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 
-	update(renderer: RenderResultRenderer | null, options: Partial<PopupOptions> = {}) {
+	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
 		this.renderer = renderer
 		this.rawOptions = options
 		this.options = {...DefaultPopupOptions, ...options}

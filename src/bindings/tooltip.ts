@@ -33,16 +33,13 @@ const DefaultTooltipOptions: PartialKeys<TooltipOptions, 'key' | 'alignTo'> = {
  */
 export class tooltip extends popup {
 
-	protected rawRenderer: string | RenderResultRenderer | null = null
 	protected options: PartialKeys<TooltipOptions, 'key' | 'alignTo' | 'transition'> = DefaultTooltipOptions
 
-	update(rawRenderer: string | RenderResultRenderer | null, options: Partial<TooltipOptions> = {}) {
-		this.rawRenderer = rawRenderer
-		super.update(rawRenderer ? this.popupRenderer.bind(this) : null, options)
+	update(renderer: string | RenderResultRenderer, options: Partial<TooltipOptions> = {}) {
+		super.update(this.popupRenderer.bind(this, renderer), options)
 	}
 
-	protected popupRenderer() {
-		let renderer = this.rawRenderer
+	protected popupRenderer(renderer: string | RenderResultRenderer) {
 		let rendered = typeof renderer === 'function' ? renderer() : renderer
 
 		return html`

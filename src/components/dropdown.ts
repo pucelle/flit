@@ -3,6 +3,8 @@ import {theme} from '../style'
 import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'
+import {TriggerType} from '../bindings'
+import {AlignerPosition, TransitionResult} from '@pucelle/ff'
 
 
 /** `<Dropdown>` for containing both trigger element and popup content.  */
@@ -29,24 +31,24 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 
 	// When undefined, use default `:popup` options.
 
-	alignPosition = undefined
-	gap = undefined
-	stickToEdges = undefined
-	canSwapPosition = undefined
-	canShrinkOnY = undefined
-	fixTriangle = undefined
+	alignPosition: AlignerPosition | undefined = undefined
+	gap: number | number[] | undefined = undefined
+	stickToEdges: boolean | undefined = undefined
+	canSwapPosition: boolean | undefined = undefined
+	canShrinkOnY: boolean | undefined = undefined
+	fixTriangle: boolean | undefined = undefined
 
-	key = undefined
-	alignTo = undefined
-	trigger = undefined
-	showDelay = undefined
-	hideDelay = undefined
-	transition = undefined
-	showImmediately = undefined
-	autoFocus = undefined
-	pointable = undefined
-	cacheable = undefined
-	keepVisible = undefined
+	key: string | undefined = undefined
+	alignTo: string | ((trigger: Element) => Element) | undefined = undefined
+	trigger: TriggerType | undefined = undefined
+	showDelay: number | undefined = undefined
+	hideDelay: number | undefined = undefined
+	transition: TransitionResult | undefined = undefined
+	showImmediately: boolean | undefined = undefined
+	autoFocus: boolean | undefined = undefined
+	pointable: boolean | undefined = undefined
+	cacheable: boolean | undefined = undefined
+	keepVisible: boolean | undefined = undefined
 
 	/** 
 	 * A fixed render result to render popup content,
@@ -70,10 +72,10 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	set opened(opened: boolean) {
 		if (opened !== this.opened) {
 			if (opened) {
-				this.binding?.showPopupLater()
+				this.binding?.showPopup()
 			}
 			else {
-				this.binding?.hidePopupLater()
+				this.binding?.hidePopup()
 			}
 		}
 	}
@@ -127,13 +129,14 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 		}
 	}
 
+	/** Ref popup binding and bind events. */
 	protected refBinding(binding: popup) {
 		this.binding = binding
 		this.binding.on('opened-change', this.onOpenedChange, this)
 		this.binding.on('will-align', this.onWillAlign, this)
 	}
 
-	/** After binding opened state change. */
+	/** After popup binding opened state change. */
 	protected onOpenedChange(_opened: boolean) {}
 
 	/** Before will align popup content. */

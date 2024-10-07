@@ -9,8 +9,8 @@ export type ListItem<T> = {
 /** It help to control key navigation inside a tree-like list data. */
 export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 
-	private data: T[] = []
-	private expanded: T[] = []
+	private data: ReadonlyArray<T> = []
+	private expanded: ReadonlyArray<T> = []
 
 	/** 
 	 * Navigation path, include active item of each depth level.
@@ -32,12 +32,11 @@ export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 	update(data: T[], expanded: T[]) {
 		this.data = data
 		this.expanded = expanded
-		this.correctPath()
 	}
 
 	/** Correct path by current data and expanded. */
 	private correctPath() {
-		let items: T[] | undefined = this.data
+		let items: ReadonlyArray<T> = this.data
 
 		for (let i = 0; i < this.path.length; i++) {
 			let {item, index} = this.path[i]
@@ -57,11 +56,11 @@ export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 				break
 			}
 
-			items = item.children
-
-			if (!items) {
+			if (!item.children) {
 				break
 			}
+
+			items = item.children
 		}
 	}
 
@@ -75,7 +74,7 @@ export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 	}
 
 	/** Get siblings of currently active item. */
-	private getCurrentSiblings(): T[] {
+	private getCurrentSiblings(): ReadonlyArray<T> {
 		if (this.path.length > 1) {
 			return this.path[this.path.length - 2].item.children!
 		}
