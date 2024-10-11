@@ -50,6 +50,7 @@ export interface ListEvents<T extends ListItem<T>> {
  * Otherwise it provides single or multiple selection,
  * and direction key navigation.
  * 
+ * Use it like:
  * `<List .data=${[{text, icon?, tip?}]}>` or
  * `<List .data=${[...]} .itemRenderer=${(item) => html`...`}>`
  */
@@ -330,6 +331,7 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 						</lu:if>
 					</div>
 				</lu:if>
+				
 				<div class="list-content text-list-content"
 					:?tooltip=${item.tip, item.tip}
 				>

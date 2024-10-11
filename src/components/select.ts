@@ -1,4 +1,4 @@
-import {computed, DOMScroll, untilComplete} from '@pucelle/ff'
+import {DOMScroll, untilComplete} from '@pucelle/ff'
 import {css, html, TemplateResult} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
@@ -20,7 +20,11 @@ interface SelectEvents<V> {
 
 /** 
  * `<Select>` works just like `<select>` element, you can select one or multiple option from it.
+ * 
+ * Use it like:
  * `<Select .data=${[{text, icon?, tip?}]} .value=${[ItemOfData]}>`
+ * 
+ * `<Select>` doesn't support custom item renderer, you may extend it to a new class to implement.
  */
 export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & SelectEvents<V>> {
 	

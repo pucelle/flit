@@ -1,6 +1,6 @@
 node_modules
 /out
-/docs
+/docs/js
 /dist
 /tests/**/*.js
 /tests/**/*.js.map

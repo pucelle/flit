@@ -1,0 +1,104 @@
+.banner{
+	position: relative;
+	height: 400px;
+	background: #6e90ee url('../img/banner.jpg') center top / cover;
+	overflow: hidden;
+
+	h1{
+		position: relative;
+		color: #fff;
+		text-align: center;
+		line-height: 58px;
+		font-size: 28px;
+		margin-top: 102px;
+		
+		&::before{
+			content: '';
+			display: inline-block;
+			vertical-align: top;
+			margin-top: -5px;
+			margin-right: 10px;
+			width: 63px;
+			height: 58px;
+			background: url('../img/logo.svg');
+		}
+	}
+
+	h2{
+		text-align: center;
+		color: #fff;
+		font-size: 60px;
+		line-height: 60px;
+		margin-top: 43px;
+	}
+
+	h3{
+		text-align: center;
+		color: #fff;
+		opacity: 0.8;
+		font-size: 28px;
+		line-height: 28px;
+		margin-top: 20px;
+	}
+}
+
+
+flit-preview{
+	display: block;
+	padding-bottom: 40px;
+
+	.wrapper{
+		width: 1110px;
+		max-width: 96%;
+		margin: 0 auto;
+	}
+
+	section{
+		margin: 32px 0;
+	}
+
+	h2{
+		margin: 48px 0 32px 0;
+	}
+
+	h3{
+		margin: 40px 0 16px 0;
+	}
+
+	h4{
+		margin: 16px 0 8px 0;
+	}
+
+	header{
+		opacity: 0.75;
+	}
+}
+
+
+.theme > div{
+	display: flex;
+}
+
+.theme > div > span{
+	width: 150px;
+	text-align: right;
+	padding-right: 10px;
+}
+
+f-radio{
+	margin-right: 10px;
+}
+
+f-checkbox{
+	margin-right: 10px;
+}
+
+.row{
+	display: flex;
+	margin: 10px;
+}
+
+.row > div{
+	flex: 1;
+	padding: 0 10px;
+}

@@ -16,19 +16,23 @@
 	"scripts": {
 		"build": "tspc",
 		"watch": "tspc -w",
-		"test": "jest",
+		"build-docs": "cd docs && webpack",
+		"watch-docs": "cd docs && webpack --watch",
+		"start-docs": "cd docs && webpack serve --open",
 		"prepublish": "tspc"
 	},
 	"dependencies": {
 		"@pucelle/ff": "^2.0.0",
-		"@pucelle/lupos.js": "^1.0.0",
-		"@pucelle/lupos.compiler": "^1.0.0"
+		"@pucelle/lupos.compiler": "^1.0.0",
+		"@pucelle/lupos.js": "^1.0.0"
 	},
 	"devDependencies": {
-		"@types/jest": "^29.5.12",
-		"jest": "^29.7.0",
-		"jest-environment-jsdom": "^29.7.0",
+		"fork-ts-checker-webpack-plugin": "^9.0.2",
+		"svg-inline-loader": "^0.8.2",
+		"ts-loader": "^9.5.1",
 		"ts-patch": "^3.2.1",
-		"typescript": "^5.6.2"
+		"typescript": "^5.6.2",
+		"webpack": "^5.95.0",
+		"webpack-dev-server": "^5.1.0"
 	}
 }
