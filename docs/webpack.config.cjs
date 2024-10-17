@@ -3,11 +3,10 @@ const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 
 module.exports = {
-	entry: path.resolve(__dirname, 'index.ts'),
+	entry: path.join(__dirname, 'index.ts'),
 	mode: 'development',
 	output: {
-		filename: 'bundle.js',
-		path: path.resolve(__dirname, 'js'),
+		filename: 'js/bundle.js',
 	},
 	optimization: {},
 	plugins: [
@@ -28,9 +27,10 @@ module.exports = {
 		rules: [
 			{
 				test: /\.svg$/,
-				loader: 'svg-inline-loader',
+				loader: '@pucelle/webpack-svg-loader',
 				options: {
-					removingTags: ['title', 'desc', 'defs', 'style'],
+					cut: true,
+					mainColor: '#000000',
 				}
 			},
 

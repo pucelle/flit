@@ -12,7 +12,7 @@ html{
 	height: 100%;
 	tab-size: 4;
 	font-size: 14px;
-	line-height: 28px;
+	line-height: 1.6;
 	-webkit-text-size-adjust: none;
 }
 
@@ -90,4 +90,17 @@ table{
 ::-webkit-scrollbar{
 	height: 10px;
 	width: 10px;
+	background: #e6e6e6;
+}
+
+::-webkit-scrollbar-thumb{
+	background: #c1c1c1;
+}
+
+::-webkit-scrollbar-thumb:hover{
+	background: #a8a8a8;
+}
+
+::-webkit-scrollbar-thumb:active{
+	background: #787878;
 }

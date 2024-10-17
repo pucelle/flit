@@ -1,3 +1,4 @@
+///<reference types="@pucelle/webpack-svg-loader" />
 import checkboxChecked from '../../assets/icons/checkbox-checked.svg'
 import checkboxIndeterminate from '../../assets/icons/checkbox-indeterminate.svg'
 import checkboxUnchecked from '../../assets/icons/checkbox-unchecked.svg'
@@ -23,10 +24,17 @@ import warning from '../../assets/icons/warning.svg'
 import refresh from '../../assets/icons/refresh.svg'
 
 
+interface IconItem {
+	id: string
+	viewBox?: [number, number, number, number]
+	code: string
+}
+
+
 class SVGIcons {
 
 	/** Map of `id -> code`. */
-	private readonly map: Map<string, string> = new Map()
+	private readonly map: Map<string, IconItem> = new Map()
 
 	/** Get all icon ids. */
 	get allIds(): string[] {
@@ -34,14 +42,14 @@ class SVGIcons {
 	}
 
 	/** Add imported icon items. */
-	add(items: Record<string, string>) {
-		for (let [id, code] of Object.entries(items)) {
-			this.map.set(id, code)
+	add(...items: IconItem[]) {
+		for (let item of items) {
+			this.map.set(item.id, item)
 		}
 	}
 	
 	/** Get svg icon code by id. */
-	get(id: string): string {
+	get(id: string): IconItem {
 		return this.map.get(id)!
 	}
 
@@ -62,28 +70,28 @@ class SVGIcons {
  */
 export const icons = new SVGIcons()
 
-icons.add({
-	'checkbox-checked': checkboxChecked,
-	'checkbox-indeterminate': checkboxIndeterminate,
-	'checkbox-unchecked': checkboxUnchecked,
-	'checked': checked,
-	'close': close,
-	'confirm': confirm,
-	'down': down,
-	'error': error,
-	'info': info,
-	'love': love,
-	'order-asc': orderAsc,
-	'order-default': orderDefault,
-	'order-desc': orderDesc,
-	'radio-checked': radioChecked,
-	'radio-unchecked': radioUnchecked,
-	'right': right,
-	'search': search,
-	'success': success,
-	'tips': tips,
-	'triangle-down': triangleDown,
-	'triangle-right': triangleRight,
-	'warning': warning,
-	'refresh': refresh,
-})
+icons.add(
+	checkboxChecked,
+	checkboxIndeterminate,
+	checkboxUnchecked,
+	checked,
+	close,
+	confirm,
+	down,
+	error,
+	info,
+	love,
+	orderAsc,
+	orderDefault,
+	orderDesc,
+	radioChecked,
+	radioUnchecked,
+	right,
+	search,
+	success,
+	tips,
+	triangleDown,
+	triangleRight,
+	warning,
+	refresh,
+)

@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilComplete, LayoutWatcher, DOMUtils, noop, DOMEvents} from '@pucelle/ff'
+import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, noop, DOMEvents, ObjectUtils} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -145,17 +145,17 @@ export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> =
 export class popup extends EventFirer<PopupBindingEvents> implements Binding, Part {
 
 	readonly el: HTMLElement
+	readonly context: any
 
 	protected readonly state: PopupState
 	protected readonly binder: PopupTriggerBinder
-	protected readonly transition: Transition
 
-	protected rawOptions: Partial<PopupOptions> | null = null
+	protected transition: Transition | null = null
 	protected options: PartialKeys<PopupOptions, 'key' | 'alignTo' | 'transition'> = DefaultPopupOptions
 	protected renderer: RenderResultRenderer = null as any
 
 	/** Used to watch rect change after popup opened. */
-	protected unwatchRect: (() => void) = noop
+	protected unwatchRect: (() => void) | null = null
 
 	/** Help to update popup content by newly rendered result. */
 	protected rendered: RenderedComponentLike | null = null
@@ -169,13 +169,13 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** Whether have prevent hiding popup content. */
 	protected preventedHiding: boolean = false
 
-	constructor(el: Element) {
+	constructor(el: Element, context: any) {
 		super()
 
 		this.el = el as HTMLElement
+		this.context = context
 		this.binder = new PopupTriggerBinder(this.el)
 		this.state = new PopupState()
-		this.transition = new Transition(this.el)
 
 		this.initEvents()
 	}
@@ -205,7 +205,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		this.state.clear()
 		this.binder.unbindLeave()
-		this.unwatchRect()
+		this.unwatchRect?.()
 		this.preventedHiding = false
 	}
 
@@ -339,8 +339,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
 		this.renderer = renderer
-		this.rawOptions = options
-		this.options = {...DefaultPopupOptions, ...options}
+		this.options = ObjectUtils.assignNonExisted(options, DefaultPopupOptions)
 
 		// If popup has popped-up, should also update it.
 		if (this.state.opened) {
@@ -364,7 +363,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		// Play leave transition if need.
 		if (this.options.transition) {
-			let finish = await this.transition.leave(this.options.transition)
+			let finish = await this.transition!.leave(this.options.transition)
 			if (finish) {
 				this.popup?.remove()
 			}
@@ -375,14 +374,14 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		this.binder.unbindLeave()
-		this.unwatchRect()
+		this.unwatchRect?.()
 		this.preventedHiding = false
 	}
 
 	/** Update popup content, if haven't rendered, render it firstly. */
 	protected async updatePopup() {
 		this.updateRenderedProperty()
-		await untilComplete()
+		await untilUpdateComplete()
 
 		// May soon become un-opened.
 		if (!this.state.opened) {
@@ -427,7 +426,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		if (!this.rendered) {
-			this.rendered = render(this.renderer!)
+			this.rendered = render(this.renderer!, this.context)
+			this.rendered.connectManually()
 		}
 	}
 
@@ -435,11 +435,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected updatePopupProperty(popup: Popup) {
 		this.binder.bindLeave(this.options.hideDelay, popup.el)
 		this.popup = popup
+		this.transition = new Transition(popup.el)
 	}
 
 	/** Append popup element into document. */
 	protected appendPopup() {
-		let inDomAlready = !!this.popup!.el.ownerDocument
+		let inDomAlready = document.contains(this.popup!.el)
 
 		// Although in document, need append too.
 		this.popup!.applyAppendTo()
@@ -449,28 +450,32 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		if (!aligned) {
 			return
 		}
-
+		
 		this.mayGetFocus()
 
 		// Play enter transition.
 		if (!inDomAlready && this.options.transition) {
-			this.transition.enter(this.options.transition)
+			this.transition!.enter(this.options.transition)
 		}
 
 		// Watch it's rect changing.
-		this.unwatchRect = LayoutWatcher.watch(this.el, 'rect', this.onTriggerRectChanged.bind(this))
+		if (!this.unwatchRect) {
+			this.unwatchRect = LayoutWatcher.watch(this.el, 'rect', this.onTriggerRectChanged.bind(this))
+		}
 	}
 
 	/** After trigger element position changed. */
-	protected onTriggerRectChanged() {
+	protected async onTriggerRectChanged() {
+
+		// Avoid synchronous watching and updating cause infinite loop.
+		await untilUpdateComplete()
+
 		if (DOMUtils.isRectIntersectWithViewport(this.el.getBoundingClientRect())) {
 			this.alignPopup()
 		}
 		else {
 			this.hidePopup()
 		}
-
-		this.unwatchRect = noop
 	}
 
 	/** Align popup content, returns whether align successfully. */
@@ -513,11 +518,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
 
 		return {
-			gap: this.rawOptions?.gap ?? this.popup!.defaultPopupOptions.gap ?? DefaultPopupOptions.gap,
-			stickToEdges: this.rawOptions?.stickToEdges ?? this.popup!.defaultPopupOptions.stickToEdges ?? DefaultPopupOptions.stickToEdges,
-			canSwapPosition: this.rawOptions?.canSwapPosition ?? this.popup!.defaultPopupOptions.canSwapPosition ?? DefaultPopupOptions.canSwapPosition,
-			canShrinkOnY: this.rawOptions?.canShrinkOnY ?? this.popup!.defaultPopupOptions.canShrinkOnY ?? DefaultPopupOptions.canShrinkOnY,
-			fixTriangle: this.rawOptions?.fixTriangle ?? this.popup!.defaultPopupOptions.fixTriangle ?? DefaultPopupOptions.fixTriangle,
+			gap: this.options?.gap,
+			stickToEdges: this.options?.stickToEdges,
+			canSwapPosition: this.options?.canSwapPosition,
+			canShrinkOnY: this.options?.canShrinkOnY,
+			fixTriangle: this.options?.fixTriangle,
 			triangle: triangle ?? undefined,
 		}
 	}
@@ -560,9 +565,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		this.binder.unbindLeave()
 		this.state.clear()
-		this.unwatchRect()
+		this.unwatchRect?.()
 		this.rendered = null
 		this.popup = null
+		this.transition = null
 		this.aligner = null
 		this.preventedHiding = false
 	}

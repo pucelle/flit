@@ -17,23 +17,24 @@ window.ff = ff
 class Preview extends Component {
 
 	protected render() {
-		return [
-			this.renderTheme(),
-			
-			html`<h2>Basic Elements</h2>`,
-			this.renderButton(),
-		]
+		return html`
+		<template class="preview size-default">
+			<div class="wrapper">
+				${this.renderTheme()}
+				
+				<h2>Basic Elements</h2>
+				${this.renderButton()}
+			</div>
+		</template>
+		`
 	}
 
 	private renderTheme() {
-		let {lineHeight} = theme
-
 		return html`
-		<div class="wrapper">
 			<section class="theme">
 				<h2>Theme</h2>
 
-				<Row style="margin: 8px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Light Mode</Col>
 					<Col .span=${20}>
 						<RadioGroup .value="light" @change=${(name: string) => theme.apply(name)}>
@@ -43,22 +44,21 @@ class Preview extends Component {
 					</Col>
 				</Row>
 
-				<Row style="margin: 8px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Size</Col>
 					<Col .span=${20}>
 						<RadioGroup .value="medium" @change=${(name: string) => theme.apply(name)}>
 							<Radio .value="small" style="margin-right: 20px;">Small</Radio>
 							<Radio .value="medium" style="margin-right: 20px;">Medium</Radio>
 							<Radio .value="large" style="margin-right: 20px;">Large</Radio>
-							<Radio .value="touch" style="margin-right: 20px;">Touch</Radio>
 						</RadioGroup>
 					</Col>
 				</Row>
 
-				<Row style="margin: 8px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Main color</Col>
 					<Col .span=${20}>
-						<MainColorSelect style="width: ${lineHeight * 5}px;" />
+						<MainColorSelect style="width: 10em;" />
 					</Col>
 				</Row>
 			</section>
@@ -69,7 +69,7 @@ class Preview extends Component {
 		return html`
 			<section class="basic">
 				<h3>Buttons</h3>
-				<Row style="margin: 8px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>
 						<header>Primary</header>
 						<Button style="margin: 8px 0;" primary>Button Text</Button><br>
@@ -97,7 +97,7 @@ class Preview extends Component {
 	// 	return html`
 	// 		<section>
 	// 			<h3>Links</h3>
-	// 			<Row style="margin: 8px 0;">
+	// 			<Row style="margin: 12px 0;">
 	// 				<Col .span=${4}>
 	// 					<header>Primary</header>
 	// 					<a href="javascript:void" primary>Link Text</a>
@@ -112,7 +112,7 @@ class Preview extends Component {
 
 	// 		<section>
 	// 			<h3>Labels</h3>
-	// 			<Row style="margin: 8px 0;">
+	// 			<Row style="margin: 12px 0;">
 	// 				<Col .span=${4}>
 	// 					<header>Normal</header>
 	// 					<label>First Name</label>
@@ -1090,6 +1090,7 @@ class MainColorSelect extends Select<{value: string, text: TemplateResult}> {
 	]
 
 	protected onCreated(): void {
+		super.onCreated()
 		this.value = [this.data[0]]
 	}
 

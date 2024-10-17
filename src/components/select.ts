@@ -1,4 +1,4 @@
-import {DOMScroll, untilComplete} from '@pucelle/ff'
+import {DOMScroll, untilUpdateComplete} from '@pucelle/ff'
 import {css, html, TemplateResult} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
@@ -36,7 +36,8 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 			display: inline-flex;
 			vertical-align: top;
 			width: calc(20em + 20px);
-			height: 1lh;
+			height: 2em;
+			padding: 0.2em;
 			background: ${fieldBackgroundColor};
 			justify-content: space-between;
 			align-items: center;
@@ -64,7 +65,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 		.select-display, .select-input{
 			flex: 1;
 			min-width: 0;
-			padding: 0 0 0 0.57em;
+			padding: 0 0 0 0.5em;
 			height: 100%;
 			border: none;
 			background: transparent;
@@ -177,10 +178,11 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 
 	protected render() {
 		return html`
-			<template :class.opened=${this.opened}
+			<template class="select"
+				:class.opened=${this.opened}
 				:class.cant-input=${!this.searchable}
-				:popup=${this.getPopupOptions()}
-				:ref.binding=${this.refBinding.bind(this)}
+				:popup=${this.renderPopup, this.popupOptions}
+				:ref.binding=${this.refBinding}
 			>
 				${this.renderDisplayOrInput()}
 				<Icon class="dropdown-icon" .type="down" .size="inherit" />
@@ -202,15 +204,15 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 			`
 		}
 		else {
-			let text = this.renderDisplay()
+			let display = this.renderDisplay()
 
 			return html`
 				<div
 					class="select-display"
-					:class.select-placeholder=${!text}
+					:class.select-placeholder=${!display}
 					@click=${this.onClick}
 				>
-					${text || this.placeholder}
+					${display || this.placeholder}
 				</div>
 			`
 		}
@@ -220,7 +222,10 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 		let data = this.getFilteredData()
 
 		return html`
-			<Popup class="popup" .triangle=${false}>
+			<Popup class="select-popup"
+				.triangle=${false}
+				:ref.el=${this.popupEl}
+			>
 				<List class="select-list"
 					:ref=${this.listEl}
 					.mode="selection"
@@ -228,7 +233,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 					.data=${data}
 					.selected=${this.value}
 					.multiple=${this.multiple}
-					.keyComeFrom=${() => this.inputEl}
+					.keyComeFrom=${this.inputEl}
 					@select=${this.onSelected}
 				/>
 			</Popup>
@@ -236,9 +241,18 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 	}
 
 	/** Render text display to represent currently selected. */
-	protected renderDisplay(): string {
-		let displays = this.value.map(item => String(item.text))
-		return displays.join('; ')
+	protected renderDisplay(): string | TemplateResult[] | null {
+		let displays = this.value.map(item => item.text)
+		if (displays.length === 0) {
+			return null
+		}
+
+		if (typeof displays[0] === 'string') {
+			return displays.join('; ')
+		}
+		else {
+			return displays as TemplateResult[]
+		}
 	}
 
 	protected getFilteredData(): V[] {
@@ -287,7 +301,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 	}
 
 	protected async onPopupOpened() {
-		await untilComplete()
+		await untilUpdateComplete()
 		this.mayFocusInput()
 		this.scrollToViewSelectedItem()
 	}

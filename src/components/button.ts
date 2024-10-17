@@ -6,7 +6,7 @@ import {theme, ThemeSize} from '../style'
 export class Button<E = {}> extends Component<E> {
 
 	static style() {
-		let {mainColor, textColor, borderColor, borderRadius, focusBlurRadius, backgroundColor, fontSize, lineHeight} = theme
+		let {mainColor, textColor, borderColor, borderRadius, focusBlurRadius, backgroundColor} = theme
 		
 		return css`	
 		.button{

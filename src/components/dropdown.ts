@@ -4,7 +4,7 @@ import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'
 import {TriggerType} from '../bindings'
-import {AlignerPosition, TransitionResult} from '@pucelle/ff'
+import {AlignerPosition, computed, TransitionResult} from '@pucelle/ff'
 
 
 /** `<Dropdown>` for containing both trigger element and popup content.  */
@@ -22,14 +22,14 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 			}
 
 			&-icon{
-				margin-right: 0.4em;
+				margin-right: 0;
 			}
 		}
 		`
 	}
 
 
-	// When undefined, use default `:popup` options.
+	// When these options are undefined, use default `:popup` options.
 
 	alignPosition: AlignerPosition | undefined = undefined
 	gap: number | number[] | undefined = undefined
@@ -63,9 +63,11 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	/** Apply popup binding after been controlled by it. */
 	protected binding: popup | null = null
 
+	private _opened: boolean = false
+
 	/** To know whether dropdown content is opening. */
 	get opened(): boolean {
-		return this.binding?.opened ?? false
+		return this._opened
 	}
 
 	/** To control popup opened state. */
@@ -83,8 +85,8 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	protected render() {
 		return html`
 			<template :class.opened=${this.opened}
-				:popup=${this.getPopupOptions()}
-				:ref.binding=${this.refBinding.bind(this)}
+				:popup=${this.renderPopup, this.popupOptions}
+				:ref.binding=${this.refBinding}
 			>
 				<slot />
 				<Icon class="dropdown-icon" .type="down" .size="inherit" />
@@ -92,7 +94,9 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 		`
 	}
 
-	protected getPopupOptions(): Partial<PopupOptions> {
+	/** Avoid this option object get changed, and cause `:popup` re-update. */
+	@computed
+	protected get popupOptions(): Partial<PopupOptions> {
 		return {
 			alignPosition: this.alignPosition,
 			gap: this.gap,
@@ -137,7 +141,9 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	}
 
 	/** After popup binding opened state change. */
-	protected onOpenedChange(_opened: boolean) {}
+	protected onOpenedChange(opened: boolean) {
+		this._opened = opened
+	}
 
 	/** Before will align popup content. */
 	protected onWillAlign(_content: Popup) {}

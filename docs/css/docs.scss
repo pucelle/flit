@@ -18,6 +18,7 @@
 			vertical-align: top;
 			margin-top: -5px;
 			margin-right: 10px;
+			margin-left: -5px;
 			width: 63px;
 			height: 58px;
 			background: url('../img/logo.svg');
@@ -27,7 +28,8 @@
 	h2{
 		text-align: center;
 		color: #fff;
-		font-size: 60px;
+		font-size: 4em;
+		font-weight: 100;
 		line-height: 60px;
 		margin-top: 43px;
 	}
@@ -36,14 +38,15 @@
 		text-align: center;
 		color: #fff;
 		opacity: 0.8;
-		font-size: 28px;
+		font-size: 2em;
+		font-weight: 400;
 		line-height: 28px;
 		margin-top: 20px;
 	}
 }
 
 
-flit-preview{
+.preview{
 	display: block;
 	padding-bottom: 40px;
 
@@ -58,6 +61,9 @@ flit-preview{
 	}
 
 	h2{
+		font-size: 2.5em;
+		line-height: 1.2;
+		font-weight: 100;
 		margin: 48px 0 32px 0;
 	}
 
@@ -85,11 +91,12 @@ flit-preview{
 	padding-right: 10px;
 }
 
-f-radio{
+.radio{
 	margin-right: 10px;
+	min-width: 5em;
 }
 
-f-checkbox{
+.checkbox{
 	margin-right: 10px;
 }
 

@@ -1,4 +1,5 @@
 import {Color, ListMap, Observed} from '@pucelle/ff'
+import {addGlobalStyle, css} from '@pucelle/lupos.js'
 
 
 export interface ThemeOptions {
@@ -50,9 +51,6 @@ export interface ThemeOptions {
 
 	/** Font size. */
 	fontSize: number
-
-	/** Height of normal one line components, not the `lineHeight` of multiple lines. */
-	lineHeight: number
 }
 
 /** All color options. */
@@ -239,11 +237,6 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 		return this.get('fontSize')
 	}
 
-	/** Height of normal one line components, not the `lineHeight` of multiple lines. */
-	get lineHeight() {
-		return this.get('lineHeight')
-	}
-
 	/** 
 	 * Mix background color with foreground(text) color.
 	 * When `foregroundRate` is `0`, return background color.
@@ -277,7 +270,7 @@ theme.define('light', 'color', {
 	...DefaultColorThemeOptions,
 	mainColor: '#3a6cf6',
 	backgroundColor: '#fff',
-	fieldBackgroundColor: '#e2e2e2',
+	fieldBackgroundColor: '#e5e5e5',
 	textColor: '#000',
 	borderColor: '#9b9b9b',
 	popupBackgroundColor: '#fff',
@@ -288,7 +281,7 @@ theme.define('dark', 'color', {
 	...DefaultColorThemeOptions,
 	mainColor: '#3a6cf6',
 	backgroundColor: '#333',
-	fieldBackgroundColor: '#414141',
+	fieldBackgroundColor: '#444444',
 	textColor: '#eee',
 	borderColor: '#888',
 	popupBackgroundColor: '#333',
@@ -298,17 +291,49 @@ theme.define('dark', 'color', {
 theme.define('small', 'size', {
 	...DefaultSizeThemeOptions,
 	fontSize: 13,
-	lineHeight: 24,
 })
 
 theme.define('medium', 'size', {
 	...DefaultSizeThemeOptions,
 	fontSize: 14,
-	lineHeight: 28,
 })
 
 theme.define('large', 'size', {
 	...DefaultSizeThemeOptions,
 	fontSize: 16,
-	lineHeight: 32,
 })
+
+theme.set('light', 'medium')
+
+
+addGlobalStyle(() => {
+	let {backgroundColor} = theme
+
+	return css`
+	::-webkit-scrollbar{
+		background: ${backgroundColor.toIntermediate(14/255)};
+	}
+
+	::-webkit-scrollbar-thumb{
+		background: ${backgroundColor.toIntermediate(62/255)};
+
+		&:hover{
+			background: ${backgroundColor.toIntermediate(87/255)};
+		}
+
+		&:active{
+			background: ${backgroundColor.toIntermediate(135/255)};
+		}
+	}
+
+	${['small', 'medium', 'large', 'default', 'inherit'].map(size => {
+		let options = size === 'inherit' ? null : size === 'default' ? theme.getOptions() : theme.getOptionsOf(size)
+		let fontSize = size === 'inherit' ? 'inherit' : options!.fontSize! + 'px'
+
+		return css`
+			.size-${size}{
+				font-size: ${fontSize};
+			}
+		`
+	})}
+`})

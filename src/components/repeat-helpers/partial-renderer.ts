@@ -1,4 +1,4 @@
-import {DOMScroll, onComplete, untilComplete} from '@pucelle/ff'
+import {DOMScroll, onUpdateComplete, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
@@ -124,7 +124,7 @@ export class PartialRenderer {
 		this.doa = new DirectionalOverflowAccessor(overflowDirection)
 		
 		// Avoid causing reflow.
-		onComplete(() => {
+		onUpdateComplete(() => {
 			this.initProperties()
 		})
 	}
@@ -220,7 +220,7 @@ export class PartialRenderer {
 
 		//// Can only read dom properties now.
 
-		await untilComplete()
+		await untilUpdateComplete()
 		this.collectStateAfterRendered()
 		this.state.rendering = false
 
@@ -478,7 +478,7 @@ export class PartialRenderer {
 
 		//// Can only read dom properties below.
 
-		await untilComplete()
+		await untilUpdateComplete()
 
 		if (unCoveredDirection !== null) {
 			this.collectStateAfterRendered()

@@ -21,7 +21,7 @@ interface RadioEvents {
 export class Radio<E = {}> extends Component<E & RadioEvents> {
 
 	static style() {
-		let {mainColor, focusBlurRadius} = theme
+		let {mainColor} = theme
 
 		return css`
 		.radio{
@@ -36,17 +36,13 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 
 			&:focus{
 				color: ${mainColor};
-
-				.icon{
-					box-shadow: 0 0 ${focusBlurRadius}px ${mainColor};
-				}
+				box-shadow: 0 0 0 2px ${mainColor};
 			}
 		
 			&-icon{
 				position: relative;
-				top: -2px;
 				border-radius: 50%;
-				margin-right: 0.5em;
+				margin-right: 0.2em;
 			}
 
 			&-checked{
@@ -58,6 +54,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
+				padding-right: 3px;
 			}
 		}
 		`

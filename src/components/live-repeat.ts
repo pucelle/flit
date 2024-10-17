@@ -1,7 +1,7 @@
 import {PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Repeat} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
-import {DOMEvents, LayoutWatcher, TransitionEasingName, effect, immediateWatch, untilComplete} from '@pucelle/ff'
+import {DOMEvents, LayoutWatcher, TransitionEasingName, effect, immediateWatch, untilUpdateComplete} from '@pucelle/ff'
 import {html} from '@pucelle/lupos.js'
 
 
@@ -163,7 +163,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.renderer!.setRenderPart(startIndex, endIndex, scrollingDown ? 'start' : 'end')
 
 			this.willUpdate()
-			await untilComplete()
+			await untilUpdateComplete()
 		}
 
 		return super.scrollIndexToStart(index - this.startIndex, gap, duration, easing)
@@ -187,7 +187,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.renderer!.setRenderPart(startIndex, endIndex, scrollingDown ? 'start' : 'end')
 
 			this.willUpdate()
-			await untilComplete()
+			await untilUpdateComplete()
 		}
 
 		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)
