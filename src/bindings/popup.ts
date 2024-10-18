@@ -457,6 +457,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			this.transition!.enter(this.options.transition)
 		}
 
+		// May playing leave transition.
+		else {
+			this.transition!.cancel()
+		}
+
 		// Watch it's rect changing.
 		if (!this.unwatchRect) {
 			let unwatchRect = LayoutWatcher.watch(this.el, 'rect', this.onTriggerRectChanged.bind(this))

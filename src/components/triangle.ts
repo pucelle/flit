@@ -36,9 +36,9 @@ export class Triangle<E = {}> extends Component<E> {
 	protected render() {
 		let w = this.width
 		let h = this.height
-		let finalWidth = this.direction === 'top' || this.direction === 'bottom' ? w : h
-		let finalHeight = this.direction === 'top' || this.direction === 'bottom' ? h : w
-		let viewBox = [0, 0, finalWidth, finalHeight].join(' ')
+		let outputWidth = this.direction === 'top' || this.direction === 'bottom' ? w : h
+		let outputHeight = this.direction === 'top' || this.direction === 'bottom' ? h : w
+		let viewBox = [0, 0, outputWidth, outputHeight].join(' ')
 
 		let p1 = new DOMPoint(w / 2, 0)
 		let p2 = new DOMPoint(w, h)
@@ -76,8 +76,8 @@ export class Triangle<E = {}> extends Component<E> {
 				style="${this.direction}: ${-this.height}px"
 			>
 				<svg viewBox=${viewBox}
-					width=${finalWidth}
-					height=${finalHeight}
+					width=${outputWidth}
+					height=${outputHeight}
 				>
 					<path d=${d}>
 				</svg>
