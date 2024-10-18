@@ -43,6 +43,7 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 				this.show()
 			}, showDelay)
 
+			this.showTimeout.start()
 			this.willShowSoon = true
 		}
 		else {
@@ -72,6 +73,7 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 				this.hide()
 			}, hideDelay)
 
+			this.hideTimeout.start()
 			this.willHideSoon = true
 		}
 		else {

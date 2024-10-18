@@ -1,4 +1,4 @@
-import {Component, html, css} from '@pucelle/lupos.js'
+import {Component, html, css, ComponentStyle} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
 import {Icon} from './icon'
 import {RadioGroup} from './radio-group'
@@ -20,7 +20,7 @@ interface RadioEvents {
 /** `<Radio>` is just like `<input type=radio>`, you can click to check one radio in a radio group. */
 export class Radio<E = {}> extends Component<E & RadioEvents> {
 
-	static style() {
+	static style: ComponentStyle = () => {
 		let {mainColor} = theme
 
 		return css`

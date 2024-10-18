@@ -1,5 +1,5 @@
 import {ListUtils} from '@pucelle/ff'
-import {Component, css, html} from '@pucelle/lupos.js'
+import {Component, ComponentStyle, css, html} from '@pucelle/lupos.js'
 
 
 /** 
@@ -8,7 +8,7 @@ import {Component, css, html} from '@pucelle/lupos.js'
  */
 export class Row extends Component {
 
-	static style() {
+	static style: ComponentStyle = () => {
 		return css`
 		.row{
 			display: flex;
@@ -31,7 +31,9 @@ export class Row extends Component {
 
 	protected render() {
 		return html`
-			<template :style.justify-content="flex-${this.justify}" />
+			<template class="row" 
+				:style.justify-content="flex-${this.justify}"
+			/>
 		`
 	}
 

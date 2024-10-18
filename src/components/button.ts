@@ -1,22 +1,22 @@
-import {Component, css, html, TemplateResult} from '@pucelle/lupos.js'
+import {Component, ComponentStyle, css, html, TemplateResult} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
 
 
 /** `<Button>` is nearly equals <button> element. */
 export class Button<E = {}> extends Component<E> {
 
-	static style() {
-		let {mainColor, textColor, borderColor, borderRadius, focusBlurRadius, backgroundColor} = theme
+	static style: ComponentStyle = () => {
+		let {mainColor, textColor, borderColor, borderRadius, focusBlurRadius, backgroundColor, lightMode} = theme
 		
 		return css`	
 		.button{
 			display: inline-flex;
 			justify-content: center;
-			height: 1lh;
+			align-items: center;
 			border: 1px solid ${borderColor};
 			color: ${textColor};
 			border-radius: ${borderRadius}px;
-			padding: 0 1em;
+			padding: calc(0.2em - 1px) 0.8em;
 			background: ${backgroundColor};
 			text-align: center;
 			cursor: pointer;
@@ -26,8 +26,8 @@ export class Button<E = {}> extends Component<E> {
 			text-overflow: ellipsis;
 			
 			&:hover, &:focus{
-				border-color: #666;
-				background-color: #666;
+				border-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 140 : 60) / 255)};
+				background-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 140 : 60) / 255)};
 				color: #fff;
 			}
 
@@ -42,22 +42,19 @@ export class Button<E = {}> extends Component<E> {
 			}
 
 			.icon, .icon-loading{
-				position: relative;
-				top: -1px;
-
 				&:first-child{
-					margin-right: 0.5em;
-					margin-left: 0.25em;
+					margin-right: 0.25em;
+					margin-left: -0.25em;
 				}
 
 				&:last-child{
-					margin-left: 0.5em;
-					margin-right: 0.25em;
+					margin-left: 0.25em;
+					margin-right: -0.25em;
 				}
 
 				&:only-child{
-					margin-left: 0;
-					margin-right: 0;
+					margin-left: -0.25em;
+					margin-right: -0.25em;
 				}
 			}
 
@@ -78,7 +75,7 @@ export class Button<E = {}> extends Component<E> {
 			}
 
 			&.flat{
-				border: none;
+				border-color: transparent;
 				padding-left: 0;
 				padding-right: 0;
 

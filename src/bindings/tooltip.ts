@@ -1,6 +1,7 @@
 import {html, RenderResultRenderer} from '@pucelle/lupos.js'
-import {DefaultPopupOptions, popup, PopupOptions} from './popup'
+import {popup, PopupOptions} from './popup'
 import {TooltipType, Tooltip} from '../components'
+import {ObjectUtils} from '@pucelle/ff'
 
 
 export interface TooltipOptions extends PopupOptions{
@@ -10,11 +11,10 @@ export interface TooltipOptions extends PopupOptions{
 }
 
 
-const DefaultTooltipOptions: PartialKeys<TooltipOptions, 'key' | 'alignTo'> = {
-	...DefaultPopupOptions,
+const DefaultTooltipOptions: Partial<TooltipOptions> = {
 
-	alignPosition: 'r',
-	gap: 3,
+	position: 'r',
+	gap: 1,
 
 	showDelay: 0,
 	hideDelay: 200,
@@ -33,14 +33,15 @@ const DefaultTooltipOptions: PartialKeys<TooltipOptions, 'key' | 'alignTo'> = {
  */
 export class tooltip extends popup {
 
-	protected options: PartialKeys<TooltipOptions, 'key' | 'alignTo' | 'transition'> = DefaultTooltipOptions
+	declare options: PartialKeys<TooltipOptions, 'key' | 'alignTo' | 'transition'>
 
 	update(renderer: string | RenderResultRenderer, options: Partial<TooltipOptions> = {}) {
+		options = ObjectUtils.assignNonExisted(options, DefaultTooltipOptions)
 		super.update(this.popupRenderer.bind(this, renderer), options)
 	}
 
 	protected popupRenderer(renderer: string | RenderResultRenderer) {
-		let rendered = typeof renderer === 'function' ? renderer() : renderer
+		let rendered = typeof renderer === 'function' ? renderer.call(this.context) : renderer
 
 		return html`
 			<Tooltip

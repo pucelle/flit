@@ -1,5 +1,5 @@
 import {DOMScroll, untilUpdateComplete} from '@pucelle/ff'
-import {css, html, TemplateResult} from '@pucelle/lupos.js'
+import {ComponentStyle, css, html, TemplateResult} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
 import {ListItem, List} from './list'
@@ -28,7 +28,7 @@ interface SelectEvents<V> {
  */
 export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & SelectEvents<V>> {
 	
-	static style() {
+	static style: ComponentStyle = () => {
 		let {mainColor, borderColor, popupShadowBlurRadius, fieldBackgroundColor, popupShadowColor} = theme
 
 		return css`
@@ -37,7 +37,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 			vertical-align: top;
 			width: calc(20em + 20px);
 			height: 2em;
-			padding: 0.2em;
+			padding: 0.2em 0;
 			background: ${fieldBackgroundColor};
 			justify-content: space-between;
 			align-items: center;
@@ -47,7 +47,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 			&:hover, &.opened{
 				box-shadow: inset 0 -1px 0 0 ${mainColor};
 
-				.select-down-icon{
+				.select-dropdown-icon{
 					color: ${mainColor};
 				}
 			}
@@ -57,15 +57,14 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 			}
 		}
 
-		.select-down-icon{
-			margin-left: 3px;
-			margin-right: 4px;
+		.select-dropdown-icon{
+			margin: 0 0.2em;
 		}
 	
 		.select-display, .select-input{
 			flex: 1;
 			min-width: 0;
-			padding: 0 0 0 0.5em;
+			padding: 0 0 0 0.6em;
 			height: 100%;
 			border: none;
 			background: transparent;
@@ -94,7 +93,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 			border-bottom: none;
 
 			.list-item{
-				padding-left: 0.57em;
+				padding-left: 0.6em;
 				border-top: none;
 			}
 		}
@@ -185,7 +184,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 				:ref.binding=${this.refBinding}
 			>
 				${this.renderDisplayOrInput()}
-				<Icon class="dropdown-icon" .type="down" .size="inherit" />
+				<Icon class="dropdown-icon select-dropdown-icon" .type="down" .size="inherit" />
 			</template>
 		`
 	}

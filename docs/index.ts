@@ -1,6 +1,6 @@
 import * as ff from '@pucelle/ff'
-import {html, Component, TemplateResult} from '@pucelle/lupos.js'
-import {Radio, RadioGroup, Row, Col, Icon, Button, ButtonGroup, theme, Select} from '../out'
+import {html, Component, TemplateResult, css} from '@pucelle/lupos.js'
+import {Radio, RadioGroup, Row, Col, Icon, Button, ButtonGroup, theme, Select, tooltip, Link, Label} from '../out'
 import {watch} from '@pucelle/ff'
 
 
@@ -17,13 +17,19 @@ window.ff = ff
 class Preview extends Component {
 
 	protected render() {
+		let {textColor, backgroundColor} = theme
+
 		return html`
-		<template class="preview size-default">
+		<template class="preview size-default"
+			style="color: ${textColor}; background: ${backgroundColor}"
+		>
 			<div class="wrapper">
 				${this.renderTheme()}
 				
 				<h2>Basic Elements</h2>
 				${this.renderButton()}
+				${this.renderLink()}
+				${this.renderLabel()}
 			</div>
 		</template>
 		`
@@ -34,7 +40,7 @@ class Preview extends Component {
 			<section class="theme">
 				<h2>Theme</h2>
 
-				<Row style="margin: 12px 0;">
+				<Row style="margin: 15px 0;">
 					<Col .span=${4}>Light Mode</Col>
 					<Col .span=${20}>
 						<RadioGroup .value="light" @change=${(name: string) => theme.apply(name)}>
@@ -44,7 +50,7 @@ class Preview extends Component {
 					</Col>
 				</Row>
 
-				<Row style="margin: 12px 0;">
+				<Row style="margin: 15px 0;">
 					<Col .span=${4}>Size</Col>
 					<Col .span=${20}>
 						<RadioGroup .value="medium" @change=${(name: string) => theme.apply(name)}>
@@ -55,10 +61,10 @@ class Preview extends Component {
 					</Col>
 				</Row>
 
-				<Row style="margin: 12px 0;">
+				<Row style="margin: 15px 0;">
 					<Col .span=${4}>Main color</Col>
 					<Col .span=${20}>
-						<MainColorSelect style="width: 10em;" />
+						<MainColorSelect style="width: 12em;" />
 					</Col>
 				</Row>
 			</section>
@@ -69,12 +75,12 @@ class Preview extends Component {
 		return html`
 			<section class="basic">
 				<h3>Buttons</h3>
-				<Row style="margin: 12px 0;">
+				<Row style="margin: 15px 0;">
 					<Col .span=${4}>
 						<header>Primary</header>
-						<Button style="margin: 8px 0;" primary>Button Text</Button><br>
-						<Button style="margin: 8px 0;" primary><Icon .type="love" /><span>Button Text</span></Button><br>
-						<Button style="margin: 8px 0;" primary><Icon .type="love" /></Button><br>
+						<Button style="margin: 8px 0;" .primary>Button Text</Button><br>
+						<Button style="margin: 8px 0;" .primary><Icon .type="love" /><span>Button Text</span></Button><br>
+						<Button style="margin: 8px 0;" .primary><Icon .type="love" /></Button><br>
 					</Col>
 					<Col .span=${4}>
 						<header>Normal</header>
@@ -93,45 +99,47 @@ class Preview extends Component {
 		`
 	}
 
-	// private renderLink() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Links</h3>
-	// 			<Row style="margin: 12px 0;">
-	// 				<Col .span=${4}>
-	// 					<header>Primary</header>
-	// 					<a href="javascript:void" primary>Link Text</a>
-	// 				</Col>
-	// 				<Col .span=${4}>
-	// 					<header>Normal</header>
-	// 					<a href="javascript:void">Link Text</a>
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+	private renderLink() {
+		return html`
+			<section>
+				<h3>Links</h3>
+				<Row style="margin: 15px 0;">
+					<Col .span=${4}>
+						<header>Primary</header>
+						<Link .primary><a href="javascript:void">Link Text</a></Link>
+					</Col>
+					<Col .span=${4}>
+						<header>Normal</header>
+						<Link><a href="javascript:void">Link Text</a></Link>
+					</Col>
+				</Row>
+			</section>
+		`
+	}
 
-
-	// 		<section>
-	// 			<h3>Labels</h3>
-	// 			<Row style="margin: 12px 0;">
-	// 				<Col .span=${4}>
-	// 					<header>Normal</header>
-	// 					<label>First Name</label>
-	// 				</Col>
-	// 				<Col .span=${4}>
-	// 					<header>Required</header>
-	// 					<label required>Email</label>
-	// 				</Col>
-	// 				<Col .span=${4}>
-	// 					<header>With Info</header>
-	// 					<label>
-	// 						Last Name
-	// 						<Icon .type="tips" :tooltip="Tips to show guide" />
-	// 					</label>
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
-	// 	`
-	// }
+	private renderLabel() {
+		return html`<section>
+			<h3>Labels</h3>
+			<Row style="margin: 15px 0;">
+				<Col .span=${4}>
+					<header>Normal</header>
+					<Label>First Name</Label>
+				</Col>
+				<Col .span=${4}>
+					<header>Required</header>
+					<Label .required>Email</Label>
+				</Col>
+				<Col .span=${4}>
+					<header>With Info</header>
+					<Label>
+						Last Name
+						<Icon .type="tips" :tooltip="Guide Tips" />
+					</Label>
+				</Col>
+			</Row>
+		</section>
+		`
+	}
 
 	// private renderButtonGroup() {
 	// 	return html`
@@ -1074,6 +1082,10 @@ class Preview extends Component {
 
 class MainColorSelect extends Select<{value: string, text: TemplateResult}> {
 
+	static style = css`
+
+	`
+
 	data = [
 		{value: '#3a6cf6', text: html`<div style="color: #3a6cf6;">Blue</div>`},
 		{value: '#48c7c7', text: html`<div style="color: #48c7c7;">Cyan</div>`},
@@ -1096,7 +1108,7 @@ class MainColorSelect extends Select<{value: string, text: TemplateResult}> {
 
 	@watch('value')
 	protected onValueChange(value: {value: string, text: TemplateResult}[]) {
-		theme.set('mainColor', value[0].value)
+		theme.overwrite({mainColor: value[0].value})
 	}
 }
 

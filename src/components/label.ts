@@ -1,11 +1,11 @@
-import {Component, html, css} from '@pucelle/lupos.js'
+import {Component, html, css, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style'
 
 
 /** `<Label>` shows a text label. */
 export class Label<Events = any> extends Component<Events> {
 
-	static style() {
+	static style: ComponentStyle = () => {
 		let {errorColor, textColor} = theme
 
 		return css`

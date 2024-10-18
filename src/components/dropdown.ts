@@ -1,4 +1,4 @@
-import {css, html, Component, Binding, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
+import {css, html, Component, Binding, RenderResultRenderer, RenderResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style'
 import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
@@ -10,7 +10,7 @@ import {AlignerPosition, computed, TransitionResult} from '@pucelle/ff'
 /** `<Dropdown>` for containing both trigger element and popup content.  */
 export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptions> {
 
-	static style() {
+	static style: ComponentStyle = () => {
 		let {mainColor} = theme
 
 		return css`
@@ -31,7 +31,7 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 
 	// When these options are undefined, use default `:popup` options.
 
-	alignPosition: AlignerPosition | undefined = undefined
+	position: AlignerPosition | undefined = undefined
 	gap: number | number[] | undefined = undefined
 	stickToEdges: boolean | undefined = undefined
 	canSwapPosition: boolean | undefined = undefined
@@ -98,7 +98,7 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	@computed
 	protected get popupOptions(): Partial<PopupOptions> {
 		return {
-			alignPosition: this.alignPosition,
+			position: this.position,
 			gap: this.gap,
 			stickToEdges: this.stickToEdges,
 			canSwapPosition: this.canSwapPosition,

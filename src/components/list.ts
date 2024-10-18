@@ -1,6 +1,6 @@
-import {css, Component, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {DOMEvents, effect, EventKeys, immediateWatch} from '@pucelle/ff'
+import {DOMEvents, EventKeys, immediateWatch} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip} from '../bindings'
@@ -67,7 +67,7 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 		}
 	}
 
-	static style() {
+	static style: ComponentStyle = () => {
 		let {mainColor, borderColor} = theme
 
 		return css`
@@ -79,8 +79,7 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 		.list-item{
 			position: relative;
 			display: flex;
-			padding-top: 2px;
-			padding-bottom: 2px;
+			padding: 0.4em 0;
 			cursor: pointer;
 			border-top: 1px solid ${borderColor.alpha(0.4)};
 
@@ -333,7 +332,7 @@ export class List<T extends ListItem<T> = any, E = {}> extends Component<E & Lis
 				</lu:if>
 				
 				<div class="list-content text-list-content"
-					:?tooltip=${item.tip, item.tip}
+					?:tooltip=${item.tip, item.tip}
 				>
 					${item.text}
 				</div>

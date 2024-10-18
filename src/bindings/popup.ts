@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, noop, DOMEvents, ObjectUtils} from '@pucelle/ff'
+import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, DOMEvents, ObjectUtils} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -15,7 +15,7 @@ export interface PopupOptions extends AlignerOptions {
 	 * Reference to `AlignerPosition` type for more details.
 	 * Default value is `b`, means align to the bottom position of trigger element.
 	 */
-	alignPosition: AlignerPosition
+	position: AlignerPosition
 
 	/** 
 	 * If specified, all the `:popup` binding with same key will
@@ -116,8 +116,8 @@ interface PopupBindingEvents {
 /** Default popup options. */
 export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> = {
 
-	alignPosition: 'b',
-	gap: 4,
+	position: 'b',
+	gap: 0,
 	stickToEdges: true,
 	canSwapPosition: true,
 	canShrinkOnY: true,
@@ -355,7 +355,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** Show popup immediately, currently in opened. */
 	protected async doingShowPopup() {
 		await this.updatePopup()
-		this.alignPopup()
+
+		let aligned = this.alignPopup()
+		if (aligned) {
+			this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
+		}
 	}
 
 	/** Hide popup immediately, currently not in opened. */
@@ -395,6 +399,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		// Update `pointable`.
+		popup.triangleDirection = Aligner.getTargetFaceDirection(this.options.position).opposite.toBoxEdgeKey()!
 		popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
 
 		// Popup content get updated.
@@ -433,7 +438,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** After popup first time updated. */
 	protected updatePopupProperty(popup: Popup) {
-		this.binder.bindLeave(this.options.hideDelay, popup.el)
 		this.popup = popup
 		this.transition = new Transition(popup.el)
 	}
@@ -445,12 +449,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		// Although in document, need append too.
 		this.popup!.applyAppendTo()
 
-		// May align not successfully.
-		let aligned = this.alignPopup()
-		if (!aligned) {
-			return
-		}
-		
+		// Get focus if needed.
 		this.mayGetFocus()
 
 		// Play enter transition.
@@ -460,7 +459,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		// Watch it's rect changing.
 		if (!this.unwatchRect) {
-			this.unwatchRect = LayoutWatcher.watch(this.el, 'rect', this.onTriggerRectChanged.bind(this))
+			let unwatchRect = LayoutWatcher.watch(this.el, 'rect', this.onTriggerRectChanged.bind(this))
+			
+			this.unwatchRect = () => {
+				unwatchRect()
+				this.unwatchRect = null
+			}
 		}
 	}
 
@@ -488,11 +492,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let alignTo = this.getAlignToElement()
 
 		// Update aligner if required.
-		if (!this.aligner || this.aligner.anchor !== alignTo || this.aligner.content !== this.popup!.el) {
-			this.aligner = new Aligner(this.popup!.el, alignTo, this.options.alignPosition, this.getAlignerOptions())
+		if (!this.aligner || this.aligner.target !== alignTo || this.aligner.content !== this.popup!.el) {
+			this.aligner = new Aligner(this.popup!.el, alignTo)
 		}
 
-		let aligned = this.aligner.align()
+		let aligned = this.aligner.align(this.getAlignerOptions())
 		if (!aligned) {
 			this.hidePopup()
 		}
@@ -518,6 +522,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
 
 		return {
+			position: this.options?.position,
 			gap: this.options?.gap,
 			stickToEdges: this.options?.stickToEdges,
 			canSwapPosition: this.options?.canSwapPosition,

@@ -89,6 +89,7 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 	protected readonly prefixMap: Map<string, string> = new Map()
 	protected readonly ofPrefixMap: ListMap<string, string> = new ListMap()
 	protected options: ThemeOptions
+	protected overwritten: Partial<ThemeOptions> = {}
 	protected names: string[] = []
 
 	/** Light mode, light or dark. */
@@ -125,18 +126,8 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 
 	/** Overwrite whole theme list by new theme names. */
 	set(...names: string[]) {
-		this.options = {} as ThemeOptions
-
-		for (let name of names) {
-			if (!this.themeMap.has(name)) {
-				throw new Error(`"${name}" is not a defined theme!`)
-			}
-
-			Object.assign(this.options, this.themeMap.get(name)!)
-		}
-
 		this.names = names
-		this.lightMode = this.backgroundColor.gray > 0.5 ? 'light' : 'dark'
+		this.updateOptions()
 	}
 
 	/** 
@@ -154,7 +145,39 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 			names = [...surviveNames, ...names]
 		}
 
-		this.set(...names)
+		this.names = names
+		this.updateOptions()
+	}
+
+	/** Update final options after names and overwritten update. */
+	protected updateOptions() {
+		this.options = {} as ThemeOptions
+
+		for (let name of this.names) {
+			if (!this.themeMap.has(name)) {
+				throw new Error(`"${name}" is not a defined theme!`)
+			}
+
+			Object.assign(this.options, this.themeMap.get(name)!)
+		}
+
+		Object.assign(this.options, this.overwritten)
+		this.lightMode = this.backgroundColor.gray > 0.5 ? 'light' : 'dark'
+	}
+
+	/** 
+	 * Overwrite theme options.
+	 * Overwritten options still exist and work after toggling themes.
+	 */
+	overwrite(options: Partial<ThemeOptions>) {
+		Object.assign(this.overwritten, options)
+		this.updateOptions()
+	}
+
+	/** Clear all overwritten options. */
+	clearOverwritten() {
+		this.overwritten = {}
+		this.updateOptions()
 	}
 
 	/** Main highlight color. */

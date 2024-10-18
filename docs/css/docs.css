@@ -44,6 +44,7 @@
 .preview {
   display: block;
   padding-bottom: 40px;
+  overflow: hidden;
 }
 .preview .wrapper {
   width: 1110px;
@@ -54,19 +55,22 @@
   margin: 32px 0;
 }
 .preview h2 {
-  font-size: 2.5em;
+  font-size: 2.56em;
   line-height: 1.2;
   font-weight: 100;
   margin: 48px 0 32px 0;
 }
 .preview h3 {
-  margin: 40px 0 16px 0;
+  font-size: 1.86em;
+  font-weight: 400;
+  margin: 30px 0 16px 0;
 }
 .preview h4 {
   margin: 16px 0 8px 0;
 }
 .preview header {
   opacity: 0.75;
+  padding: 3px 0;
 }
 
 .theme > div {
@@ -94,6 +98,5 @@
 }
 
 .row > div {
-  flex: 1;
   padding: 0 10px;
 }

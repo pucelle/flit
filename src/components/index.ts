@@ -18,3 +18,6 @@ export * from './tooltip'
 
 export * from './list'
 export * from './select'
+
+export * from './link'
+export * from './label'

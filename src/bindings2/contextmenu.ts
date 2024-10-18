@@ -39,7 +39,7 @@ export class ContextMenuBinding implements Binding<RenderFn> {
 		alignToEvent(popup.el, e as MouseEvent)
 		popup.el.focus()
 
-		// Makesure mouse enter to submenu doesn't cause current contextmenu hidden.
+		// Make sure mouse enter to submenu doesn't cause current contextmenu hidden.
 		MouseLeave.lock(this.el, popup.el)
 
 		// Play enter transition.

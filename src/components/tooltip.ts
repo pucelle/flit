@@ -1,8 +1,9 @@
 import {Color} from '@pucelle/ff'
-import {css, html} from '@pucelle/lupos.js'
+import {ComponentStyle, css, html} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Icon} from './icon'
+import {Triangle} from './triangle'
 
 
 /** 
@@ -24,11 +25,11 @@ export interface TooltipEvents {
 /** `<Tooltip>` shows a short text or html type message beside it's trigger element. */
 export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 
-	static style() {
+	static style: ComponentStyle = () => {
 		let {popupBackgroundColor, textColor, errorColor} = theme
 
 		let types = [
-			['default', popupBackgroundColor],
+			['default', popupBackgroundColor.toIntermediate(0.05)],
 			['prompt', textColor.toIntermediate(0.1)],
 			['error', errorColor.toIntermediate(0.05)]
 		] as [TooltipType, Color][]
@@ -37,13 +38,13 @@ export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 		.tooltip{
 			display: flex;
 			max-width: 15em;
-			padding: 0.3em 0.6em;
+			padding: 0.2em 0.5em;
 		}
 
 		.tooltip-text{
 			flex: 1;
 			min-width: 0;
-			line-height: ${20/28}em;
+			font-size: 0.928em;
 		}
 
 		.tooltip-close{
@@ -71,10 +72,10 @@ export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 			.tooltip.type-${type}{
 				background: ${color};
 				color: ${textColor};
-			}
-			
-			.tooltip .triangle{
-				border-bottom-color: ${color};
+
+				.triangle path{
+					fill: ${color};
+				}
 			}
 			`
 		})}
@@ -101,7 +102,7 @@ export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 		return html`
 			<template class="popup tooltip size-${this.size} type-${this.type}">
 				<lu:if ${this.triangle}>
-					<div class="triangle" />
+					<Triangle .direction=${this.triangleDirection} />
 				</lu:if>
 
 				<div class="tooltip-text">

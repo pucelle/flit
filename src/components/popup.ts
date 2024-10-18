@@ -1,5 +1,4 @@
-import {AlignerOptions} from '@pucelle/ff'
-import {css, Component, html} from '@pucelle/lupos.js'
+import {css, Component, html, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style/theme'
 import {Triangle} from './triangle'
 
@@ -10,7 +9,7 @@ import {Triangle} from './triangle'
  */
 export class Popup<E = {}> extends Component<E> {
 
-	static style() {
+	static style: ComponentStyle = () => {
 		let {popupBorderRadius, popupBackgroundColor, popupShadowBlurRadius, popupShadowColor} = theme
 
 		return css`
@@ -34,11 +33,14 @@ export class Popup<E = {}> extends Component<E> {
 	/** Whether shows triangle element. */
 	triangle: boolean = true
 
+	/** The direction triangle acute angle point to. */
+	triangleDirection: 'top' | 'bottom' | 'left' | 'right' = 'top'
+
 	protected render() {
 		return html`
 			<template class="popup" tabindex="0">
 				<lu:if ${this.triangle}>
-					<Triangle />
+					<Triangle .direction=${this.triangleDirection} />
 				</lu:if>
 				<slot />
 			</template>
