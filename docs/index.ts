@@ -1,6 +1,6 @@
 import * as ff from '@pucelle/ff'
 import {html, Component, TemplateResult, css} from '@pucelle/lupos.js'
-import {Radio, RadioGroup, Row, Col, Icon, Button, ButtonGroup, theme, Select, tooltip, Link, Label} from '../out'
+import {Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup, theme, Select, tooltip, Link, Label, Switch, Tag} from '../out'
 import {watch} from '@pucelle/ff'
 
 
@@ -26,10 +26,12 @@ class Preview extends Component {
 			<div class="wrapper">
 				${this.renderTheme()}
 				
-				<h2>Basic Elements</h2>
+				<h2>Components</h2>
 				${this.renderButton()}
+				${this.renderButtonGroup()}
 				${this.renderLink()}
 				${this.renderLabel()}
+				${this.renderCheckbox()}
 			</div>
 		</template>
 		`
@@ -40,7 +42,7 @@ class Preview extends Component {
 			<section class="theme">
 				<h2>Theme</h2>
 
-				<Row style="margin: 15px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Light Mode</Col>
 					<Col .span=${20}>
 						<RadioGroup .value="light" @change=${(name: string) => theme.apply(name)}>
@@ -50,7 +52,7 @@ class Preview extends Component {
 					</Col>
 				</Row>
 
-				<Row style="margin: 15px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Size</Col>
 					<Col .span=${20}>
 						<RadioGroup .value="medium" @change=${(name: string) => theme.apply(name)}>
@@ -61,7 +63,7 @@ class Preview extends Component {
 					</Col>
 				</Row>
 
-				<Row style="margin: 15px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Main color</Col>
 					<Col .span=${20}>
 						<MainColorSelect style="width: 12em;" />
@@ -75,7 +77,7 @@ class Preview extends Component {
 		return html`
 			<section class="basic">
 				<h3>Buttons</h3>
-				<Row style="margin: 15px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>
 						<header>Primary</header>
 						<Button style="margin: 8px 0;" .primary>Button Text</Button><br>
@@ -99,11 +101,32 @@ class Preview extends Component {
 		`
 	}
 
+	private renderButtonGroup() {
+		return html`
+			<section>
+				<h3>Button Group</h3>
+
+				<ButtonGroup style="margin: 8px 0;">
+					<Button .primary>One</Button>
+					<Button>Two</Button>
+					<Button>Three</Button>
+				</ButtonGroup><br>
+
+				<ButtonGroup style="margin: 8px 0;">
+					<Button .primary><Icon .type="love" /></Button>
+					<Button><Icon .type="love" /></Button>
+					<Button><Icon .type="love" /></Button>
+				</ButtonGroup><br>
+			</section>
+
+		`
+	}
+	
 	private renderLink() {
 		return html`
 			<section>
 				<h3>Links</h3>
-				<Row style="margin: 15px 0;">
+				<Row style="margin: 12px 0;">
 					<Col .span=${4}>
 						<header>Primary</header>
 						<Link .primary><a href="javascript:void">Link Text</a></Link>
@@ -120,7 +143,7 @@ class Preview extends Component {
 	private renderLabel() {
 		return html`<section>
 			<h3>Labels</h3>
-			<Row style="margin: 15px 0;">
+			<Row style="margin: 12px 0;">
 				<Col .span=${4}>
 					<header>Normal</header>
 					<Label>First Name</Label>
@@ -141,75 +164,75 @@ class Preview extends Component {
 		`
 	}
 
-	// private renderButtonGroup() {
-	// 	return html`
 
-	// 		<h2>Components</h2>
+	checkboxValue: string[] = ['2']
+	checkboxIndeterminate = true
+	switch1On = true
+	switch2On = false
+	tagClosed = false
 
-	// 		<section>
-	// 			<h3>Button Group</h3>
+	private renderCheckbox() {
+		return html`
+			<section>
+				<Row style="margin: 8px 0;" .gutter="24">
+					<Col .span=${6}>
+						<h3>Checkboxes</h3>
+						<CheckboxGroup .value=${this.checkboxValue}>
+							<Checkbox .value="1">${this.checkboxValue.includes('1') ? 'Checked' : 'Unchecked'}</Checkbox><br>
+							<Checkbox .value="2">${this.checkboxValue.includes('2') ? 'Checked' : 'Unchecked'}</Checkbox><br>
+							<Checkbox .value="3" .indeterminate=${this.checkboxIndeterminate} @change=${() => this.checkboxIndeterminate = false}>${
+								this.checkboxIndeterminate ? 'Indeterminate' : this.checkboxValue.includes('3') ? 'Checked' : 'Unchecked'
+							}</Checkbox><br>
+						</CheckboxGroup>
+					</Col>
 
-	// 			<ButtonGroup style="margin: 8px 0;">
-	// 				<Button primary>One</Button>
-	// 				<Button>Two</Button>
-	// 				<Button>Three</Button>
-	// 			</ButtonGroup><br>
+					<Col .span=${6}>
+						<h3>Radios</h3>
+						<RadioGroup .value="1">
+							<Radio .value="1">Radio 1</Radio><br>
+							<Radio .value="2">Radio 2</Radio><br>
+						</RadioGroup>
+					</Col>
 
-	// 			<ButtonGroup style="margin: 8px 0;">
-	// 				<Button primary><Icon .type="love" /></Button>
-	// 				<Button><Icon .type="love" /></Button>
-	// 				<Button><Icon .type="love" /></Button>
-	// 			</ButtonGroup><br>
-	// 		</section>
+					<Col .span=${6}>
+						<h3>Switches</h3>
+						<div style="padding: 0.2em 0">
+							<Switch style="margin-right: 8px;"
+								.value=${this.switch1On}
+								@change=${(value: boolean) => this.switch1On = value}
+							/>
+							Switch 1 ${this.switch1On ? 'On' : 'Off'}
+						</div>
+						<div style="padding: 0.2em 0">
+							<Switch style="margin-right: 8px;"
+								.value=${this.switch2On}
+								@change=${(value: boolean) => this.switch2On = value}
+							/>
+							Switch 2 ${this.switch2On ? 'On' : 'Off'}
+						</div>
+					</Col>
 
-	// 	`
-	// }
-	
-	// checkboxValue: string[] = ['2']
-	// checkboxInterminated = true
-	// switch1On = true
-	// switch2On = false
-	// tagClosed = false
+					<Col .span=${6}>
+						<h3>Tags</h3>
 
-	// private renderCheckbox() {
-	// 	return html`
-	// 		<section>
-	// 			<Row style="margin: 8px 0;" .gutter="24">
-	// 				<Col .span=${6}>
-	// 					<h3>Checkboxes</h3>
-	// 					<f-checkboxgroup .value=${this.checkboxValue}>
-	// 						<f-checkbox .value="1">${this.checkboxValue.includes('1') ? 'Checked' : 'Unchecked'}</f-checkbox><br>
-	// 						<f-checkbox .value="2">${this.checkboxValue.includes('2') ? 'Checked' : 'Unchecked'}</f-checkbox><br>
-	// 						<f-checkbox .value="3" .indeterminate=${this.checkboxInterminated} @change=${() => this.checkboxInterminated = false}>${
-	// 							this.checkboxInterminated ? 'Indeterminate' : this.checkboxValue.includes('3') ? 'Checked' : 'Unchecked'
-	// 						}</f-checkbox><br>
-	// 					</f-checkboxgroup>
-	// 				</Col>
+						<div style="padding: 0.2em 0">
+							<Tag>Normal Tag</Tag>
+						</div>
+						
+						<div style="padding: 0.2em 0">
+							<Tag .closable
+								?hidden=${this.tagClosed}
+								@close=${() => this.tagClosed = true}
+							>
+								Closable Tag
+							</Tag>
+						</div>
+					</Col>
+				</Row>
+			</section>
 
-	// 				<Col .span=${6}>
-	// 					<h3>Radios</h3>
-	// 					<RadioGroup .value="1">
-	// 						<Radio .value="1">Radio 1</Radio><br>
-	// 						<Radio .value="2">Radio 2</Radio><br>
-	// 					</RadioGroup>
-	// 				</Col>
-
-	// 				<Col .span=${6}>
-	// 					<h3>Switchs</h3>
-	// 					<f-switch style="margin-right: 8px;" :model="switch1On" />Switch 1 ${this.switch1On ? 'On' : 'Off'}<br>
-	// 					<f-switch style="margin-right: 8px;" :model="switch2On" />Switch 2 ${this.switch2On ? 'On' : 'Off'}<br>
-	// 				</Col>
-
-	// 				<Col .span=${6}>
-	// 					<h3>Tags</h3>
-	// 					<f-tag>Normal Tag</f-tag><br>
-	// 					<f-tag .closable :hide=${this.tagClosed} @close=${() => this.tagClosed = true}>Closable Tag</f-tag><br>
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
-
-	// 		`
-	// }
+			`
+	}
 
 	// private renderInput() {
 	// 	return html`
@@ -828,7 +851,7 @@ class Preview extends Component {
 	// 										.errorInTooltip
 	// 										:refComponent=${(i: Input) => input = i}
 	// 									/>
-	// 									<f-checkbox .checked style="margin-top: 8px;">Remember Me</f-checkbox>
+	// 									<Checkbox .checked style="margin-top: 8px;">Remember Me</Checkbox>
 	// 								`,
 	// 								{
 	// 									title: 'Dialog Title',
@@ -1088,17 +1111,14 @@ class MainColorSelect extends Select<{value: string, text: TemplateResult}> {
 
 	data = [
 		{value: '#3a6cf6', text: html`<div style="color: #3a6cf6;">Blue</div>`},
-		{value: '#48c7c7', text: html`<div style="color: #48c7c7;">Cyan</div>`},
 		{value: '#0077cf', text: html`<div style="color: #0077cf;">Darkblue</div>`},
 		{value: '#4eb2ea', text: html`<div style="color: #4eb2ea;">Skyblue</div>`},
+		{value: '#48c7c7', text: html`<div style="color: #48c7c7;">Cyan</div>`},
 		{value: '#be66cc', text: html`<div style="color: #be66cc;">Purple</div>`},
 		{value: '#ff6666', text: html`<div style="color: #ff6666;">Red</div>`},
 		{value: '#ff8095', text: html`<div style="color: #ff8095;">Pink</div>`},
-		{value: '#d65c5c', text: html`<div style="color: #d65c5c;">Brown</div>`},
-		{value: '#f67d51', text: html`<div style="color: #f67d51;">Orange</div>`},
 		{value: '#15af78', text: html`<div style="color: #15af78;">Green</div>`},
 		{value: '#888888', text: html`<div style="color: #888888;">Grey</div>`},
-		{value: '#000000', text: html`<div style="color: #000000;">Black</div>`},
 	]
 
 	protected onCreated(): void {

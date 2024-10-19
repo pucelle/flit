@@ -13,6 +13,11 @@ export * from './icon-loading'
 export * from './radio'
 export * from './radio-group'
 
+export * from './checkbox'
+export * from './checkbox-group'
+
+export * from './switch'
+
 export * from './popup'
 export * from './tooltip'
 
@@ -21,3 +26,5 @@ export * from './select'
 
 export * from './link'
 export * from './label'
+export * from './tag'
+

@@ -29,7 +29,7 @@ export class RadioGroup<T = any, E = {}> extends Component<RadioGroupEvents<T> &
 	value: T | null = null
 
 	/** Register a child radio. */
-	register(this: RadioGroup<any, {}>, radio: Radio) {
+	register(radio: Radio) {
 		this.radios.push(radio)
 
 		let handler = this.onRadioChecked.bind(this, radio)

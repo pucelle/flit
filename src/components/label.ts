@@ -24,7 +24,6 @@ export class Label<Events = any> extends Component<Events> {
 			}
 
 			.icon{
-				margin-left: 4px;
 				color: ${textColor.toIntermediate(20/255)};
 			}
 		}

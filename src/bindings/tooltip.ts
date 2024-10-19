@@ -29,7 +29,8 @@ const DefaultTooltipOptions: Partial<TooltipOptions> = {
  * 
  * `:tooltip="message"`
  * `:tooltip=${message}`
- * `:tooltip=${() => message}`
+ * `:tooltip=${message, {position, ...}}`
+ * `:tooltip=${() => message, {position, ...}}`
  */
 export class tooltip extends popup {
 

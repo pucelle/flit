@@ -54,7 +54,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 				white-space: nowrap;
 				overflow: hidden;
 				text-overflow: ellipsis;
-				padding-right: 3px;
+				padding-right: 0.2em;
 			}
 		}
 		`
