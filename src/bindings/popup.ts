@@ -479,11 +479,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		// Avoid synchronous watching and updating cause infinite loop.
 		await untilUpdateComplete()
 
-		if (DOMUtils.isRectIntersectWithViewport(this.el.getBoundingClientRect())) {
-			this.alignPopup()
+		if (this.options.stickToEdges && !DOMUtils.isRectIntersectWithViewport(this.el.getBoundingClientRect())) {
+			this.hidePopup()
 		}
 		else {
-			this.hidePopup()
+			this.alignPopup()
 		}
 	}
 

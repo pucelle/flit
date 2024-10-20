@@ -16,6 +16,9 @@ const DefaultTooltipOptions: Partial<TooltipOptions> = {
 	position: 'r',
 	gap: 1,
 
+	/** Make it can be shown even out-of viewport. */
+	stickToEdges: false,
+
 	showDelay: 0,
 	hideDelay: 200,
 	pointable: false,

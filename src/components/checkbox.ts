@@ -1,6 +1,6 @@
 import {Component, html, css} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {DOMEvents, DOMModifiableEvents, ListUtils} from '@pucelle/ff'
+import {DOMModifiableEvents} from '@pucelle/ff'
 import {CheckboxGroup} from './checkbox-group'
 import {Icon} from './icon'
 
@@ -18,7 +18,7 @@ interface CheckboxEvents {
 export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 
 	static style() {
-		let {mainColor, focusBlurRadius} = theme
+		let {mainColor} = theme
 
 		return css`
 		.checkbox{
@@ -33,7 +33,7 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 
 			&:focus{
 				color: ${mainColor};
-				box-shadow: 0 0 0 2px ${mainColor};
+				box-shadow: 0 0 0 1px ${mainColor};
 			}
 		}
 
@@ -130,7 +130,7 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 	}
 
 	protected onBlur() {
-		DOMEvents.off(document, 'keydown', this.onEnter, this)
+		DOMModifiableEvents.off(document, 'keydown', this.onEnter, this)
 	}
 }
 

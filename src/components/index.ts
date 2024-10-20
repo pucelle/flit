@@ -28,3 +28,6 @@ export * from './link'
 export * from './label'
 export * from './tag'
 
+export * from './input'
+export * from './textarea'
+export * from './form'

@@ -92,7 +92,7 @@ export class Col extends Component {
 		let width = this.getWidth()
 
 		return html`
-			<template
+			<template class="col"
 				:style.margin-left=${marginLeft}
 				:style.width=${width}
 			/>

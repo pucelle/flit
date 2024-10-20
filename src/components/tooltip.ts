@@ -38,7 +38,7 @@ export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 		.tooltip{
 			display: flex;
 			max-width: 15em;
-			padding: 0.2em 0.5em;
+			padding: 0.2em 0.6em;
 		}
 
 		.tooltip-text{

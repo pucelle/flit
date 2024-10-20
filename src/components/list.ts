@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {DOMEvents, EventKeys, immediateWatch} from '@pucelle/ff'
+import {DOMEvents, EventKeys, immediateWatch, Observed} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip} from '../bindings'
@@ -54,7 +54,7 @@ export interface ListEvents<T extends ListItem<T>> {
  * `<List .data=${[{text, icon?, tip?}]}>` or
  * `<List .data=${[...]} .itemRenderer=${(item) => html`...`}>`
  */
-export class List<T extends ListItem<T> = any, E = {}> extends Component<E & ListEvents<T>> {
+export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	/** Walk item and all descendant items recursively. */
 	static *walkItems<T extends ListItem<T>>(item: T): Iterable<T> {

@@ -36,7 +36,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 
 			&:focus{
 				color: ${mainColor};
-				box-shadow: 0 0 0 2px ${mainColor};
+				box-shadow: 0 0 0 1px ${mainColor};
 			}
 		
 			&-icon{
@@ -126,7 +126,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 
 	protected onBlur() {
 		DOMEvents.off(this.el, 'blur', this.onBlur, this)
-		DOMEvents.off(document, 'keydown', this.onEnter, this)
+		DOMModifiableEvents.off(document, 'keydown', this.onEnter, this)
 	}
 
 	protected onEnter() {

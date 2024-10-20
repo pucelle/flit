@@ -69,6 +69,7 @@
   margin: 16px 0 8px 0;
 }
 .preview header {
+  font-weight: 700;
   opacity: 0.75;
   padding: 3px 0;
 }

@@ -1,6 +1,9 @@
 import * as ff from '@pucelle/ff'
 import {html, Component, TemplateResult, css} from '@pucelle/lupos.js'
-import {Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup, theme, Select, tooltip, Link, Label, Switch, Tag} from '../out'
+import {
+	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
+	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form
+} from '../out'
 import {watch} from '@pucelle/ff'
 
 
@@ -31,7 +34,9 @@ class Preview extends Component {
 				${this.renderButtonGroup()}
 				${this.renderLink()}
 				${this.renderLabel()}
-				${this.renderCheckbox()}
+				${this.renderCheckboxAndSomeOthers()}
+				${this.renderInputTextarea()}
+				${this.renderForm()}
 			</div>
 		</template>
 		`
@@ -171,7 +176,7 @@ class Preview extends Component {
 	switch2On = false
 	tagClosed = false
 
-	private renderCheckbox() {
+	private renderCheckboxAndSomeOthers() {
 		return html`
 			<section>
 				<Row style="margin: 8px 0;" .gutter="24">
@@ -234,101 +239,107 @@ class Preview extends Component {
 			`
 	}
 
-	// private renderInput() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Inputs</h3>
+	private renderInputTextarea() {
+		return html`
+			<section>
+				<h3>Inputs</h3>
 
-	// 			<Row style="margin: 8px 0 16px 0;" .gutter="24">
-	// 				<Col .span=${6}>
-	// 					<label>Text Input</label><br>
-	// 					<f-input .type="text" style="width: 100%;" />
-	// 				</Col>
-	// 				<Col .span=${6}>
-	// 					<label>With Placeholder</label><br>
-	// 					<f-input .type="text" style="width: 100%;" .placeholder="With Placeholder" />
-	// 				</Col>
-	// 				</Col>
-	// 			</Row>
+				<Row style="margin: 8px 0 16px 0;" .gutter="24">
+					<Col .span=${6}>
+						<header>Text Input</header>
+						<Input .type="text" style="width: 100%;" />
+					</Col>
+					<Col .span=${6}>
+						<header>With Placeholder</header>
+						<Input .type="text" style="width: 100%;" .placeholder="With Placeholder" />
+					</Col>
+					<Col .span=${6}>
+						<header>Textarea</header>
+						<Textarea .rows=${3} style="width: 100%;" />
+					</Col>
+				</Row>
 
-	// 			<Row style="margin: 8px 0 16px 0;" .gutter="24">
-	// 				<Col .span=${6}>
-	// 					<label>Valid Input</label><br>
-	// 					<f-input .type="text" style="width: 100%;" .touched .valid=${true} .placeholder="Valid Input" />
-	// 				</Col>
-	// 				<Col .span=${6}>
-	// 					<label>Invalid Input</label><br>
-	// 					<f-input .type="text" style="width: 100%;" .touched .valid=${false} .placeholder="Invalid Input" .error="Error Message" />
-	// 				</Col>
-	// 				<Col .span=${6}>
-	// 					<label>Error message in tooltip</label><br>
-	// 					<f-input .type="text" style="width: 100%;" .errorInTooltip .touched .valid=${false} .placeholder="Invalid Input" .error="Error Message" />
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+				<Row style="margin: 8px 0 16px 0;" .gutter="24">
+					<Col .span=${6}>
+						<header>Valid Input</header>
+						<Input .type="text" style="width: 100%;" .touched .valid=${true} .placeholder="Valid Input" />
+					</Col>
+					<Col .span=${6}>
+						<header>Invalid Input</header>
+						<Input .type="text" style="width: 100%;" .touched .valid=${false} .placeholder="Invalid Input" .error="Error Message" />
+					</Col>
+					<Col .span=${6}>
+						<header>Error message on tooltip</header>
+						<Input .type="text" style="width: 100%;" .errorOnTooltip .touched .valid=${false} .placeholder="Invalid Input" .error="Error Message" />
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
 
-	// form: Form
+	form!: Form
 
-	// private renderForm() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Form</h3>
+	private renderForm() {
+		return html`
+			<section>
+				<h3>Form</h3>
 
-	// 			<f-form :refComponent="form">
-	// 				<Row style="margin: 8px 0 24px 0;" .gutter="24">
-	// 					<Col .span=${12}>
-	// 						<label required>Name</label><br>
-	// 						<f-input style="width: 100%;" .validator=${(value: string) => {
-	// 							if (value.length === 0) {
-	// 								return `The name field is required!`
-	// 							}
-	// 							else if (value.length < 10) {
-	// 								return `The name field should have at least 10 characters!`
-	// 							}
-	// 						}} />
-	// 					</Col>
-	// 				</Row>
+				<Form :ref=${this.form}>
+					<Row style="margin: 8px 0 24px 0;" .gutter="24">
+						<Col .span=${12}>
+							<header><Label .required>Name</Label></header>
+							<Input style="width: 100%;" .validator=${(value: string) => {
+								if (value.length === 0) {
+									return `The name field is required!`
+								}
+								else if (value.length < 10) {
+									return `The name field should have at least 10 characters!`
+								}
+								else {
+									return null
+								}
+							}} />
+						</Col>
+					</Row>
 
-	// 				<Row style="margin: 8px 0;" .gutter="24">
-	// 					<Col .span=${6}>
-	// 						<label>Country</label><br>
-	// 						<f-select style="width: 100%;" .searchable .data=${[{value: '1', text: 'Country 1'}, {value: '2', text: 'Country 2'}]} />
-	// 					</Col>
+					<Row style="margin: 8px 0;" .gutter="24">
+						<Col .span=${6}>
+							<header>Country</header>
+							<Select style="width: 100%;" .searchable .data=${[{value: '1', text: 'Country 1'}, {value: '2', text: 'Country 2'}]} />
+						</Col>
 
-	// 					<Col .span=${6}>
-	// 						<label>City</label><br>
-	// 						<f-select style="width: 100%;" .searchable .data=${[{value: '1', text: 'City 1'}, {value: '2', text: 'City 2'}]} />
-	// 					</Col>
-	// 				</Row>
+						<Col .span=${6}>
+							<header>City</header>
+							<Select style="width: 100%;" .searchable .data=${[{value: '1', text: 'City 1'}, {value: '2', text: 'City 2'}]} />
+						</Col>
+					</Row>
 
-	// 				<Row style="margin: 8px 0;" .gutter="24">
-	// 					<Col .span=${12}>
-	// 						<label>Address</label><br>
-	// 						<f-input style="width: 100%;" />
-	// 					</Col>
-	// 				</Row>
+					<Row style="margin: 8px 0;" .gutter="24">
+						<Col .span=${12}>
+							<header>Address</header>
+							<Input style="width: 100%;" />
+						</Col>
+					</Row>
 
-	// 				<Row style="margin: 8px 0;" .gutter="24">
-	// 					<Col .span=${12}>
-	// 						<label>About</label><br>
-	// 						<f-textarea style="width: 100%;" />
-	// 					</Col>
-	// 				</Row>
+					<Row style="margin: 8px 0;" .gutter="24">
+						<Col .span=${12}>
+							<header>About</header>
+							<Textarea style="width: 100%;" />
+						</Col>
+					</Row>
 
-	// 				<Row style="margin: 16px 0 10px;" .gutter="24">
-	// 					<Col .span=${12} style="text-align: right;">
-	// 						<Button primary @click=${() => this.refComponents.form.validate()}>Save</Button>
-	// 					</Col>
-	// 				</Row>
-	// 			</f-form>
-	// 		</section>
+					<Row style="margin: 16px 0 10px;" .gutter="24">
+						<Col .span=${12} style="text-align: right;">
+							<Button .primary @click=${() => this.form.validate()}>Save</Button>
+						</Col>
+					</Row>
+				</Form>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
 	// private renderSelect() {
 	// 	return html`
@@ -338,17 +349,17 @@ class Preview extends Component {
 	// 			<Row style="margin: 8px 0;" .gutter="24">
 	// 				<Col .span=${6}>
 	// 					<header>Single Select</header>
-	// 					<f-select style="width: 100%; margin: 8px 0;" .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${1}  />
+	// 					<Select style="width: 100%; margin: 8px 0;" .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${1}  />
 	// 				</Col>
 
 	// 				<Col .span=${6}>
 	// 					<header>Multiple Select</header>
-	// 					<f-select style="width: 100%; margin: 8px 0;" .multipleSelect .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${[1, 2]} />
+	// 					<Select style="width: 100%; margin: 8px 0;" .multipleSelect .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${[1, 2]} />
 	// 				</Col>
 
 	// 				<Col .span=${6}>
 	// 					<header>Searchable Select</header>
-	// 					<f-select style="width: 100%; margin: 8px 0;" .searchable .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${1} />
+	// 					<Select style="width: 100%; margin: 8px 0;" .searchable .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${1} />
 	// 				</Col>
 	// 			</Row>
 	// 		</section>
@@ -845,7 +856,7 @@ class Preview extends Component {
 	// 							dialog.show(
 	// 								html`
 	// 									Please input the name of your account:
-	// 									<f-input style="margin-top: 8px; width: 100%;"
+	// 									<Input style="margin-top: 8px; width: 100%;"
 	// 										.placeholder="Name of your account"
 	// 										.validator=${(v: string) => v ? '' : 'Name field is required'}
 	// 										.errorInTooltip
