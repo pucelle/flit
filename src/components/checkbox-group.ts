@@ -54,7 +54,7 @@ export class CheckboxGroup<T = any, E = {}> extends Component<E & CheckboxGroupE
 		else {
 			let index = this.value.indexOf(checkbox.value)
 			if (index > -1) {
-				this.value.splice(index, 0, checkbox.value)
+				this.value.splice(index, 1)
 			}
 		}
 

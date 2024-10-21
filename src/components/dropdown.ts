@@ -11,19 +11,9 @@ import {AlignerPosition, computed, TransitionResult} from '@pucelle/ff'
 export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptions> {
 
 	static style: ComponentStyle = () => {
-		let {mainColor} = theme
-
 		return css`
 		.dropdown{
 			display: inline-flex;
-
-			&.opened{
-				color: ${mainColor};
-			}
-
-			&-icon{
-				margin-right: 0;
-			}
 		}
 		`
 	}
@@ -84,7 +74,8 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 
 	protected render() {
 		return html`
-			<template :class.opened=${this.opened}
+			<template class="dropdown"
+				:class.opened=${this.opened}
 				:popup=${this.renderPopup, this.popupOptions}
 				:ref.binding=${this.refBinding}
 			>

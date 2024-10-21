@@ -13,6 +13,8 @@ export interface TooltipOptions extends PopupOptions{
 
 const DefaultTooltipOptions: Partial<TooltipOptions> = {
 
+	key: 'tooltip',
+
 	position: 'r',
 	gap: 1,
 

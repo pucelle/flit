@@ -1,18 +1,25 @@
 import {css, Component, html, RenderResult, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {DOMEvents, EventKeys, immediateWatch, Observed} from '@pucelle/ff'
+import {DOMEvents, EventKeys, immediateWatch, Observed, watch} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip} from '../bindings'
 
 
 /** Base type of list item. */
-export type ListItem<T> = {
+export type ListItem<T = any> = {
+
+	/** Unique value to identify current item. */
+	value: any
 
 	/** List item content, can be a pre-generated template result. */
 	text?: string | TemplateResult
 
-	/** Plain text to do search and filter. */
+	/** 
+	 * Plain text to do search and filter.
+	 * If need to search, and `searchText` is omit,
+	 * `text` must be string type.
+	 */
 	searchText?: string
 
 	/** 
@@ -28,10 +35,10 @@ export type ListItem<T> = {
 	tip?: string | TemplateResult
 
 	/** To render subsection list. */
-	children?: T[]
+	children?: ListItem<T>[]
 }
 
-export interface ListEvents<T extends ListItem<T>> {
+export interface ListEvents<T> {
 
 	/** 
 	 * Fires after selected items changed.
@@ -54,10 +61,10 @@ export interface ListEvents<T extends ListItem<T>> {
  * `<List .data=${[{text, icon?, tip?}]}>` or
  * `<List .data=${[...]} .itemRenderer=${(item) => html`...`}>`
  */
-export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Component<E & ListEvents<T>> {
+export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	/** Walk item and all descendant items recursively. */
-	static *walkItems<T extends ListItem<T>>(item: T): Iterable<T> {
+	static *walkItems<T>(item: ListItem<T>): Iterable<ListItem<T>> {
 		yield item
 
 		if (item.children) {
@@ -140,7 +147,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 		}
 
 		.list-selected-icon{
-			margin: 0 0.5em;
+			margin: 0 0.2em;
 		}
 
 		.list-subsection{
@@ -204,13 +211,13 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 	dirSelectable: boolean = true
 
 	/** Input data list. */
-	data: T[] = []
+	data: ListItem<T>[] = []
 
 	/** 
 	 * Renderer to render each item display content.
 	 * If specifies, it overwrites default action of rendering item content.
 	 */
-	itemRenderer: ((item: T) => RenderResult | string | number) | null = null
+	itemRenderer: ((item: ListItem<T>) => RenderResult | string | number) | null = null
 
 	/** Indicates current select values. */
 	selected: T[] = []
@@ -233,6 +240,11 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 	/** Whether watching keyboard navigation events. */
 	private inKeyNavigating: boolean = false
 
+	@immediateWatch('data', 'expanded')
+	protected updateKeyNavigator(data: ListItem<T>[], expanded: T[]) {
+		this.keyNavigator.update(data, expanded)
+	}
+
 	protected render() {
 		return html`
 		<template class="list">
@@ -241,16 +253,16 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 		`
 	}
 
-	protected renderItems(items: T[]): RenderResult[] {
+	protected renderItems(items: Observed<ListItem<T>[]>): RenderResult[] {
 		let anySiblingHaveChildren = items.some(item => item.children)
 
-		return items.map((item: T) => {
+		return items.map((item: ListItem<T>) => {
 			return this.renderItem(item, anySiblingHaveChildren)
 		})
 	}
 
-	protected renderItem(item: T, anySiblingHaveChildren: boolean): RenderResult {
-		let expanded = this.expanded.includes(item)
+	protected renderItem(item: Observed<ListItem<T>>, anySiblingHaveChildren: boolean): RenderResult {
+		let expanded = this.expanded.includes(item.value)
 
 		return html`
 			<div
@@ -263,7 +275,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 					<div class='list-toggle-placeholder'
 						@click.stop=${() => this.toggleExpanded(item)}
 					>
-						<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} />
+						<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} .size="inherit" />
 					</div>
 				</lu:if>
 
@@ -274,7 +286,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 				<lu:if ${item.icon !== undefined}>
 					<div class='text-list-icon'>
 						<lu:if ${item.icon}>
-							<Icon .type=${item.icon} />
+							<Icon .type=${item.icon} .size="inherit" />
 						</lu:if>
 					</div>
 				</lu:if>
@@ -284,7 +296,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 				</div>
 
 				<lu:if ${this.isSelected(item)}>
-					<Icon class="list-selected-icon" .type="checked" />
+					<Icon class="list-selected-icon" .type="checked" .size="inherit" />
 				</lu:if>
 			</div>
 
@@ -294,7 +306,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 		`
 	}
 
-	protected renderActiveSelectedClassName(item: T) {
+	protected renderActiveSelectedClassName(item: Observed<ListItem<T>>) {
 		if (this.mode === 'navigation') {
 			if (this.isSelected(item)) {
 				return 'navigated'
@@ -313,7 +325,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 	 * Render item content, can be overwritten for sub classes
 	 * who know about more details about data items.
 	 */
-	protected renderItemContent(item: T) {
+	protected renderItemContent(item: Observed<ListItem<T>>) {
 		if (this.itemRenderer) {
 			return html`
 			<div class="list-content">
@@ -326,7 +338,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 				<lu:if ${item.icon !== undefined}>
 					<div class='text-list-icon'>
 						<lu:if ${item.icon}>
-							<Icon .type=${item.icon} />
+							<Icon .type=${item.icon} .size="inherit" />
 						</lu:if>
 					</div>
 				</lu:if>
@@ -341,33 +353,33 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 	}
 
 	/** Whether an item has been selected.  */
-	protected isSelected(item: T): boolean {
-		return this.selected.includes(item)
+	protected isSelected(item: Observed<ListItem<T>>): boolean {
+		return this.selected.includes(item.value)
 	}
 
 	/** Toggle expanded state. */
-	protected toggleExpanded(item: T) {
-		if (this.expanded.includes(item)) {
-			this.expanded.splice(this.expanded.indexOf(item), 1)
+	protected toggleExpanded(item: Observed<ListItem<T>>) {
+		if (this.expanded.includes(item.value)) {
+			this.expanded.splice(this.expanded.indexOf(item.value), 1)
 		}
 		else {
-			this.expanded.push(item)
+			this.expanded.push(item.value)
 		}
 	}
 
 	/** Do selection or navigation. */
-	protected onClickItem(this: List, item: T) {
+	protected onClickItem(this: List, item: Observed<ListItem<T>>) {
 		if (this.selectable && (this.dirSelectable || !item.children)) {
 			if (this.multipleSelect) {
-				if (this.selected.includes(item)) {
+				if (this.selected.includes(item.value)) {
 					this.selected.splice(this.selected.indexOf(item), 1)
 				}
 				else {
-					this.selected.push(item)
+					this.selected.push(item.value)
 				}
 			}
 			else {
-				this.selected = [item]
+				this.selected = [item.value]
 			}
 
 			this.fire('select', this.selected)
@@ -377,15 +389,15 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 	}
 
 	/** Expand item, and all of it's ancestors recursively. */
-	expandDeeply(item: T) {
-		this.applyExpandedRecursively(this.data, item)
+	expandDeeply(value: T) {
+		this.applyExpandedRecursively(this.data, value)
 	}
 
 	/** 
 	 * Make active item been expanded recursively.
 	 * Returns whether any of items has expanded descendants.
 	  */
-	private applyExpandedRecursively(items: T[], active: T): boolean {
+	private applyExpandedRecursively(items: ListItem<T>[], active: T): boolean {
 		return items.some(item => {
 			if (item === active) {
 				return true
@@ -394,8 +406,8 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 			if (item.children) {
 				let hasActiveChildItem = this.applyExpandedRecursively(item.children, active)
 				if (hasActiveChildItem) {
-					if (!this.expanded.includes(item)) {
-						this.expanded.push(item)
+					if (!this.expanded.includes(item.value)) {
+						this.expanded.push(item.value)
 					}
 				}
 			}
@@ -450,7 +462,7 @@ export class List<T extends Observed<ListItem<T>> = any, E = {}> extends Compone
 		else if (key === 'ArrowRight') {
 			if (this.inKeyNavigating) {
 				let item = this.keyNavigator.current
-				if (item && !this.expanded.includes(item) && item.children) {
+				if (item && !this.expanded.includes(item.value) && item.children) {
 					this.toggleExpanded(item)
 					this.keyNavigator.moveRight()
 				}

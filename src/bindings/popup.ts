@@ -124,7 +124,7 @@ export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> =
 	fixTriangle: false,
 
 	trigger: 'hover',
-	showDelay: 100,
+	showDelay: 0,
 	hideDelay: 200,
 	transition: fade(),
 	showImmediately: false,
@@ -384,62 +384,82 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Update popup content, if haven't rendered, render it firstly. */
 	protected async updatePopup() {
-		this.updateRenderedProperty()
-		await untilUpdateComplete()
+		await this.updateRenderedAndPopup()
 
 		// May soon become un-opened.
 		if (!this.state.opened) {
 			return
 		}
 
-		let firstElement = this.rendered!.el.firstElementChild!
-		let popup = firstElement ? Popup.from(firstElement) : this.popup
-		if (!popup) {
-			throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
-		}
-
-		// Update `pointable`.
-		popup.triangleDirection = Aligner.getTargetFaceDirection(this.options.position).opposite.toBoxEdgeKey()!
-		popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
-
-		// Popup content get updated.
-		if (popup !== this.popup) {
-			this.updatePopupProperty(popup)
-		}
+		// Update popup properties.
+		this.popup!.triangleDirection = Aligner.getTargetFaceDirection(this.options.position).opposite.toBoxEdgeKey()!
+		this.popup!.el.style.pointerEvents = this.options.pointable ? '' : 'none'
 
 		/** Append popup element into document. */
 		this.appendPopup()
-
-		if (this.options.key) {
-			SharedPopups.add(this.options.key, {popup, rendered: this.rendered!})
-			SharedPopups.setUser(popup, this)
-		}
 	}
 
-	/** Update rendered property, and may use cache. */
-	protected updateRenderedProperty() {
-		if (this.rendered) {
+	/** Update rendered and popup property, and may use and add cache. */
+	protected async updateRenderedAndPopup() {
+		let oldRendered = this.rendered
+		let popup: Popup | null = null
+
+		// Reset renderer.
+		if (this.rendered && this.rendered.renderer !== this.renderer!) {
 			this.rendered.renderer = this.renderer!
 		}
 
+		// Use cache.
 		if (!this.rendered) {
 			let cache = this.options.key ? SharedPopups.find(this.options.key) : null
 			if (cache) {
 				this.rendered = cache.rendered
-				this.popup = cache.popup
+				popup = cache.popup
 			}
 		}
 
+		// Make rendered.
 		if (!this.rendered) {
 			this.rendered = render(this.renderer!, this.context)
 			this.rendered.connectManually()
 		}
+
+		// rendered updated.
+		if (this.rendered !== oldRendered) {
+			this.rendered.on('updated', this.onRenderedUpdated, this)
+		}
+		
+		// Pick rendered popup.
+		if (!popup) {
+			await untilUpdateComplete()
+
+			let firstElement = this.rendered!.el.firstElementChild!
+
+			// May rendered didn't re-render popup after renderer updated.
+			popup = firstElement ? Popup.from(firstElement) : this.popup
+			if (!popup) {
+				throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
+			}
+		}
+		
+		// Update popup property.
+		if (popup !== this.popup) {
+			this.popup = popup
+			this.transition = new Transition(popup.el)
+
+			if (this.options.key) {
+				SharedPopups.add(this.options.key, {popup, rendered: this.rendered!})
+				SharedPopups.setUser(popup, this)
+			}
+		}
 	}
 
-	/** After popup first time updated. */
-	protected updatePopupProperty(popup: Popup) {
-		this.popup = popup
-		this.transition = new Transition(popup.el)
+	/** After popup content get updated. */
+	protected async onRenderedUpdated() {
+		if (this.state.opened && this.popup) {
+			await untilUpdateComplete()
+			this.alignPopup()
+		}
 	}
 
 	/** Append popup element into document. */
@@ -565,10 +585,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Clears popup content, reset to initial state. */
 	clearContent() {
-		if (this.state.opened && this.popup) {
-			this.popup.remove()
-		}
-
 		if (this.options.key && this.popup) {
 			SharedPopups.clearUser(this.popup)
 		}
@@ -576,6 +592,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.binder.unbindLeave()
 		this.state.clear()
 		this.unwatchRect?.()
+		this.rendered?.off('updated', this.onRenderedUpdated, this)
 		this.rendered = null
 		this.popup = null
 		this.transition = null

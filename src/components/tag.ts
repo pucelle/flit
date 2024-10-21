@@ -43,9 +43,13 @@ export class Tag<E = {}> extends Component<E & TagEvents> {
 			padding-right: 0.2em;
 		}
 	
-		.tag-icon{
+		.tag-close-icon{
 			display: inline-flex;
 			margin-right: -0.2em;
+
+			&:active{
+				transform: translateY(1px);
+			}
 		}
 		`
 	}
@@ -68,7 +72,7 @@ export class Tag<E = {}> extends Component<E & TagEvents> {
 		<template class="tag">
 			<span class="tag-label"><slot /></span>
 			<lu:if ${this.closable}>
-				<Icon class="tag-icon" .type="close"
+				<Icon class="tag-close-icon" .type="close" .size="inherit"
 					@click=${this.close}
 				/>
 			</lu:if>

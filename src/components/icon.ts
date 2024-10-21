@@ -11,7 +11,6 @@ export class Icon<Events = any> extends Component<Events> {
 		display: inline-flex;
 		stroke: currentColor;
 		fill: none;
-		margin: auto 0;
 		vertical-align: middle;
 		position: relative;
 

@@ -35,15 +35,15 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 				color: ${mainColor};
 				box-shadow: 0 0 0 1px ${mainColor};
 			}
+
+			&.indeterminate, &.checked{
+				color: ${mainColor};
+			}
 		}
 
 		.checkbox-icon{
 			position: relative;
 			margin-right: 0.2em;
-		}
-
-		.checkbox-indeterminate, .checkbox-checked{
-			color: ${mainColor};
 		}
 
 		.checkbox-label{
@@ -96,13 +96,13 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 		return html`
 		<template tabindex="0"
 			class="checkbox size-${this.size}" 
-			:class.checkbox-checked=${this.checked}
-			:class.checkbox-indeterminate=${this.indeterminate}
+			:class.checked=${this.checked}
+			:class.indeterminate=${this.indeterminate}
 			@click=${this.onClick}
 			@focus=${this.onFocus}
 			@blur=${this.onBlur}
 		>
-			<Icon class="checkbox-icon" .type=${iconType} />
+			<Icon class="checkbox-icon" .type=${iconType} .size="inherit" />
 			<div class="checkbox-label">
 				<slot />
 			</div>

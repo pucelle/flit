@@ -45,7 +45,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 				margin-right: 0.2em;
 			}
 
-			&-checked{
+			&.checked{
 				color: ${mainColor};
 			}
 		
@@ -94,7 +94,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 			<template
 				tabindex="0"
 				class="radio size-${this.size}"
-				:class.radio-checked=${this.checked}
+				:class.checked=${this.checked}
 				@click=${this.onClick}
 				@focus=${this.onFocus}
 			>

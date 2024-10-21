@@ -81,6 +81,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		`
 	}
 
+	
 	size: ThemeSize = 'default'
 
 	/** Input type, same with `<input type=...>`. */
@@ -129,7 +130,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 				${this.renderField()}
 
 				<lu:if ${this.touched && this.valid}>
-					<Icon class="input-valid-icon" .type="checked" />
+					<Icon class="input-valid-icon" .type="checked" .size="inherit" />
 				</lu:if>
 
 				<lu:if ${this.touched && this.error && !this.errorOnTooltip}>

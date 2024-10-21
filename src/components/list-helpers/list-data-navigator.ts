@@ -1,26 +1,22 @@
 import {computed, Observed} from '@pucelle/ff'
-
-
-export type ListItem<T> = {
-	children?: T[]
-}
+import {ListItem} from '../list'
 
 
 /** It help to control key navigation inside a tree-like list data. */
-export class ListDataNavigator<T extends ListItem<T>> implements Observed {
+export class ListDataNavigator<T = any> implements Observed {
 
-	private data: ReadonlyArray<T> = []
+	private data: ReadonlyArray<ListItem<T>> = []
 	private expanded: ReadonlyArray<T> = []
 
 	/** 
 	 * Navigation path, include active item of each depth level.
 	 * Should every time validate items because may add new items quietly.
 	 */
-	private path: {item: T, index: number}[] = []
+	private path: {item: ListItem<T>, index: number}[] = []
 
 	/** Correct and get currently active item. */
 	@computed
-	get current(): T | undefined {
+	get current(): ListItem<T> | undefined {
 		this.correctPath()
 		return this.getCurrent()
 	}
@@ -29,14 +25,14 @@ export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 	 * Update data and expanded state.
 	 * No need to watch them deeply, will correct path each time.
 	 */
-	update(data: T[], expanded: T[]) {
+	update(data: ListItem<T>[], expanded: T[]) {
 		this.data = data
 		this.expanded = expanded
 	}
 
 	/** Correct path by current data and expanded. */
 	private correctPath() {
-		let items: ReadonlyArray<T> = this.data
+		let items: ReadonlyArray<ListItem<T>> = this.data
 
 		for (let i = 0; i < this.path.length; i++) {
 			let {item, index} = this.path[i]
@@ -51,7 +47,7 @@ export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 			}
 
 			// Include current item, but not descendants.
-			if (!this.expanded.includes(item)) {
+			if (!this.expanded.includes(item.value)) {
 				this.path = this.path.slice(0, i + 1)
 				break
 			}
@@ -65,7 +61,7 @@ export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 	}
 
 	/** Get currently active item. */
-	private getCurrent(): T | undefined {
+	private getCurrent(): ListItem<T> | undefined {
 		if (this.path.length > 0) {
 			return this.path[this.path.length - 1].item
 		}
@@ -74,7 +70,7 @@ export class ListDataNavigator<T extends ListItem<T>> implements Observed {
 	}
 
 	/** Get siblings of currently active item. */
-	private getCurrentSiblings(): ReadonlyArray<T> {
+	private getCurrentSiblings(): ReadonlyArray<ListItem<T>> {
 		if (this.path.length > 1) {
 			return this.path[this.path.length - 2].item.children!
 		}

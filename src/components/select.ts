@@ -8,13 +8,13 @@ import {Icon} from './icon'
 import {popup} from '../bindings'
 
 
-interface SelectEvents<V> {
+interface SelectEvents<T> {
 
 	/** 
 	 * Fire after selected value changed.
 	 * Only user interaction can cause `change` event get triggered.
 	 */
-	change: (value: V[]) => void
+	change: (value: T[]) => void
 }
 
 
@@ -26,7 +26,7 @@ interface SelectEvents<V> {
  * 
  * `<Select>` doesn't support custom item renderer, you may extend it to a new class to implement.
  */
-export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & SelectEvents<V>> {
+export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 	
 	static style: ComponentStyle = () => {
 		let {mainColor, borderColor, popupShadowBlurRadius, fieldBackgroundColor, popupShadowColor} = theme
@@ -58,6 +58,10 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 		}
 
 		.select-dropdown-icon{
+			margin: 0 0.2em;
+		}
+
+		.select-clear-icon{
 			margin: 0 0.2em;
 		}
 	
@@ -106,9 +110,11 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 
 
 	size: ThemeSize = 'default'
-	trigger: 'click' | 'contextmenu' = 'click'
-	gap: number | number[] = 0
-	
+
+	trigger: 'click' | 'contextmenu' | undefined = 'click'
+	showDelay: number | undefined = 0
+	hideDelay: number | undefined = 0
+	gap: number | number[] | undefined = 0
 	
 	/** Whether shows triangle. Default value is `false`. */
 	triangle: boolean = false
@@ -126,10 +132,10 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 	placeholder: string = ''
 
 	/** Input text data list. */
-	data: V[] = []
+	data: ListItem<T>[] = []
 	
 	/** Current selected value or values. */
-	value: V[] = []
+	value: T[] = []
 
 	/** 
 	 * Whether close pop-up content after selected any item.
@@ -154,12 +160,19 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 	protected editing: boolean = false
 
 
-	protected onOpenedChange(opened: boolean) {
+	protected async onOpenedChange(opened: boolean) {
 		super.onOpenedChange(opened)
 
 		// End editing after closed popup.
 		if (!opened && this.editing) {
 			this.endEditing()
+		}
+
+		// Focus and scroll to view after opened popup.
+		else if (opened) {
+			await untilUpdateComplete()
+			this.mayFocusInput()
+			this.scrollToViewSelectedItem()
 		}
 	}
 
@@ -177,14 +190,23 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 
 	protected render() {
 		return html`
-			<template class="select"
+			<template class="dropdown select"
 				:class.opened=${this.opened}
 				:class.cant-input=${!this.searchable}
 				:popup=${this.renderPopup, this.popupOptions}
 				:ref.binding=${this.refBinding}
+				@click=${this.onClick}
 			>
 				${this.renderDisplayOrInput()}
-				<Icon class="dropdown-icon select-dropdown-icon" .type="down" .size="inherit" />
+
+				<lu:if ${this.inputtedText}>
+					<Icon class="select-clear-icon" .type="close" .size="inherit"
+						@click.stop=${this.clearInputtedText}
+					/>
+				</lu:if>
+				<lu:else>
+					<Icon class="dropdown-icon select-dropdown-icon" .type="down" .size="inherit" />
+				</lu:else>
 			</template>
 		`
 	}
@@ -197,7 +219,6 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 					:ref=${this.inputEl}
 					.value=${this.inputtedText}
 					.placeholder=${this.placeholder}
-					@click=${this.onClick}
 					@input=${this.onInput}
 				>
 			`
@@ -226,12 +247,12 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 				:ref.el=${this.popupEl}
 			>
 				<List class="select-list"
-					:ref=${this.listEl}
+					:ref.el=${this.listEl}
 					.mode="selection"
 					.selectable
 					.data=${data}
 					.selected=${this.value}
-					.multiple=${this.multiple}
+					.multipleSelect=${this.multiple}
 					.keyComeFrom=${this.inputEl}
 					@select=${this.onSelected}
 				/>
@@ -241,7 +262,8 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 
 	/** Render text display to represent currently selected. */
 	protected renderDisplay(): string | TemplateResult[] | null {
-		let displays = this.value.map(item => item.text)
+		let filteredData = this.data.filter(item => this.value.includes(item.value))
+		let displays = filteredData.map(item => item.text)
 		if (displays.length === 0) {
 			return null
 		}
@@ -254,10 +276,10 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 		}
 	}
 
-	protected getFilteredData(): V[] {
+	protected getFilteredData(): ListItem<T>[] {
 		if (this.searchable && this.inputtedText) {
 			let lowerSearchWord = this.inputtedText.toLowerCase()
-			let filteredData: V[] = []
+			let filteredData: ListItem<T>[] = []
 
 			for (let item of this.data) {
 				let searchText = item.searchText ?? String(item.text).toLowerCase()
@@ -279,7 +301,7 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 		}
 	}
 
-	protected onSelected(this: Select, selected: V[]) {
+	protected onSelected(this: Select, selected: T[]) {
 		this.value = selected
 
 		let hideAfterSelected = this.hideAfterSelected ?? !this.multiple
@@ -291,18 +313,12 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 	}
 
 	protected async startEditing() {
+		this.inputtedText = ''
 		this.editing = true
 	}
 
 	protected endEditing() {
 		this.editing = false
-		this.inputtedText = ''
-	}
-
-	protected async onPopupOpened() {
-		await untilUpdateComplete()
-		this.mayFocusInput()
-		this.scrollToViewSelectedItem()
 	}
 
 	protected mayFocusInput() {
@@ -323,5 +339,9 @@ export class Select<V extends ListItem<V> = any, E = {}> extends Dropdown<E & Se
 	protected onInput() {
 		this.inputtedText = this.inputEl!.value
 		this.opened = true
+	}
+
+	protected clearInputtedText() {
+		this.inputtedText = ''
 	}
 }

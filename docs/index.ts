@@ -2,9 +2,10 @@ import * as ff from '@pucelle/ff'
 import {html, Component, TemplateResult, css} from '@pucelle/lupos.js'
 import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
-	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form
+	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
+	Progress
 } from '../out'
-import {watch} from '@pucelle/ff'
+import {range, watch} from '@pucelle/ff'
 
 
 declare global {
@@ -37,6 +38,10 @@ class Preview extends Component {
 				${this.renderCheckboxAndSomeOthers()}
 				${this.renderInputTextarea()}
 				${this.renderForm()}
+				${this.renderSelect()}
+				${this.renderSearchField()}
+				${this.renderProgressBar()}
+				${this.renderSlider()}
 			</div>
 		</template>
 		`
@@ -179,10 +184,10 @@ class Preview extends Component {
 	private renderCheckboxAndSomeOthers() {
 		return html`
 			<section>
-				<Row style="margin: 8px 0;" .gutter="24">
+				<Row style="margin: 8px 0;" .gutter=${24}>
 					<Col .span=${6}>
 						<h3>Checkboxes</h3>
-						<CheckboxGroup .value=${this.checkboxValue}>
+						<CheckboxGroup .value=${this.checkboxValue} @change=${(value: string[]) => this.checkboxValue = value}>
 							<Checkbox .value="1">${this.checkboxValue.includes('1') ? 'Checked' : 'Unchecked'}</Checkbox><br>
 							<Checkbox .value="2">${this.checkboxValue.includes('2') ? 'Checked' : 'Unchecked'}</Checkbox><br>
 							<Checkbox .value="3" .indeterminate=${this.checkboxIndeterminate} @change=${() => this.checkboxIndeterminate = false}>${
@@ -242,9 +247,9 @@ class Preview extends Component {
 	private renderInputTextarea() {
 		return html`
 			<section>
-				<h3>Inputs</h3>
+				<h3>Form Inputs</h3>
 
-				<Row style="margin: 8px 0 16px 0;" .gutter="24">
+				<Row style="margin: 8px 0 16px 0;" .gutter=${24}>
 					<Col .span=${6}>
 						<header>Text Input</header>
 						<Input .type="text" style="width: 100%;" />
@@ -255,11 +260,11 @@ class Preview extends Component {
 					</Col>
 					<Col .span=${6}>
 						<header>Textarea</header>
-						<Textarea .rows=${3} style="width: 100%;" />
+						<Textarea .rows=${2} style="width: 100%;" />
 					</Col>
 				</Row>
 
-				<Row style="margin: 8px 0 16px 0;" .gutter="24">
+				<Row style="margin: 8px 0 16px 0;" .gutter=${24}>
 					<Col .span=${6}>
 						<header>Valid Input</header>
 						<Input .type="text" style="width: 100%;" .touched .valid=${true} .placeholder="Valid Input" />
@@ -287,7 +292,7 @@ class Preview extends Component {
 				<h3>Form</h3>
 
 				<Form :ref=${this.form}>
-					<Row style="margin: 8px 0 24px 0;" .gutter="24">
+					<Row style="margin: 8px 0 24px 0;" .gutter=${24}>
 						<Col .span=${12}>
 							<header><Label .required>Name</Label></header>
 							<Input style="width: 100%;" .validator=${(value: string) => {
@@ -304,7 +309,7 @@ class Preview extends Component {
 						</Col>
 					</Row>
 
-					<Row style="margin: 8px 0;" .gutter="24">
+					<Row style="margin: 8px 0;" .gutter=${24}>
 						<Col .span=${6}>
 							<header>Country</header>
 							<Select style="width: 100%;" .searchable .data=${[{value: '1', text: 'Country 1'}, {value: '2', text: 'Country 2'}]} />
@@ -316,21 +321,21 @@ class Preview extends Component {
 						</Col>
 					</Row>
 
-					<Row style="margin: 8px 0;" .gutter="24">
+					<Row style="margin: 8px 0;" .gutter=${24}>
 						<Col .span=${12}>
 							<header>Address</header>
 							<Input style="width: 100%;" />
 						</Col>
 					</Row>
 
-					<Row style="margin: 8px 0;" .gutter="24">
+					<Row style="margin: 8px 0;" .gutter=${24}>
 						<Col .span=${12}>
 							<header>About</header>
 							<Textarea style="width: 100%;" />
 						</Col>
 					</Row>
 
-					<Row style="margin: 16px 0 10px;" .gutter="24">
+					<Row style="margin: 16px 0 10px;" .gutter=${24}>
 						<Col .span=${12} style="text-align: right;">
 							<Button .primary @click=${() => this.form.validate()}>Save</Button>
 						</Col>
@@ -341,77 +346,101 @@ class Preview extends Component {
 			`
 	}
 
-	// private renderSelect() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Selects</h3>
+	private renderSelect() {
+		return html`
+			<section>
+				<h3>Selects</h3>
 				
-	// 			<Row style="margin: 8px 0;" .gutter="24">
-	// 				<Col .span=${6}>
-	// 					<header>Single Select</header>
-	// 					<Select style="width: 100%; margin: 8px 0;" .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${1}  />
-	// 				</Col>
+				<Row style="margin: 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header>Single Select</header>
+						<Select style="width: 100%; margin: 8px 0;"
+							.data=${[...range(1, 11)].map(value => ({value, text: 'Option ' + value}))}
+							.value=${[1]}
+						/>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header>Multiple Select</header>
-	// 					<Select style="width: 100%; margin: 8px 0;" .multipleSelect .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${[1, 2]} />
-	// 				</Col>
+					<Col .span=${6}>
+						<header>Multiple Select</header>
+						<Select style="width: 100%; margin: 8px 0;"
+							.multiple
+							.data=${[...range(1, 11)].map(value => ({value, text: 'Option ' + value}))}
+							.value=${[1, 2]}
+						/>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header>Searchable Select</header>
-	// 					<Select style="width: 100%; margin: 8px 0;" .searchable .data=${range(1, 11).map(value => ({value, text: 'Option ' + value}))} .value=${1} />
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+					<Col .span=${6}>
+						<header>Searchable Select</header>
+						<Select style="width: 100%; margin: 8px 0;"
+							.searchable
+							.data=${[...range(1, 11)].map(value => ({value, text: 'Option ' + value}))}
+							.value=${[1]}
+						/>
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
-	// private renderSearchField() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Search Field</h3>
+	private renderSearchField() {
+		return html`
+			<section>
+				<h3>Search Field</h3>
 				
-	// 			<Row style="margin: 16px 0 16px 0;" .gutter="24">
-	// 				<Col .span=${6}>
-	// 					<f-search style="width: 100%; margin-bottom: 8px;" />
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+				<Row style="margin: 16px 0 16px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<Search style="width: 100%; margin-bottom: 8px;" />
+					</Col>
+				</Row>
+			</section>
+		`
+	}
 
-
-	// 		<section>
-	// 			<h3>Progress Bars</h3>
+	private renderProgressBar() {
+		return html`
+			<section>
+				<h3>Progress Bar</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
-	// 				<Col .span=${6}>
-	// 					<f-progress style="width: 100%;" .value="0" />
-	// 					<f-progress style="width: 100%;" .value="0.5" />
-	// 					<f-progress style="width: 100%;" .value="1" />
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.1} /> 10%<br>
+						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.5} /> 50%<br>
+						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${1} /> 100%<br>
+					</Col>
 
-	// 		<section>
-	// 			<h3>Sliders</h3>
+					<Col .span=${6}>
+						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.3} .height=${1} /> Height 1<br>
+						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.5} .height=${2} /> Height 2<br>
+						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.8} .height=${3} /> Height 3<br>
+					</Col>
+				</Row>
+			</section>
+		`
+	}
+
+	private renderSlider() {
+		return html`
+			<section>
+				<h3>Slider</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
-	// 				<Col .span=${6}>
-	// 					<f-slider style="width: 100%;" .value="0" />
-	// 					<f-slider style="height: 100px; margin-top: 20px;" .value="50" .vertical />
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<f-slider style="width: 100%;" .value="0" />
+						<f-slider style="height: 100px; margin-top: 20px;" .value="50" .vertical />
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
 	// private renderLoader() {
 	// 	return html`
 	// 		<section>
 	// 			<h3>Loaders</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${4}>
 	// 					<header style="margin-bottom: 8px;">Small</header>
 	// 					<f-loader .size="small" .speed="0.7" />
@@ -437,7 +466,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Lists</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Selection type</header>
 	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} />
@@ -450,7 +479,7 @@ class Preview extends Component {
 
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Multiple Selection</header>
-	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .selectable .multipleSelect .selected=${[1, 2]} />
+	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .selectable .multiple .selected=${[1, 2]} />
 	// 				</Col>
 
 	// 				<Col .span=${6}>
@@ -459,7 +488,7 @@ class Preview extends Component {
 	// 				</Col>
 	// 			</Row>
 
-	// 			<Row style="margin: 32px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">With Icon</header>
 	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value, icon: 'love'}))} />
@@ -505,7 +534,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Navigations</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<f-navigation
 	// 						.active=${111}
@@ -554,7 +583,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Popovers</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Default</header>
 	// 					<Button ${
@@ -626,7 +655,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Menus</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<Button ${
 	// 						popup(
@@ -669,7 +698,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Tooltips</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Default</header>
 	// 					<Button ${
@@ -685,7 +714,7 @@ class Preview extends Component {
 	// 				</Col>
 	// 			</Row>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Error</header>
 	// 					<Button primary disabled ${
@@ -703,7 +732,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Notifications</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Info</header>
 	// 					<Button @click=${
@@ -741,7 +770,7 @@ class Preview extends Component {
 	// 				</Col>
 	// 			</Row>
 
-	// 			<Row style="margin: 32px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Without Title</header>
 	// 					<Button @click=${
@@ -788,7 +817,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Dialogs</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Default</header>
 	// 					<Button @click=${
@@ -830,7 +859,7 @@ class Preview extends Component {
 	// 				</Col>
 	// 			</Row>
 				
-	// 			<Row style="margin: 32px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">With Third action</header>
 	// 					<Button @click=${
@@ -886,7 +915,7 @@ class Preview extends Component {
 	// 		<section>
 	// 			<h3>Modals</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter="24">
+	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 	// 				<Col .span=${6}>
 	// 					<header style="margin-bottom: 8px;">Default</header>
 
@@ -1114,11 +1143,7 @@ class Preview extends Component {
 }
 
 
-class MainColorSelect extends Select<{value: string, text: TemplateResult}> {
-
-	static style = css`
-
-	`
+class MainColorSelect extends Select<string> {
 
 	data = [
 		{value: '#3a6cf6', text: html`<div style="color: #3a6cf6;">Blue</div>`},
@@ -1132,14 +1157,11 @@ class MainColorSelect extends Select<{value: string, text: TemplateResult}> {
 		{value: '#888888', text: html`<div style="color: #888888;">Grey</div>`},
 	]
 
-	protected onCreated(): void {
-		super.onCreated()
-		this.value = [this.data[0]]
-	}
+	value: string[] = ['#3a6cf6']
 
 	@watch('value')
-	protected onValueChange(value: {value: string, text: TemplateResult}[]) {
-		theme.overwrite({mainColor: value[0].value})
+	protected onValueChange(value: string[]) {
+		theme.overwrite({mainColor: value[0]})
 	}
 }
 
