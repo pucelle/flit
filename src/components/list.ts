@@ -133,8 +133,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 
 		.list-icon{
-			display: flex;
-			width: 1.6em;
+			margin-right: 0.2em;
 		}
 
 		.list-content{
@@ -284,7 +283,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				</lu:elseif>
 
 				<lu:if ${item.icon !== undefined}>
-					<div class='text-list-icon'>
+					<div class='list-icon'>
 						<lu:if ${item.icon}>
 							<Icon .type=${item.icon} .size="inherit" />
 						</lu:if>
@@ -295,7 +294,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 					${this.renderItemContent(item)}
 				</div>
 
-				<lu:if ${this.isSelected(item)}>
+				<lu:if ${this.mode === 'selection' && this.isSelected(item)}>
 					<Icon class="list-selected-icon" .type="checked" .size="inherit" />
 				</lu:if>
 			</div>
@@ -335,14 +334,6 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 		else {
 			return html`
-				<lu:if ${item.icon !== undefined}>
-					<div class='text-list-icon'>
-						<lu:if ${item.icon}>
-							<Icon .type=${item.icon} .size="inherit" />
-						</lu:if>
-					</div>
-				</lu:if>
-				
 				<div class="list-content text-list-content"
 					?:tooltip=${item.tip, item.tip}
 				>

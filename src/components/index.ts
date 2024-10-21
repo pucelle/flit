@@ -31,5 +31,8 @@ export * from './tag'
 export * from './input'
 export * from './textarea'
 export * from './form'
+
 export * from './search'
 export * from './progress'
+export * from './slider'
+export * from './loader'

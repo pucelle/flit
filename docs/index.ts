@@ -3,7 +3,7 @@ import {html, Component, TemplateResult, css} from '@pucelle/lupos.js'
 import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
-	Progress
+	Progress, Slider, Loader, List
 } from '../out'
 import {range, watch} from '@pucelle/ff'
 
@@ -42,6 +42,8 @@ class Preview extends Component {
 				${this.renderSearchField()}
 				${this.renderProgressBar()}
 				${this.renderSlider()}
+				${this.renderLoader()}
+				${this.renderList()}
 			</div>
 		</template>
 		`
@@ -403,16 +405,16 @@ class Preview extends Component {
 				<h3>Progress Bar</h3>
 				
 				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-					<Col .span=${6}>
-						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.1} /> 10%<br>
-						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.5} /> 50%<br>
-						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${1} /> 100%<br>
+					<Col .span=${6} style="line-height: 2em;">
+						<Progress style="width: calc(100% - 3em); margin-right: 0.5em; vertical-align: middle" .value=${0.1} /> 10%<br>
+						<Progress style="width: calc(100% - 3em); margin-right: 0.5em; vertical-align: middle" .value=${0.5} /> 50%<br>
+						<Progress style="width: calc(100% - 3em); margin-right: 0.5em; vertical-align: middle" .value=${1} /> 100%<br>
 					</Col>
 
-					<Col .span=${6}>
-						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.3} .height=${1} /> Height 1<br>
-						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.5} .height=${2} /> Height 2<br>
-						<Progress style="width: calc(100% - 4.5em); margin-right: 0.5em;" .value=${0.8} .height=${3} /> Height 3<br>
+					<Col .span=${6} style="line-height: 2em;">
+						<Progress style="width: calc(100% - 2em); margin-right: 0.5em; vertical-align: middle" .value=${0.3} .height=${1} />1<br>
+						<Progress style="width: calc(100% - 2em); margin-right: 0.5em; vertical-align: middle" .value=${0.5} .height=${2} />2<br>
+						<Progress style="width: calc(100% - 2em); margin-right: 0.5em; vertical-align: middle" .value=${0.8} .height=${3} />3<br>
 					</Col>
 				</Row>
 			</section>
@@ -426,8 +428,20 @@ class Preview extends Component {
 				
 				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 					<Col .span=${6}>
-						<f-slider style="width: 100%;" .value="0" />
-						<f-slider style="height: 100px; margin-top: 20px;" .value="50" .vertical />
+						<header>Horizontal</header>
+						<Slider style="width: 100%;" .value=${10} />
+					</Col>
+
+					<Col .span=${6}>
+						<header>Vertical</header>
+						<Slider style="height: 6em;" .value=${50} .vertical />
+					</Col>
+
+					<Col .span=${6} style="line-height: 2em;">
+						<header>Size</header>
+						<Slider style="width: calc(100% - 2em); margin-right: 1em;" .value=${50} .grooveSize=${1} />1<br>
+						<Slider style="width: calc(100% - 2em); margin-right: 1em;" .value=${50} .grooveSize=${2} .ballSize=${18} />2<br>
+						<Slider style="width: calc(100% - 2em); margin-right: 1em;" .value=${50} .grooveSize=${3} .ballSize=${20} />3<br>
 					</Col>
 				</Row>
 			</section>
@@ -435,99 +449,99 @@ class Preview extends Component {
 			`
 	}
 
-	// private renderLoader() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Loaders</h3>
+	private renderLoader() {
+		return html`
+			<section>
+				<h3>Loader</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${4}>
-	// 					<header style="margin-bottom: 8px;">Small</header>
-	// 					<f-loader .size="small" .speed="0.7" />
-	// 				</Col>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${4}>
+						<header style="margin-bottom: 8px;">18 + 3</header>
+						<Loader .size=${18} .strokeSize=${3} .speed="0.7" />
+					</Col>
 
-	// 				<Col .span=${4}>
-	// 					<header style="margin-bottom: 8px;">Medium</header>
-	// 					<f-loader .size="medium" .speed="0.6" />
-	// 				</Col>
+					<Col .span=${4}>
+						<header style="margin-bottom: 8px;">28 + 4</header>
+						<Loader .size=${28} .strokeSize=${4} .speed="0.6" />
+					</Col>
 
-	// 				<Col .span=${4}>
-	// 					<header style="margin-bottom: 8px;">Large</header>
-	// 					<f-loader .size="large" .speed="0.5" />
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+					<Col .span=${4}>
+						<header style="margin-bottom: 8px;">38 + 5</header>
+						<Loader .size=${38} .strokeSize=${5} .speed="0.5" />
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
-	// private renderList() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Lists</h3>
+	private renderList() {
+		return html`
+			<section>
+				<h3>List</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Selection type</header>
-	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} />
-	// 				</Col>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Non Selection</header>
+						<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} />
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Single Selection</header>
-	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .selectable .selected=${[2]} />
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Single Selection</header>
+						<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} .selectable .selected=${[2]} />
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Multiple Selection</header>
-	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .selectable .multiple .selected=${[1, 2]} />
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Multiple Selection</header>
+						<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} .selectable .multipleSelect .selected=${[1, 2]} />
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Navigation Type</header>
-	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .type="navigation" .active=${1} />
-	// 				</Col>
-	// 			</Row>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Navigation Type</header>
+						<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} .mode="navigation" .selectable .selected=${[1]} />
+					</Col>
+				</Row>
 
-	// 			<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With Icon</header>
-	// 					<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value, icon: 'love'}))} />
-	// 				</Col>
+				<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With Icon</header>
+						<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value, icon: 'love'}))} />
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With Subsection</header>
-	// 					<f-list .type="navigation" .data=${[
-	// 						{value: 1, text: 'User A', children:
-	// 							[
-	// 								{value: 11, text: 'Folder 1', children: [
-	// 									{value: 111, text: 'Item 1'},
-	// 									{value: 112, text: 'Item 2'},
-	// 								]},
-	// 								{value: 12, text: 'Folder 2', children: [
-	// 									{value: 121, text: 'Item 1'},
-	// 									{value: 122, text: 'Item 2'},
-	// 								]}
-	// 							]
-	// 						},
-	// 						{value: 2, text: 'User B', opened: true, children:
-	// 							[
-	// 								{value: 21, text: 'Folder 1', children: [
-	// 									{value: 211, text: 'Item 1'},
-	// 									{value: 212, text: 'Item 2'},
-	// 								]},
-	// 								{value: 22, text: 'Folder 2', children: [
-	// 									{value: 221, text: 'Item 1'},
-	// 									{value: 222, text: 'Item 2'},
-	// 								]}
-	// 							]
-	// 						},
-	// 					]} />
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With Subsection</header>
+						<List .type="navigation" .data=${[
+							{value: 1, text: 'User A', children:
+								[
+									{value: 11, text: 'Folder 1', children: [
+										{value: 111, text: 'Item 1'},
+										{value: 112, text: 'Item 2'},
+									]},
+									{value: 12, text: 'Folder 2', children: [
+										{value: 121, text: 'Item 1'},
+										{value: 122, text: 'Item 2'},
+									]}
+								]
+							},
+							{value: 2, text: 'User B', opened: true, children:
+								[
+									{value: 21, text: 'Folder 1', children: [
+										{value: 211, text: 'Item 1'},
+										{value: 212, text: 'Item 2'},
+									]},
+									{value: 22, text: 'Folder 2', children: [
+										{value: 221, text: 'Item 1'},
+										{value: 222, text: 'Item 2'},
+									]}
+								]
+							},
+						]} />
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
 	// private renderNavigator() {
 	// 	return html`
@@ -661,7 +675,7 @@ class Preview extends Component {
 	// 						popup(
 	// 							() => html`
 	// 							<f-menu>
-	// 								<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} />
+	// 								<List .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} />
 	// 							</f-menu>
 	// 							`,
 	// 							{trigger: 'click'}
@@ -677,7 +691,7 @@ class Preview extends Component {
 	// 						popup(
 	// 							() => html`
 	// 							<f-menu .title="Menu title">
-	// 								<f-list .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .selectable .selected=${[1]} />
+	// 								<List .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .selectable .selected=${[1]} />
 	// 							</f-menu>
 	// 							`,
 	// 							{trigger: 'click'}

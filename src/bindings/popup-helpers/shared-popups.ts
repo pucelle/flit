@@ -18,11 +18,24 @@ const PopupContentCache: Map<string, SharedPopupContentCache> = new Map()
 const PopupContentUsedBy: Map<Popup, popup> = new Map()
 
 
-/** 
- * Get a shared popup cache by `key`,
- * it must not include `triggerEl`.
- */
-export function find(key: string): SharedPopupContentCache | null {
+/** Get a shared popup cache by `key`, initialize it for reuse. */
+export function getCache(key: string): SharedPopupContentCache | null {
+	let cache = findCache(key)
+	if (!cache) {
+		return null
+	}
+
+	let binding = PopupContentUsedBy.get(cache.popup)
+	if (binding) {
+		binding.clearContent(true)
+	}
+
+	return cache
+}
+
+
+/** Find a shared popup cache by `key`. */
+function findCache(key: string): SharedPopupContentCache | null {
 	let cache = PopupContentCache.get(key)
 	if (!cache) {
 		return null
@@ -36,7 +49,6 @@ export function find(key: string): SharedPopupContentCache | null {
 	let binding = PopupContentUsedBy.get(popup)
 	if (binding) {
 		if (binding.canContentReuse()) {
-			binding.clearContent()
 			return cache
 		}
 		else {
@@ -50,7 +62,7 @@ export function find(key: string): SharedPopupContentCache | null {
 
 /** Check whether the represented popup from cache with the specified key is opened. */
 export function isCacheOpened(key: string): boolean {
-	let cache = find(key)
+	let cache = findCache(key)
 	if (!cache) {
 		return false
 	}
@@ -65,7 +77,7 @@ export function isCacheOpened(key: string): boolean {
 
 
 /** Add a shared popup cache. */
-export function add(key: string, cache: SharedPopupContentCache) {
+export function setCache(key: string, cache: SharedPopupContentCache) {
 	PopupContentCache.set(key, cache)
 }
 

@@ -366,10 +366,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected async doingHidePopup() {
 
 		// Play leave transition if need.
-		if (this.options.transition) {
-			let finish = await this.transition!.leave(this.options.transition)
+		if (this.options.transition && this.transition) {
+			let finish = await this.transition.leave(this.options.transition)
 			if (finish) {
-				this.popup?.remove()
+				this.popup!.remove()
 			}
 		
 			if (this.state.opened) {
@@ -384,7 +384,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Update popup content, if haven't rendered, render it firstly. */
 	protected async updatePopup() {
-		await this.updateRenderedAndPopup()
+		await this.updateRendering()
 
 		// May soon become un-opened.
 		if (!this.state.opened) {
@@ -400,55 +400,56 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Update rendered and popup property, and may use and add cache. */
-	protected async updateRenderedAndPopup() {
-		let oldRendered = this.rendered
-		let popup: Popup | null = null
-
-		// Reset renderer.
-		if (this.rendered && this.rendered.renderer !== this.renderer!) {
-			this.rendered.renderer = this.renderer!
-		}
+	protected async updateRendering() {
+		let rendered = this.rendered
+		let popup = this.popup
 
 		// Use cache.
-		if (!this.rendered) {
-			let cache = this.options.key ? SharedPopups.find(this.options.key) : null
+		if (!rendered) {
+			let cache = this.options.key ? SharedPopups.getCache(this.options.key) : null
 			if (cache) {
-				this.rendered = cache.rendered
+				rendered = cache.rendered
 				popup = cache.popup
 			}
 		}
 
 		// Make rendered.
-		if (!this.rendered) {
-			this.rendered = render(this.renderer!, this.context)
-			this.rendered.connectManually()
+		if (!rendered) {
+			rendered = render(this.renderer!, this.context)
+			rendered.connectManually()
 		}
 
-		// rendered updated.
-		if (this.rendered !== oldRendered) {
-			this.rendered.on('updated', this.onRenderedUpdated, this)
+		// Reset renderer.
+		else if (rendered.renderer !== this.renderer!) {
+			rendered.renderer = this.renderer!
 		}
-		
+
+		// Wait for rendering complete.
+		await untilUpdateComplete()
+
+		// Do alignment after rendered updated.
+		if (rendered !== this.rendered) {
+			rendered.on('updated', this.onRenderedUpdated, this)
+			this.rendered = rendered
+		}
+
 		// Pick rendered popup.
+		let firstElement = rendered!.el.firstElementChild!
+
+		// May rendered didn't re-render popup after renderer updated.
+		popup = firstElement ? Popup.from(firstElement) : popup
 		if (!popup) {
-			await untilUpdateComplete()
-
-			let firstElement = this.rendered!.el.firstElementChild!
-
-			// May rendered didn't re-render popup after renderer updated.
-			popup = firstElement ? Popup.from(firstElement) : this.popup
-			if (!popup) {
-				throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
-			}
+			throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
 		}
 		
 		// Update popup property.
 		if (popup !== this.popup) {
 			this.popup = popup
+			this.transition?.cancel()
 			this.transition = new Transition(popup.el)
-
+		
 			if (this.options.key) {
-				SharedPopups.add(this.options.key, {popup, rendered: this.rendered!})
+				SharedPopups.setCache(this.options.key, {popup, rendered})
 				SharedPopups.setUser(popup, this)
 			}
 		}
@@ -584,7 +585,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Clears popup content, reset to initial state. */
-	clearContent() {
+	clearContent(forReuse: boolean = false) {
+		if (!forReuse && this.state.opened && this.popup) {
+			this.popup.remove()
+		}
+
 		if (this.options.key && this.popup) {
 			SharedPopups.clearUser(this.popup)
 		}
@@ -595,6 +600,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.rendered?.off('updated', this.onRenderedUpdated, this)
 		this.rendered = null
 		this.popup = null
+		this.transition?.cancel()
 		this.transition = null
 		this.aligner = null
 		this.preventedHiding = false

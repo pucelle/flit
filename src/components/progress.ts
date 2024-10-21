@@ -30,7 +30,6 @@ export class Progress<E = {}> extends Component<E> {
 
 		.progress-tooltip{
 			font-family: consolas;
-			font-size: 1em;
 		}
 		`
 	}
@@ -56,12 +55,12 @@ export class Progress<E = {}> extends Component<E> {
 		let tooltipOptions: Partial<TooltipOptions> = {
 			position: 'bc-tr',
 			alignTo: '.progress-progress',
-			gap: [8, 0],
+			gap: 8,
 		}
 
 		return html`
 			<template class="progress"
-				:tooltip=${this.renderTooltip, tooltipOptions}
+				:tooltip=${this.renderTooltipContent, tooltipOptions}
 			>
 				<div class="progress-groove" :style.height.px=${this.height}>
 					<div class="progress-progress"
@@ -72,7 +71,7 @@ export class Progress<E = {}> extends Component<E> {
 		`
 	}
 
-	renderTooltip() {
+	renderTooltipContent() {
 		let tipValue = (Math.min(this.value, 1) * 100)
 		let tipText = tipValue.toString()
 
