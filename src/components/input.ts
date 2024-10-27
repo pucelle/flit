@@ -22,7 +22,7 @@ interface InputEvents {
 export class Input<E = {}> extends Component<InputEvents & E> {
 
 	static style: ComponentStyle = () => {
-		let {errorColor, borderColor, mainColor, successColor, focusBlurRadius, fieldBackgroundColor} = theme
+		let {errorColor, borderColor, mainColor, successColor, fieldBackgroundColor} = theme
 
 		return css`
 		.input{
@@ -81,14 +81,17 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		`
 	}
 
-	
+
 	size: ThemeSize = 'default'
 
 	/** Input type, same with `<input type=...>`. */
 	type: 'text' | 'password' = 'text'
 
+	/** Whether get focus after been inserted into document. */
+	autoFocus: boolean = false
+
 	/** Whether get focus. */
-	getFocus: boolean = false
+	focusGot: boolean = false
 
 	/** 
 	 * Whether input has been touched, error messages only appears after touched.
@@ -123,7 +126,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	protected render() {
 		return html`
 			<template class=${this.renderClassName()}
-				:class.input-focus=${this.getFocus}
+				:class.input-focus=${this.focusGot}
 				:class.input-valid=${this.touched && this.valid}
 				:class.input-invalid=${this.touched && this.valid === false}
 			>
@@ -147,6 +150,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	protected renderField() {
 		return html`
 		<input class="input-field" type=${this.type}
+			?autofocus=${this.autoFocus}
 			.placeholder=${this.placeholder || ''}
 			.value=${this.value}
 			:ref=${this.field}
@@ -159,7 +163,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	}
 
 	protected onFocus() {
-		this.getFocus = true
+		this.focusGot = true
 		DOMModifiableEvents.on(document, 'keydown', ['Enter'], this.onEnter, this)
 	}
 
@@ -171,7 +175,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	protected onBlur() {
 		DOMModifiableEvents.off(document, 'keydown', this.onEnter, this)
 		
-		this.getFocus = false
+		this.focusGot = false
 		this.touched = true
 
 		// Validate after only change event is not enough.

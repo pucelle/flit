@@ -10,12 +10,10 @@ export {TriggerType}
 /** Options for `:popup` */
 export interface PopupOptions extends AlignerOptions {
 
-	/** 
-	 * How the popup content would align with the trigger element.
-	 * Reference to `AlignerPosition` type for more details.
-	 * Default value is `b`, means align to the bottom position of trigger element.
+	/** Whether popup content will be aligned to follow trigger events.
+	 * Default value is `false`.
 	 */
-	position: AlignerPosition
+	followEvents: boolean
 
 	/** 
 	 * If specified, all the `:popup` binding with same key will
@@ -27,15 +25,16 @@ export interface PopupOptions extends AlignerOptions {
 	 * It's useful when there are many same-type popup contents existing,
 	 * and you'd like only one of them exist to reduce disturb.
 	 */
-	readonly key: string
+	key?: string
 
 	/** 
 	 * By which interaction type trigger the popup.
 	 * Can be one of `hover | click | focus | contextmenu | none`.
 	 * You should not change it after `:popup` initialized.
 	 * Note when use `focus` type trigger, you must ensure element can get focus.
+	 * Default value is `hover`.
 	 */
-	readonly trigger: TriggerType
+	trigger: TriggerType
 
 	/** 
 	 * Specifies which element to align to.
@@ -44,7 +43,7 @@ export interface PopupOptions extends AlignerOptions {
 	 * 
 	 * If omit, use current element to align to.
 	 */
-	alignTo: string | ((trigger: Element) => Element)
+	alignTo?: string | ((trigger: Element) => Element)
 
 	/** 
 	 * Delay showing in milliseconds, such that mouse hover unexpected will not cause layer popup.
@@ -123,6 +122,7 @@ export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> =
 	canShrinkOnY: true,
 	fixTriangle: false,
 
+	followEvents: false, 
 	trigger: 'hover',
 	showDelay: 0,
 	hideDelay: 200,
@@ -450,8 +450,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		
 			if (this.options.key) {
 				SharedPopups.setCache(this.options.key, {popup, rendered})
-				SharedPopups.setUser(popup, this)
 			}
+			SharedPopups.setUser(popup, this)
 		}
 	}
 
@@ -515,20 +515,31 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		this.fire('will-align', this.popup!)
-		let alignTo = this.getAlignToElement()
+
+		let target = this.getAlignToElement()
+		let aligned = false
 
 		// Update aligner if required.
-		if (!this.aligner || this.aligner.target !== alignTo || this.aligner.content !== this.popup!.el) {
-			this.aligner = new Aligner(this.popup!.el, alignTo)
+		if (!this.aligner || this.aligner.target !== target || this.aligner.content !== this.popup!.el) {
+			this.aligner = new Aligner(this.popup!.el, target)
 		}
 
-		let aligned = this.aligner.align(this.getAlignerOptions())
+		if (this.options.followEvents) {
+			let event = this.binder.getLatestTriggerEvent()
+			if (event) {
+				aligned = this.aligner.alignToEvent(event, this.getAlignerOptions())
+			}
+		}
+		else {
+			aligned = this.aligner.align(this.getAlignerOptions())
+		}
+
 		if (!aligned) {
 			this.hidePopup()
 		}
 
 		return aligned
-	}
+}
 
 	/** Get element popup will align to. */
 	protected getAlignToElement(): Element {
@@ -548,7 +559,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
 
 		return {
-			position: this.options?.position,
+			position: this.options?.position as AlignerPosition,
 			gap: this.options?.gap,
 			stickToEdges: this.options?.stickToEdges,
 			canSwapPosition: this.options?.canSwapPosition,
@@ -590,7 +601,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			this.popup.remove()
 		}
 
-		if (this.options.key && this.popup) {
+		if (this.popup) {
 			SharedPopups.clearUser(this.popup)
 		}
 

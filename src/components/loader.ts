@@ -6,7 +6,7 @@ import {theme} from '../style'
 export class Loader<E = {}> extends Component<E> {
 
 	static style() {
-		let {mainColor, backgroundColor} = theme
+		let {mainColor, textColor} = theme
 
 		return css`
 		.loader{
@@ -22,7 +22,7 @@ export class Loader<E = {}> extends Component<E> {
 			right: 0;
 			bottom: 0;
 			z-index: 10;
-			background: ${backgroundColor.alpha(0.9)};
+			background: ${textColor.alpha(0.05)};
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
@@ -81,8 +81,8 @@ export class Loader<E = {}> extends Component<E> {
 		return html`
 			<template class="loader"
 				:class.as-cover=${this.asCover}
-				:style.width.px=${size}
-				:style.height.px=${size}
+				:style.width=${this.asCover ? '' : size + 'px'}
+				:style.height=${this.asCover ? '' : size + 'px'}
 				:style.animation="loader-snake-${this.size} 2s linear infinite"
 			>
 				<svg viewBox="0 0 ${size} ${size}" width=${size} height=${size}>

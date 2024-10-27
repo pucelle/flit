@@ -1,6 +1,6 @@
 import {Component, css, html} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {DOMEvents, immediateWatch, watch} from '@pucelle/ff'
+import {DOMEvents, watch} from '@pucelle/ff'
 import {Icon} from './icon'
 
 

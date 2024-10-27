@@ -82,13 +82,19 @@ export function setCache(key: string, cache: SharedPopupContentCache) {
 }
 
 
-/** Set a popup content is using by a popup binding. */
+/** Set a <Popup> is using by a popup binding. */
 export function setUser(popup: Popup, binding: popup) {
 	PopupContentUsedBy.set(popup, binding)
 }
 
 
-/** Clear popup content usage. */
+/** Get the popup binding which uses a <Popup>. */
+export function getUser(popup: Popup) {
+	return PopupContentUsedBy.get(popup)
+}
+
+
+/** Clear <Popup> usage. */
 export function clearUser(popup: Popup) {
 	PopupContentUsedBy.delete(popup)
 }

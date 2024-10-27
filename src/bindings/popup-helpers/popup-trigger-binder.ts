@@ -42,6 +42,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	private content: Element | null = null
 	private unwatchLeave: null | (() => void) = null
 	private bound: BoundMask | 0 = 0
+	private latestTriggerEvent: MouseEvent | null = null
 
 	constructor(el: Element) {
 		super()
@@ -50,6 +51,10 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 	setTriggerType(trigger: TriggerType) {
 		this.trigger = this.mapTriggerType(trigger)
+	}
+
+	getLatestTriggerEvent() {
+		return this.latestTriggerEvent
 	}
 
 	private mapTriggerType(trigger: TriggerType): TriggerType {
@@ -109,12 +114,14 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	private onClickEl(e: Event) {
 		e.preventDefault()
 		e.stopPropagation()
+		this.latestTriggerEvent = e as MouseEvent
 		this.toggleShowHide()
 	}
 
 	private onContextMenu(e: Event) {
 		e.preventDefault()
 		e.stopPropagation()
+		this.latestTriggerEvent = e as MouseEvent
 		this.toggleShowHide()
 	}
 
@@ -124,6 +131,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	}
 
 	private onMouseEnterOrFocusEl(e: Event) {
+		this.latestTriggerEvent = e as MouseEvent
 		e.stopPropagation()
 		this.fire('will-show')
 	}

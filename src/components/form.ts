@@ -1,6 +1,5 @@
 import {Component, css} from '@pucelle/lupos.js'
 import {Input} from './input'
-import {Textarea} from './textarea'
 
 
 /** `<Form>` can contain `<Input>` or `<Textarea>` and check their valid state at once. */

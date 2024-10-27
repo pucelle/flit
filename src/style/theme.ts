@@ -268,6 +268,12 @@ export class Theme implements ColorOptions, NotColorOptions, Observed {
 	getMixedColor(foregroundRate: number) {
 		return this.backgroundColor.mix(this.textColor, foregroundRate)
 	}
+
+	/** Transform from px to em. */
+	emOf(px: number): string {
+		let defaultFontSize = this.getOptionsOf('medium').fontSize!
+		return px / defaultFontSize + 'em'
+	}
 }
 
 

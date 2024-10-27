@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {DOMEvents, EventKeys, immediateWatch, Observed, watch} from '@pucelle/ff'
+import {DOMEvents, EventKeys, immediateWatch, Observed, fold} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip} from '../bindings'
@@ -153,16 +153,17 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			padding-left: 1.6em;
 			padding-bottom: 4px;
 			overflow: hidden;
-			font-size: 0.92em;
+			font-size: 0.928em;
 
-			.list-option{
-				padding-top: 0;
-				padding-bottom: 0;
+			.list-item{
+				padding-top: 0.2em;
+				padding-bottom: 0.2em;
 				border-top: none;
 				line-height: calc(1lh - 2px);
 			}
 
 			.list-subsection{
+				font-size: 1em;
 				padding-top: 0;
 			}
 
@@ -300,7 +301,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			</div>
 
 			<lu:if ${item.children && expanded}>
-				<div class="list-subsection">${this.renderItems(item.children!)}</div>
+				<div class="list-subsection" :transition.immediate=${fold()}>
+					${this.renderItems(item.children!)}
+				</div>
 			</lu:if>
 		`
 	}
@@ -334,7 +337,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 		else {
 			return html`
-				<div class="list-content text-list-content"
+				<div class="list-content"
 					?:tooltip=${item.tip, item.tip}
 				>
 					${item.text}

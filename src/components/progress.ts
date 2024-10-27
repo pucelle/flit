@@ -1,5 +1,5 @@
 import {Component, css, html} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {theme} from '../style'
 import {tooltip, TooltipOptions} from '../bindings'
 
 

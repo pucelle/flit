@@ -1,5 +1,4 @@
-import {css, html, Component, Binding, RenderResultRenderer, RenderResult, ComponentStyle} from '@pucelle/lupos.js'
-import {theme} from '../style'
+import {css, html, Component, RenderResultRenderer, RenderResult, ComponentStyle} from '@pucelle/lupos.js'
 import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'

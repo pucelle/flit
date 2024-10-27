@@ -1,6 +1,7 @@
 import {css, Component, html, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style/theme'
 import {Triangle} from './triangle'
+import {SharedPopups} from '../bindings'
 
 
 /** 
@@ -29,6 +30,13 @@ export class Popup<E = {}> extends Component<E> {
 		`
 	}
 
+	/** 
+	 * Options to overwrite default `:popup` binding options,
+	 * normally use this to control default alignment for extended classes.
+	 * Will be overwritten by binding options passed to `:popup=${{...}}`.
+	 */
+	//static readonly DefaultPopupOptions: Partial<PopupOptions> = {}
+
 
 	/** Whether shows triangle element. */
 	triangle: boolean = true
@@ -53,5 +61,13 @@ export class Popup<E = {}> extends Component<E> {
 	 */
 	applyAppendTo() {
 		this.appendTo(document.body)
+	}
+
+	/** Close current popup. */
+	close() {
+		let binding = SharedPopups.getUser(this)
+		if (binding) {
+			binding.hidePopup()
+		}
 	}
 }

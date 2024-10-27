@@ -26,8 +26,8 @@ export class Button<E = {}> extends Component<E> {
 			text-overflow: ellipsis;
 			
 			&:hover, &:focus{
-				border-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 140 : 60) / 255)};
-				background-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 140 : 60) / 255)};
+				border-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 160 : 60) / 255)};
+				background-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 160 : 60) / 255)};
 				color: #fff;
 			}
 

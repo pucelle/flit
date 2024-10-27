@@ -1,5 +1,4 @@
 import {ComponentStyle, css, html} from '@pucelle/lupos.js'
-import {tooltip} from '../bindings'
 import {Input} from './input'
 
 
@@ -36,6 +35,7 @@ export class Textarea extends Input {
 		return html`
 			<textarea class="input-field textarea-field"
 				placeholder=${this.placeholder}
+				?autofocus=${this.autoFocus}
 				:ref=${this.field}
 				:class.valid=${this.touched && this.valid === true}
 				:class.invalid=${this.touched && this.valid === false}

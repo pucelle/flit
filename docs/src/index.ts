@@ -1,10 +1,11 @@
 import * as ff from '@pucelle/ff'
-import {html, Component, TemplateResult, css} from '@pucelle/lupos.js'
+import {html, Component, render} from '@pucelle/lupos.js'
 import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
-	Progress, Slider, Loader, List
-} from '../out'
+	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
+	dialog, Modal, loading
+} from '../../out'
 import {range, watch} from '@pucelle/ff'
 
 
@@ -44,6 +45,13 @@ class Preview extends Component {
 				${this.renderSlider()}
 				${this.renderLoader()}
 				${this.renderList()}
+				${this.renderNavigation()}
+				${this.renderPopover()}
+				${this.renderMenu()}
+				${this.renderTooltip()}
+				${this.renderNotification()}
+				${this.renderDialog()}
+				${this.renderModal()}
 			</div>
 		</template>
 		`
@@ -469,6 +477,11 @@ class Preview extends Component {
 						<header style="margin-bottom: 8px;">38 + 5</header>
 						<Loader .size=${38} .strokeSize=${5} .speed="0.5" />
 					</Col>
+
+					<Col .span=${4}>
+						<header style="margin-bottom: 8px;">:loading=\${...}</header>
+						<div style="position: relative; width: 100px; height: 100px" :loading=${true}></div>
+					</Col>
 				</Row>
 			</section>
 
@@ -511,25 +524,25 @@ class Preview extends Component {
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">With Subsection</header>
 						<List .type="navigation" .data=${[
-							{value: 1, text: 'User A', children:
+							{value: 1, text: 'Folder A', children:
 								[
-									{value: 11, text: 'Folder 1', children: [
+									{value: 11, text: 'Sub Folder a', children: [
 										{value: 111, text: 'Item 1'},
 										{value: 112, text: 'Item 2'},
 									]},
-									{value: 12, text: 'Folder 2', children: [
+									{value: 12, text: 'Sub Folder b', children: [
 										{value: 121, text: 'Item 1'},
 										{value: 122, text: 'Item 2'},
 									]}
 								]
 							},
-							{value: 2, text: 'User B', opened: true, children:
+							{value: 2, text: 'Folder B', opened: true, children:
 								[
-									{value: 21, text: 'Folder 1', children: [
+									{value: 21, text: 'Sub Folder a', children: [
 										{value: 211, text: 'Item 1'},
 										{value: 212, text: 'Item 2'},
 									]},
-									{value: 22, text: 'Folder 2', children: [
+									{value: 22, text: 'Sub Folder b', children: [
 										{value: 221, text: 'Item 1'},
 										{value: 222, text: 'Item 2'},
 									]}
@@ -543,432 +556,429 @@ class Preview extends Component {
 			`
 	}
 
-	// private renderNavigator() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Navigations</h3>
+	private renderNavigation() {
+		return html`
+			<section>
+				<h3>Navigation</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<f-navigation
-	// 						.active=${111}
-	// 						.title="Navigation Menu"
-	// 						.data=${[
-	// 							{value: 1, text: 'User A', children:
-	// 								[
-	// 									{value: 11, text: 'Folder 1', children: [
-	// 										{value: 111, text: 'Item 1'},
-	// 										{value: 112, text: 'Item 2'},
-	// 									]},
-	// 									{value: 12, text: 'Folder 2', children: [
-	// 										{value: 121, text: 'Item 1'},
-	// 										{value: 122, text: 'Item 2'},
-	// 									]}
-	// 								]
-	// 							},
-	// 							{value: 2, text: 'User B', opened: true, children:
-	// 								[
-	// 									{value: 21, text: 'Folder 1', children: [
-	// 										{value: 211, text: 'Item 1'},
-	// 										{value: 212, text: 'Item 2'},
-	// 									]},
-	// 									{value: 22, text: 'Folder 2', children: [
-	// 										{value: 221, text: 'Item 1'},
-	// 										{value: 222, text: 'Item 2'},
-	// 									]}
-	// 								]
-	// 							},
-	// 						]}
-	// 					/>
-	// 				</Col>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<Navigation
+							.selected=${[111]}
+							.title="Navigation Menu"
+							.data=${[
+								{value: 1, text: 'Folder A', children:
+									[
+										{value: 11, text: 'Sub Folder a', children: [
+											{value: 111, text: 'Item 1'},
+											{value: 112, text: 'Item 2'},
+										]},
+										{value: 12, text: 'Sub Folder b', children: [
+											{value: 121, text: 'Item 1'},
+											{value: 122, text: 'Item 2'},
+										]}
+									]
+								},
+								{value: 2, text: 'Folder B', opened: true, children:
+									[
+										{value: 21, text: 'Sub Folder a', children: [
+											{value: 211, text: 'Item 1'},
+											{value: 212, text: 'Item 2'},
+										]},
+										{value: 22, text: 'Sub Folder b', children: [
+											{value: 221, text: 'Item 1'},
+											{value: 222, text: 'Item 2'},
+										]}
+									]
+								},
+							]}
+						/>
+					</Col>
 
-	// 			</Row>
+				</Row>
 
-	// 		</section>
+			</section>
+			`
+	}
 
-	// 		`
-	// }
 
+	popupWithActions!: Popover
 
-	// popupWithActions: Popover
-
-	// private renderPopover() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Popovers</h3>
+	private renderPopover() {
+		return html`
+			<section>
+				<h3>Popovers</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Default</header>
-	// 					<Button ${
-	// 						popup(
-	// 							() => html`
-	// 							<f-popover .title="Popover title">
-	// 								This is Popover content.
-	// 							</f-popover>
-	// 							`,
-	// 							{trigger: 'click'}
-	// 						)
-	// 					}>Click to Open Popover</Button>
-	// 				</Col>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Default</header>
+						<Button :popup=${
+							() => html`
+							<Popover .title="Popover title">
+								This is Popover content.
+							</Popover>
+							`,
+							{trigger: 'click', position: 'b', fixTriangle: true}
+						}>Click to Open Popover</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With Close Button</header>
-	// 					<Button ${
-	// 						popup(
-	// 							() => html`
-	// 							<f-popover .title="Popover title" .closable>
-	// 								This is Popover content.
-	// 							</f-popover>
-	// 							`,
-	// 							{trigger: 'click'}
-	// 						)
-	// 					}>Click to Open Popover</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With Close Button</header>
+						<Button :popup=${
+							() => html`
+							<Popover .title="Popover title" .closable>
+								This is Popover content.
+							</Popover>
+							`,
+							{trigger: 'click', position: 'b', fixTriangle: true}
+						}>Click to Open Popover</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">No Title</header>
-	// 					<Button ${
-	// 						popup(
-	// 							() => html`
-	// 							<f-popover>
-	// 								This is Popover content.
-	// 							</f-popover>
-	// 							`,
-	// 							{trigger: 'click'}
-	// 						)
-	// 					}>Click to Open Popover</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">No Title</header>
+						<Button :popup=${
+							() => html`
+							<Popover>
+								This is Popover content.
+							</Popover>
+							`,
+							{trigger: 'click', position: 'b', fixTriangle: true}
+						}>Click to Open Popover</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With actions</header>
-	// 					<Button ${
-	// 						popup(
-	// 							() => html`
-	// 							<f-popover
-	// 								:refComponent="popupWithActions"
-	// 								.title="Popover title" 
-	// 							>
-	// 								This is Popover content.
-	// 								<Button :slot="action" @click=${() => this.refComponents.popupWithActions.close()}>Cancel</Button>
-	// 								<Button :slot="action" primary @click=${() => this.refComponents.popupWithActions.close()}>Save</Button>
-	// 							</f-popover>
-	// 							`,
-	// 							{trigger: 'click'}
-	// 						)
-	// 					}>Click to Open Popover</Button>
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With actions</header>
+						<Button :popup=${
+							() => html`
+							<Popover .title="Popover title" :ref=${this.popupWithActions}>
+								This is Popover content.
+								<div :slot="action">
+									<Button @click=${() => this.popupWithActions.close()} .size="inherit">Cancel</Button>
+									<Button .primary @click=${() => this.popupWithActions.close()} .size="inherit">Save</Button>
+								</div>
+							</Popover>
+							`,
+							{trigger: 'click', position: 'b', fixTriangle: true}
+						}>Click to Open Popover</Button>
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
-	// private renderMenu() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Menus</h3>
+	private renderMenu() {
+		return html`
+			<section>
+				<h3>Menu</h3>
 				
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<Button ${
-	// 						popup(
-	// 							() => html`
-	// 							<f-menu>
-	// 								<List .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} />
-	// 							</f-menu>
-	// 							`,
-	// 							{trigger: 'click'}
-	// 						)
-	// 					}>
-	// 						<span>Click to Open Menu</span>
-	// 						<Icon .type="down" />
-	// 					</Button>
-	// 				</Col>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<Button :popup=${
+							() => html`
+								<Menu>
+									<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} />
+								</Menu>
+							`,
+							{trigger: 'click', position: 'b', fixTriangle: true,}
+						}>
+							<span>Click to Open Menu</span>
+							<Icon .type="down" />
+						</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<Button ${
-	// 						popup(
-	// 							() => html`
-	// 							<f-menu .title="Menu title">
-	// 								<List .data=${range(1, 6).map(value => ({value, text: 'Option ' + value}))} .selectable .selected=${[1]} />
-	// 							</f-menu>
-	// 							`,
-	// 							{trigger: 'click'}
-	// 						)
-	// 					}>
-	// 						<span>Menu with Title</span>
-	// 						<Icon .type="down" />
-	// 					</Button>
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+					<Col .span=${6}>
+						<Button :popup=${() => html`
+							<Menu .title="Menu title">
+								<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} .selectable .selected=${[1]} />
+							</Menu>
+							`,
+							{trigger: 'click', position: 'b', fixTriangle: true,}
+						}>
+							<span>Menu with Title</span>
+							<Icon .type="down" />
+						</Button>
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
-	// private renderTooltip() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Tooltips</h3>
+	private renderTooltip() {
+		return html`
+			<section>
+				<h3>Tooltip</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Default</header>
-	// 					<Button ${
-	// 						tooltip('Tooltip text', {type: 'default'})
-	// 					}>Hover for Tooltip</Button>
-	// 				</Col>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Default</header>
+						<Button :tooltip=${'Tooltip text', {type: 'default'}}>Hover for Tooltip</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Prompt</header>
-	// 					<Button ${
-	// 						tooltip('Add some items to your list by clicking this button.', {type: 'prompt'})
-	// 					}>Add Items</Button>
-	// 				</Col>
-	// 			</Row>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Prompt</header>
+						<Button :tooltip=${'Add some items to your list by clicking this button.', {type: 'prompt'}}>Add Items</Button>
+					</Col>
+				</Row>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Error</header>
-	// 					<Button primary disabled ${
-	// 						tooltip('You can\'t submit, try resolve all mistakes then this tooltip will disappear.', {type: 'error'})
-	// 					}>Submit</Button>
-	// 				</Col>
-	// 			</Row>
-	// 		</section>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Error</header>
+						<Button .primary disabled :tooltip=${
+							'You can\'t submit, try resolve all mistakes then this tooltip will disappear.',
+							{type: 'error'}
+						}>Submit</Button>
+					</Col>
+				</Row>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
-	// private renderNotification() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Notifications</h3>
+	private renderNotification() {
+		return html`
+			<section>
+				<h3>Notifications</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Info</header>
-	// 					<Button @click=${
-	// 						() => notification.info('Info notification content', {title: 'Info Notification'})
-	// 					}>
-	// 						Show Info Notification
-	// 					</Button>
-	// 				</Col>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Info</header>
+						<Button @click=${
+							() => notification.info('Info notification content', {title: 'Info Notification'})
+						}>
+							Info Notification
+						</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Warn</header>
-	// 					<Button @click=${
-	// 						() => notification.warn('Warning notification content', {title: 'Warning Notification'})
-	// 					}>
-	// 						Show Warn Notification
-	// 					</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Warn</header>
+						<Button @click=${
+							() => notification.warn('Warning notification content', {title: 'Warning Notification'})
+						}>
+							Warn Notification
+						</Button>
+					</Col>
 					
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Error</header>
-	// 					<Button @click=${
-	// 						() => notification.error('Error notification content', {title: 'Error Notification'})
-	// 					}>
-	// 						Show Error Notification
-	// 					</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Error</header>
+						<Button @click=${
+							() => notification.error('Error notification content', {title: 'Error Notification'})
+						}>
+							Error Notification
+						</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Success</header>
-	// 					<Button @click=${
-	// 						() => notification.success('Success notification content', {title: 'Success Notification'})
-	// 					}>
-	// 						Show Success Notification
-	// 					</Button>
-	// 				</Col>
-	// 			</Row>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Success</header>
+						<Button @click=${
+							() => notification.success('Success notification content', {title: 'Success Notification'})
+						}>
+							Success Notification
+						</Button>
+					</Col>
+				</Row>
 
-	// 			<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Without Title</header>
-	// 					<Button @click=${
-	// 						() => notification.success('Success notification content', {
-	// 							title: 'Success Notification',
-	// 						})
-	// 					}>
-	// 						Show Notification with title
-	// 					</Button>
-	// 				</Col>
+				<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Without Title</header>
+						<Button @click=${
+							() => notification.success('Success notification content', {
+								title: 'Success Notification',
+							})
+						}>
+							Notification with Title
+						</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With List</header>
-	// 					<Button @click=${
-	// 						() => notification.warn('Warning notification content', {
-	// 							title: 'Warning Notification',
-	// 							list: ['List Item 1', 'List Item 2']
-	// 						})
-	// 					}>
-	// 						Show Notification with List
-	// 					</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With List</header>
+						<Button @click=${
+							() => notification.warn('Warning notification content', {
+								title: 'Warning Notification',
+								list: ['List Item 1', 'List Item 2']
+							})
+						}>
+							Notification with List
+						</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With Actions</header>
-	// 					<Button @click=${
-	// 						() => notification.error('Error notification content', {
-	// 							title: 'Error Notification',
-	// 							actions: [{text: 'Try Again'}]
-	// 						})
-	// 					}>
-	// 						Show Notification with Actions
-	// 					</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With Actions</header>
+						<Button @click=${
+							() => notification.error('Error notification content', {
+								title: 'Error Notification',
+								actions: [{text: 'Try Again'}]
+							})
+						}>
+							Notification with Actions
+						</Button>
+					</Col>
 
-	// 			</Row>
-	// 		</section>
+				</Row>
+			</section>
+			`
+	}
 
-	// 		`
-	// }
+	private renderDialog() {
+		return html`
+			<section>
+				<h3>Dialogs</h3>
 
-	// private renderDialog() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Dialogs</h3>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Default</header>
+						<Button @click=${
+							() => dialog.show('This is dialog message.')
+						}>
+							Default Dialog
+						</Button>
+					</Col>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Default</header>
-	// 					<Button @click=${
-	// 						() => dialog.show('This is dialog message.')
-	// 					}>
-	// 						Open Default Dialog
-	// 					</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With Title</header>
+						<Button @click=${
+							() => dialog.show('This is dialog message.', {title: 'Dialog Title'})
+						}>
+							Dialog with Title
+						</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With Title</header>
-	// 					<Button @click=${
-	// 						() => dialog.show('This is dialog message.', {title: 'Dialog Title'})
-	// 					}>
-	// 						Open Dialog with Title
-	// 					</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Confirm</header>
+						<Button @click=${
+							() => dialog.confirm('Are you sure you want to delete these items?', {title: 'Dialog Title'})
+						}>
+							Confirm Dialog
+						</Button>
+					</Col>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Confirm</header>
-	// 					<Button @click=${
-	// 						() => dialog.confirm('Are you sure you want to delete these items?', {title: 'Dialog Title'})
-	// 					}>
-	// 						Open Confirm Dialog
-	// 					</Button>
-	// 				</Col>
-
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Prompt</header>
-	// 					<Button @click=${
-	// 						() => dialog.prompt('Please input the name of your account:', {
-	// 							title: 'Dialog Title',
-	// 							placeholder: 'Name of your account',
-	// 							validator: (value: string) => {if (!value) {return 'Name is required'} else {return null}}
-	// 						})
-	// 					}>
-	// 						Open Prompt Dialog
-	// 					</Button>
-	// 				</Col>
-	// 			</Row>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Prompt</header>
+						<Button @click=${
+							() => dialog.prompt('Please input the name of your account:', {
+								title: 'Dialog Title',
+								placeholder: 'Name of your account',
+								validator: (value: string) => {if (!value) {return 'Name is required'} else {return null}}
+							})
+						}>
+							Prompt Dialog
+						</Button>
+					</Col>
+				</Row>
 				
-	// 			<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With Third action</header>
-	// 					<Button @click=${
-	// 						() => dialog.confirm('You have unsaved data, are you sure you want to save your changes?', {
-	// 							title: 'Dialog Title',
-	// 							actions: [
-	// 								{text: 'Don\'t Save', third: true},
-	// 								{text: 'Cancel'},
-	// 								{text: 'Save', primary: true},
-	// 							]
-	// 						})
-	// 					}>
-	// 						Open Dialog with Third Action
-	// 					</Button>
-	// 				</Col>
+				<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With Third action</header>
+						<Button @click=${
+							() => dialog.confirm('You have unsaved data, are you sure you want to save your changes?', {
+								title: 'Dialog Title',
+								actions: [
+									{text: 'Don\'t Save', third: true},
+									{text: 'Cancel'},
+									{text: 'Save', primary: true},
+								]
+							})
+						}>
+							Dialog with Third Action
+						</Button>
+					</Col>
 					
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Customize</header>
-	// 					<Button @click=${
-	// 						() => {
-	// 							let input: Input
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Customize</header>
+						<Button @click=${
+							() => {
+								let input: Input
 
-	// 							dialog.show(
-	// 								html`
-	// 									Please input the name of your account:
-	// 									<Input style="margin-top: 8px; width: 100%;"
-	// 										.placeholder="Name of your account"
-	// 										.validator=${(v: string) => v ? '' : 'Name field is required'}
-	// 										.errorInTooltip
-	// 										:refComponent=${(i: Input) => input = i}
-	// 									/>
-	// 									<Checkbox .checked style="margin-top: 8px;">Remember Me</Checkbox>
-	// 								`,
-	// 								{
-	// 									title: 'Dialog Title',
-	// 									interruptAction: () => !input.valid
-	// 								}
-	// 							)
-	// 						}
-	// 					}>
-	// 						Open Custom Dialog
-	// 					</Button>
-	// 				</Col>
-	// 			</Row>
+								dialog.show(
+									html`
+										Please input the name of your account:
+										<Input style="margin-top: 8px; width: 100%;"
+											.placeholder="Input Name of Your Account"
+											.validator=${(v: string) => v ? null : 'Name field is required'}
+											.errorOnTooltip
+											:ref=${input!}
+										/>
+										<Checkbox .checked style="margin-top: 8px;">Remember Me</Checkbox>
+									`,
+									{
+										title: 'Dialog Title',
+										actions: [{
+											value: 'ok',
+											text: 'OK',
+											handler() {
+												if (!input.touched || !input.valid) {
+													input.touched = true
+													return true
+												}
+												return null
+											}
+										}]
+									}
+								)
+							}
+						}>
+							Custom Dialog
+						</Button>
+					</Col>
+				</Row>
 
-	// 		</section>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
-	// private renderModal() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Modals</h3>
+	private renderModal() {
+		return html`
+			<section>
+				<h3>Modals</h3>
 
-	// 			<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">Default</header>
+				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">Default</header>
 
-	// 					<Button @click="${() => {
-	// 						let modal = getRenderedAsComponent(render(html`
-	// 							<f-modal style="width: ${theme.adjust(360)}px;" .title="Modal Title">
-	// 								This is modal content
-	// 							</f-modal>
-	// 						`)) as Modal
+						<Button @click=${() => {
+							render(html`
+								<Modal style="width: ${theme.emOf(360)};"
+									.title="Modal Title"
+									:ref=${((m: Modal) => m.show())}
+								>
+									This is modal content
+								</Modal>
+							`).connectManually()
+						}}>
+							Open Modal
+						</Button>
+					</Col>
 
-	// 						modal.show()
-	// 					}}">
-	// 						Open Modal
-	// 					</Button>
-	// 				</Col>
+					<Col .span=${6}>
+						<header style="margin-bottom: 8px;">With Actions</header>
 
-	// 				<Col .span=${6}>
-	// 					<header style="margin-bottom: 8px;">With Actions</header>
+						<Button @click=${() => {
+							let modal: Modal
 
-	// 					<Button @click="${() => {
-	// 						let modal = getRenderedAsComponent(render(html`
-	// 							<f-modal style="width: ${theme.adjust(360)}px;" .title="Modal Title">
-	// 								This is modal content
-	// 								<Button :slot="action" @click=${() => modal.hide()}>Cancel</Button>
-	// 								<Button :slot="action" primary @click=${() => modal.hide()}>Save</Button>
-	// 							</f-modal>
-	// 						`)) as Modal
+							render(html`
+								<Modal style="width: ${theme.emOf(360)};"
+									.title="Modal Title"
+									:ref=${((m: Modal) => {modal = m; m.show()})}
+								>
+									This is modal content
+									<div :slot="action">
+										<Button @click=${() => modal.hide()}>Cancel</Button>
+										<Button .primary @click=${() => modal.hide()}>Save</Button>
+									</div>
+								</Modal>
+							`).connectManually()
+						}}>
+							Modal with Actions
+						</Button>
+					</Col>
+				</Row>
 
-	// 						modal.show()
-	// 					}}">
-	// 						Open Modal with Actions
-	// 					</Button>
-	// 				</Col>
-	// 			</Row>
+			</section>
 
-	// 		</section>
-
-	// 		`
-	// }
+			`
+	}
 
 	// private renderTable() {
 	// 	return html`

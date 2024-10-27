@@ -1,16 +1,16 @@
 const path = require('path')
-const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
+//const ForkTsCheckerWebpackPlugin = require('fork-ts-checker-webpack-plugin')
 
 
 module.exports = {
-	entry: path.join(__dirname, 'index.ts'),
+	entry: path.join(__dirname, 'out/index.js'),
 	mode: 'development',
 	output: {
 		filename: 'js/bundle.js',
 	},
 	optimization: {},
 	plugins: [
-		new ForkTsCheckerWebpackPlugin()
+		//new ForkTsCheckerWebpackPlugin()
 	],
 	devServer: {
 		static: __dirname,
@@ -43,33 +43,24 @@ module.exports = {
 				},
 			},
 
-			{
-				test: /\.tsx?$/,
-				use: [{
-					loader: 'ts-loader',
-					options: {
+			// {
+			// 	test: /\.tsx?$/,
+			// 	use: [{
+			// 		loader: 'ts-loader',
+			// 		options: {
 
-						// Required, or types of imported modules are not loaded.
-						transpileOnly: false,
+			// 			// Required, or types of imported modules are not loaded.
+			// 			transpileOnly: false,
 	
-						// Specifies `getCustomTransformers` now working.
-						compiler: 'ts-patch/compiler',
+			// 			// Specifies `getCustomTransformers` not working.
+			// 			compiler: 'ts-patch/compiler',
 
-						// Optional.
-						// configFile: './tsconfig.json'
-					},
-				}],
-				exclude: /node_modules/
-			},
+			// 			// Optional.
+			// 			// configFile: './tsconfig.json'
+			// 		},
+			// 	}],
+			// 	exclude: /node_modules/
+			// },
 		],
-		// rules: [
-		// 	{
-		// 		test: /\.svg$/,
-		// 		use: [{
-		// 			loader: '@pucelle/webpack-svg-loader',
-		// 			options: {},
-		// 		}],
-		// 	},
-		// ],
 	},
 }

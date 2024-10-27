@@ -2,12 +2,16 @@ import {html, RenderResultRenderer} from '@pucelle/lupos.js'
 import {popup, PopupOptions} from './popup'
 import {TooltipType, Tooltip} from '../components'
 import {ObjectUtils} from '@pucelle/ff'
+import {ThemeSize} from '../style'
 
 
 export interface TooltipOptions extends PopupOptions{
 
 	/** Tooltip type, `default | prompt | error`. */
 	readonly type: TooltipType
+
+	/** Tooltip text size. */
+	size: ThemeSize
 }
 
 
@@ -23,9 +27,9 @@ const DefaultTooltipOptions: Partial<TooltipOptions> = {
 
 	showDelay: 0,
 	hideDelay: 200,
-	pointable: false,
 
 	type: 'default',
+	size: 'default',
 }
 
 
@@ -50,10 +54,7 @@ export class tooltip extends popup {
 		let rendered = typeof renderer === 'function' ? renderer.call(this.context) : renderer
 
 		return html`
-			<Tooltip
-				.type=${this.options.type}
-				@to-close=${this.hidePopupLater}
-			>
+			<Tooltip .type=${this.options.type} .size=${this.options.size}>
 				${rendered}
 			</Tooltip>
 		`

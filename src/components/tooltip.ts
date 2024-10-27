@@ -15,15 +15,8 @@ import {Triangle} from './triangle'
 export type TooltipType = 'default' | 'prompt' | 'error'
 
 
-export interface TooltipEvents {
-
-	/** Request to close tooltip. */
-	'to-close'(): void
-}
-
-
 /** `<Tooltip>` shows a short text or html type message beside it's trigger element. */
-export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
+export class Tooltip<E = {}> extends Popup<E> {
 
 	static style: ComponentStyle = () => {
 		let {popupBackgroundColor, textColor, errorColor} = theme
@@ -38,7 +31,8 @@ export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 		.tooltip{
 			display: flex;
 			max-width: 15em;
-			padding: 0.2em 0.6em;
+			padding: 0.4em 0.8em;
+			line-height: 1.4;
 		}
 
 		.tooltip-text{
@@ -51,9 +45,8 @@ export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 			display: flex;
 			width: 1lh;
 			height: 1lh;
-			margin-top: -0.3em;
-			margin-bottom: -0.3em;
-			margin-right: -0.6em;
+			margin-right: -0.4em;
+			margin-left: 0.2em;
 			cursor: pointer;
 
 			&:active{
@@ -111,17 +104,13 @@ export class Tooltip<E = {}> extends Popup<E & TooltipEvents> {
 
 				<lu:if ${this.type === 'prompt'}>
 					<div class="tooltip-close"
-						@click=${this.toClose}
+						@click=${this.close}
 					>
 						<Icon .type="close" .size="inherit" />
 					</div>
 				</lu:if>
 			</template>
 		`
-	}
-
-	protected toClose(this: Tooltip) {
-		this.fire('to-close')
 	}
 }
 
