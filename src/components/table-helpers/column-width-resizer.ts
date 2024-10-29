@@ -1,6 +1,6 @@
-import {getStyleValueAsNumber, repeatForTimes, sum} from '@pucelle/ff'
-import {html, off, on, once, render} from '@pucelle/flit'
+import {DOMEvents, DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
+import {html, render} from '@pucelle/lupos.js'
 
 
 /** For `<f-table>` to resize column widths. */
@@ -21,14 +21,11 @@ export class ColumnWidthResizer {
 	/** Column widths array. */
 	protected columnWidths: number[] | null = null
 
-	/** Column widths array when resizeing. */
+	/** Column widths array when resizing. */
 	protected resizingColumnWidths: number[] | null = null
 
 	/** Whether column resized. */
 	protected columnResized: boolean = false
-
-	/** Cached head client width. */
-	protected cachedHeadClientWidth: number = 0
 
 	/** Minimum column width in pixels. */
 	protected minColumnWidth: number
@@ -37,13 +34,13 @@ export class ColumnWidthResizer {
 	protected resizingMaskClassName: string
 
 	constructor(
-			head: HTMLTableSectionElement,
-			columnContainer: HTMLElement,
-			colgroup: HTMLTableColElement,
-			columns: TableColumn[],
-			minColumnWidth: number,
-			resizingMaskClassName: string
-		) {
+		head: HTMLTableSectionElement,
+		columnContainer: HTMLElement,
+		colgroup: HTMLTableColElement,
+		columns: TableColumn[],
+		minColumnWidth: number,
+		resizingMaskClassName: string
+	) {
 		this.head = head
 		this.columnContainer = columnContainer
 		this.colgroup = colgroup
@@ -52,33 +49,20 @@ export class ColumnWidthResizer {
 		this.resizingMaskClassName = resizingMaskClassName
 	}
 
-	/** Update column configuration. */
-	setColumns(columns: TableColumn[]) {
-		this.columns = columns
-	}
-
-	/** Update column configuration. */
-	setMinColumnWidth(minColumnWidth: number) {
-		this.minColumnWidth = minColumnWidth
-	}
-
 	/** 
 	 * Update column widths from column configuration.
 	 * Will check available column width and may cause page reflow.
 	 */
-	updatColumnWidthsPrecisely() {
-		let headClientWidth = this.head.clientWidth - getStyleValueAsNumber(this.head, 'paddingLeft') - getStyleValueAsNumber(this.head, 'paddingRight')
-		this.cachedHeadClientWidth = headClientWidth
-		this.updatColumnWidthsByAvailableWidth(headClientWidth)
-	}
+	updateColumnWidths() {
+		let headAvailableWidth = this.head.clientWidth
+			- DOMUtils.getNumericStyleValue(this.head, 'paddingLeft')
+			- DOMUtils.getNumericStyleValue(this.head, 'paddingRight')
 
-	/** A quick method to update column widths when knows head width is not adjusted. */
-	updatColumnWidthsRoughly() {
-		this.updatColumnWidthsByAvailableWidth(this.cachedHeadClientWidth)
+		this.updateColumnWidthsByAvailable(headAvailableWidth)
 	}
 
 	/** Update column widths after knows available head width. */
-	protected updatColumnWidthsByAvailableWidth(availableWidth: number) {
+	protected updateColumnWidthsByAvailable(availableWidth: number) {
 		let widthAndFlexArray = this.columns.map(({flex, width}, index) => {
 			let baseWidthInColumnConfig = Math.max(width || 0, this.minColumnWidth)
 
@@ -110,15 +94,16 @@ export class ColumnWidthResizer {
 	 * and no column width should less than `minColumnWidth`.
 	 */
 	protected calcColumnWidths(widthAndFlexArray: [number, number, number][], clientWidth: number, minColumnWidth: number): number[] {
+
 		// Not enough space for even `minColumnWidth`, then average `clientWidth` to each column.
 		if (clientWidth < minColumnWidth * widthAndFlexArray.length) {
-			return repeatForTimes(clientWidth / widthAndFlexArray.length, widthAndFlexArray.length)
+			return ListUtils.repeatForTimes(clientWidth / widthAndFlexArray.length, widthAndFlexArray.length)
 		}
 
 		let totalBaseWidth = 0
 		let totalExtendFlex = 0
 		let totalShrinkFlex = 0
-		let widths = repeatForTimes(minColumnWidth, widthAndFlexArray.length)
+		let widths = ListUtils.repeatForTimes(minColumnWidth, widthAndFlexArray.length)
 		let excludedIndexSet: Set<number> = new Set()
 
 		for (let [baseWidth, extendFlex, shrinkFlex] of widthAndFlexArray) {
@@ -138,6 +123,7 @@ export class ColumnWidthResizer {
 			widthAndFlexArray.forEach(a => a[2] = 1)
 		}
 
+		// May need to be adjusted for multiple times because of the existing of minimum column width.
 		while (true) {
 			let totalFlex = clientWidth >= totalBaseWidth ? totalExtendFlex : totalShrinkFlex
 			let widthPerFlex = (clientWidth - totalBaseWidth) / totalFlex
@@ -173,7 +159,7 @@ export class ColumnWidthResizer {
 	}
 
 	protected setColumnWidths(widths: number[]) {
-		let totalWidth = sum(widths)
+		let totalWidth = ValueListUtils.sum(widths)
 		
 		for (let index = 0; index < widths.length; index++) {
 			let isLastColumn = index === widths.length - 1
@@ -204,16 +190,16 @@ export class ColumnWidthResizer {
 				this.resizingColumnWidths = null
 			}
 
-			off(document, 'mousemove', onMouseMove as (e: Event) => void)
+			DOMEvents.off(document, 'mousemove', onMouseMove as (e: Event) => void)
 			cursorMask.remove()
 			this.columnResized = true
 		}
 
-		let cursorMask = render(html`<div class="${this.resizingMaskClassName}" />`).getFirstElement() as HTMLElement
-		document.body.append(cursorMask)
+		let cursorMask = render(html`<div class="${this.resizingMaskClassName}" />`)
+		cursorMask.appendTo(document.body)
 
-		on(document, 'mousemove', onMouseMove as (e: Event) => void)
-		once(document, 'mouseup', onMouseUp)
+		DOMEvents.on(document, 'mousemove', onMouseMove as (e: Event) => void)
+		DOMEvents.once(document, 'mouseup', onMouseUp)
 	}
 
 	protected resizeColumnByMovementX(movementX: number, index: number) {

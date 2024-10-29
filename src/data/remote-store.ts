@@ -11,13 +11,13 @@ export interface RemoteStoreOptions<T> {
 	preloadPageCount: number
 
 	/** Current order key. */
-	orderKey: keyof T | null
+	orderName: keyof T | null
 
 	/** Current order direction. */
-	orderDirection: ListUtils.OrderDirection
+	orderDirection: ListUtils.OrderDirection | null
 
-	/** Search word to do data searching. */
-	searchWord: string | null
+	/** Search word to do data filtering. */
+	filterWord: string | null
 }
 
 
@@ -32,11 +32,10 @@ export abstract class RemoteStore<T = any> implements RemoteStoreOptions<T>, Obs
 
 	pageSize: number = 1
 	preloadPageCount: number = 0
-	orderKey: keyof T | null = null
-	orderDirection: ListUtils.OrderDirection = 'asc'
-	searchWord: string | null = null
+	orderName: keyof T | null = null
+	orderDirection: ListUtils.OrderDirection | null = null
+	filterWord: string | null = null
 
-	
 	constructor(options: Partial<RemoteStoreOptions<T>> = {}) {
 		Object.assign(this, options)
 	}
@@ -50,6 +49,20 @@ export abstract class RemoteStore<T = any> implements RemoteStoreOptions<T>, Obs
 	protected applyPreloadPageCount() {
 		this.dataLoader.setPreloadPageCount(this.preloadPageCount)
 	}
+
+	/** 
+	 * It should read `orderName` and `orderDirection` and apply ordering.
+	 * Need to be overwritten.
+	 */
+	@effect
+	applyOrder() {}
+
+	/** 
+	 * It should read `filterWord` and apply filtering.
+	 * Need to be overwritten.
+	 */
+	@effect
+	applyFilter() {}
 
 	/** Get total data count. */
 	protected abstract dataCountGetter(): Promise<number> | number

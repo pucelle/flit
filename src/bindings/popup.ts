@@ -384,12 +384,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Update popup content, if haven't rendered, render it firstly. */
 	protected async updatePopup() {
-		await this.updateRendering()
-
-		// May soon become un-opened.
-		if (!this.state.opened) {
-			return
-		}
+		this.updateRendering()
 
 		// Update popup properties.
 		this.popup!.triangleDirection = Aligner.getTargetFaceDirection(this.options.position).opposite.toBoxEdgeKey()!
@@ -423,9 +418,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		else if (rendered.renderer !== this.renderer!) {
 			rendered.renderer = this.renderer!
 		}
-
-		// Wait for rendering complete.
-		await untilUpdateComplete()
 
 		// Do alignment after rendered updated.
 		if (rendered !== this.rendered) {
@@ -468,7 +460,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let inDomAlready = document.contains(this.popup!.el)
 
 		// Although in document, need append too.
-		this.popup!.applyAppendTo()
+		this.popup!.appendTo(document.body)
 
 		// Get focus if needed.
 		this.mayGetFocus()

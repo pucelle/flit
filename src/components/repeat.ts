@@ -22,14 +22,15 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 
 	/** 
 	 * Specify or auto-detect overflow direction.
-	 * - If not specified, try to detect from scroller element.
-	 * - If specified, scroller element's scroll direction but keep consistent with it.
-	 * 
-	 * Normally you should leave this property as default value,
-	 * But if scroller element has overflow set in both directions,
-	 * you must specify this property explicitly.
+	 * Is `vertical` by default.
 	 */
-	overflowDirection: HVDirection | null = null
+	overflowDirection: HVDirection = 'vertical'
+
+	/** 
+	 * A CSS selector to select scroller element.
+	 * If not provided, use `parentNode` as scroller.
+	 */
+	scrollerSelector: string | null = null
 
 	
 	/** 
@@ -47,12 +48,14 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 */
 	@computed
 	get scroller(): HTMLElement {
-		return this.el.parentElement!
+		return this.scrollerSelector !== null
+			? this.el.closest(this.scrollerSelector) ?? this.el.parentElement!
+			: this.el.parentElement!
 	}
 
 
 	protected render() {
-		return html`<lupos:for ${this.data}>${this.renderFn}</lupos:for>`
+		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
 	}
 
 	/** Locate start or end index at which the item is visible in viewport. */

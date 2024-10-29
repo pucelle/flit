@@ -55,14 +55,6 @@ export class Popup<E = {}> extends Component<E> {
 		`
 	}
 
-	/** 
-	 * Insert element into document after connected.
-	 * You may overwrite this.
-	 */
-	applyAppendTo() {
-		this.appendTo(document.body)
-	}
-
 	/** Close current popup. */
 	close() {
 		let binding = SharedPopups.getUser(this)

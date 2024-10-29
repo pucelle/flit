@@ -1,7 +1,7 @@
 import {PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Repeat} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
-import {DOMEvents, LayoutWatcher, TransitionEasingName, effect, immediateWatch, untilUpdateComplete} from '@pucelle/ff'
+import {DOMEvents, LayoutWatcher, TransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
 import {html} from '@pucelle/lupos.js'
 
 
@@ -33,7 +33,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * slider element has no enough size to expand scrolling area,
 	 * so use this placeholder to expand scrolling area to full size.
 	 */
-	placeholder: HTMLDivElement | null = null
+	protected placeholder: HTMLDivElement | null = null
 
 	/** Partial content renderer. */
 	protected renderer: PartialRenderer | null = null as any
@@ -53,6 +53,11 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.renderer!.alignDirection
 	}
 
+	/** Live data, rendering part of all the data. */
+	get liveData(): T[] {
+		return this.data.slice(this.startIndex, this.endIndex)
+	}
+
 	/** Update after data change. */
 	update() {
 		this.renderer!.update()
@@ -65,7 +70,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	protected render() {
 		let liveData = this.data.slice(this.startIndex, this.endIndex)
-		return html`<lupos:for ${liveData}>${this.renderFn}</lupos:for>`
+		return html`<lu:for ${liveData}>${this.renderFn}</lu:for>`
 	}
 
 	locateVisibleIndex(direction: 'start' | 'end') {
@@ -76,23 +81,27 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	beforeDisconnectCallback(param: PartCallbackParameterMask): void {
 		super.beforeDisconnectCallback(param)
 
-		// If remove current element directly, remove placeholder also.
-		if ((param & PartCallbackParameterMask.DirectNodeToMove) > 0) {
+		// If remove current component from parent, remove placeholder also.
+		if ((param & PartCallbackParameterMask.IsolateFromContext) > 0) {
 			this.placeholder!.remove()
 			this.placeholder = null
+			this.renderer = null
 		}
 	}
 
 	protected onConnected(this: LiveRepeat<any, {}>) {
 		super.onConnected()
-		this.initPlaceholderIfNot()
+
+		this.initPlaceholder()
+		this.initRenderer()
+
 		DOMEvents.on(this.scroller!, 'scroll', this.checkCoverage, this, {passive: true})
 
 		let unwatchScrollerSize = LayoutWatcher.watch(this.scroller!, 'size', this.checkCoverage.bind(this))
 		this.once('will-disconnect', unwatchScrollerSize)
 	}
 
-	protected initPlaceholderIfNot() {
+	protected initPlaceholder() {
 		if (this.placeholder) {
 			return
 		}
@@ -102,24 +111,33 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.scroller!.prepend(this.placeholder)
 	}
 
+	/** Init renderer when connected. */
+	protected initRenderer() {
+		if (this.renderer) {
+			return
+		}
+
+		let scroller = this.scroller
+		let slider = this.el
+
+		while (slider.parentElement !== scroller) {
+			slider = slider.parentElement!
+		}
+
+		this.renderer = new PartialRenderer(
+			this.scroller!,
+			slider,
+			this.placeholder!,
+			this.doa,
+			this.updateLiveData.bind(this)
+		)
+	}
+	
 	protected onWillDisconnect() {
 		super.onWillDisconnect()
 		DOMEvents.off(this.scroller!, 'scroll', this.checkCoverage, this)
 	}
 
-	
-	/** Init renderer when connected. */
-	@immediateWatch('scroller', 'placeholder', 'overflowDirection')
-	protected initRenderer(scroller: HTMLElement, placeholder: HTMLDivElement | null, overflowDirection: HVDirection | null) {
-		this.renderer = new PartialRenderer(
-			scroller!,
-			this.el,
-			placeholder!,
-			overflowDirection,
-			this.updateLiveData.bind(this)
-		)
-	}
-	
 	/** After `coverageRate` property change. */
 	@effect
 	protected applyCoverageRate() {

@@ -1,4 +1,4 @@
-import {fade, ObjectUtils, TransitionResult, untilUpdateComplete} from '@pucelle/ff'
+import {fade, ObjectUtils, TransitionResult} from '@pucelle/ff'
 import {Binding, render, html, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Loader} from '../components'
 
@@ -90,7 +90,7 @@ export class loading implements Binding, Part {
 		}
 	}
 
-	private async renderLoader() {
+	private renderLoader(): Loader {
 		let loaderRendered = render(html`
 			<Loader
 				.size=${this.options.size}
@@ -102,10 +102,6 @@ export class loading implements Binding, Part {
 		`)
 
 		loaderRendered.connectManually()
-
-		await untilUpdateComplete()
-
-		let loader = Loader.from(loaderRendered.el.firstElementChild!)!
-		return loader
+		return Loader.from(loaderRendered.el.firstElementChild!)!
 	}
 }

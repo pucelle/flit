@@ -1,4 +1,4 @@
-import {DOMScroll, onUpdateComplete, untilUpdateComplete} from '@pucelle/ff'
+import {untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
@@ -66,7 +66,6 @@ export class PartialRenderer {
 	private readonly slider: HTMLElement
 	private readonly placeholder: HTMLDivElement
 	private readonly updateRendering: UpdateRenderingFn
-	private overflowDirection: HVDirection | null = null
 	private coverageRate: number = 1
 	private dataCount: number = 0
 	
@@ -113,51 +112,14 @@ export class PartialRenderer {
 		scroller: HTMLElement,
 		slider: HTMLElement,
 		placeholder: HTMLDivElement,
-		overflowDirection: HVDirection | null,
+		doa: DirectionalOverflowAccessor,
 		updateRendering: UpdateRenderingFn
 	) {
 		this.scroller = scroller
 		this.slider = slider
 		this.placeholder = placeholder
-		this.overflowDirection = overflowDirection
+		this.doa = doa
 		this.updateRendering = updateRendering
-		this.doa = new DirectionalOverflowAccessor(overflowDirection)
-		
-		// Avoid causing reflow.
-		onUpdateComplete(() => {
-			this.initProperties()
-		})
-	}
-
-	/** Validate css properties of associated elements. */
-	private initProperties() {
-		let scrollerStyle = getComputedStyle(this.scroller)
-		let sliderStyle = getComputedStyle(this.slider)
-		
-		if (scrollerStyle.position === 'static') {
-			throw 'Must not set "position" property of scroller element of "<LiveRepeat>" to "static"!'
-		}
-
-		if (sliderStyle.position !== 'absolute') {
-			throw 'Must set "position" property of "<LiveRepeat>" element to "absolute"!'
-		}
-
-		if (this.overflowDirection === 'vertical') {
-			let overflowY = scrollerStyle.overflowY === 'auto' || scrollerStyle.overflowY === 'scroll'
-			if (!overflowY) {
-				throw 'Must set "overflow-y" property of scroller element of "<LiveRepeat>" to "scroll" or "auto"!'
-			}
-		}
-		else if (this.overflowDirection === 'horizontal') {
-			let overflowY = scrollerStyle.overflowX === 'auto' || scrollerStyle.overflowX === 'scroll'
-			if (!overflowY) {
-				throw 'Must set "overflow-x" property of scroller element of "<LiveRepeat>" to "scroll" or "auto"!'
-			}
-		}
-		else {
-			this.overflowDirection = DOMScroll.getCSSOverflowDirection(this.scroller)
-			this.doa.setDirection(this.overflowDirection)
-		}
 	}
 
 	/** Set `coverageRate` property. */
@@ -202,9 +164,8 @@ export class PartialRenderer {
 		this.state.rendering = true
 
 		// Adjust scroll position by specified indices.
-		if (this.state.startIndexNeededToApply) {
+		if (this.state.startIndexNeededToApply !== null) {
 			this.updateWithNewIndices()
-			
 			this.state.startIndexNeededToApply = null
 			this.state.endIndexNeededToApply = null
 			this.state.alignDirectionNeededToApply = null
@@ -215,7 +176,10 @@ export class PartialRenderer {
 			this.updateWithStartIndexPersist()
 		}
 
-		this.updatePlaceholderSize()
+		let haveNotMeasured = this.stat.getAverageSize() === 0
+		if (!haveNotMeasured) {
+			this.updatePlaceholderSize()
+		}
 
 
 		//// Can only read dom properties now.
@@ -223,6 +187,12 @@ export class PartialRenderer {
 		await untilUpdateComplete()
 		this.collectStateAfterRendered()
 		this.state.rendering = false
+
+
+		// Update again after known size.
+		if (haveNotMeasured && this.stat.getAverageSize() > 0) {
+			this.update()
+		}
 
 
 		// Re-check coverage, un-comment if meet coverage problem.
@@ -348,7 +318,7 @@ export class PartialRenderer {
 		let scrolledToEnd = this.endIndex === this.dataCount
 		let placeholderSize: number
 
-		if (!scrolledToEnd || !expanded) {
+		if (!scrolledToEnd && !expanded) {
 			return
 		}
 

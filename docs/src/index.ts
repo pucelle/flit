@@ -4,7 +4,10 @@ import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
-	dialog, Modal, loading
+	dialog, Modal, loading, Table,
+	TableColumn,
+	Store,
+	RemoteStore
 } from '../../out'
 import {range, watch} from '@pucelle/ff'
 
@@ -52,6 +55,7 @@ class Preview extends Component {
 				${this.renderNotification()}
 				${this.renderDialog()}
 				${this.renderModal()}
+				${this.renderTable()}
 			</div>
 		</template>
 		`
@@ -980,118 +984,118 @@ class Preview extends Component {
 			`
 	}
 
-	// private renderTable() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Table</h3>
+	private renderTable() {
+		return html`
+			<section>
+				<h3>Table</h3>
 
-	// 			<f-table
-	// 				.resizable
-	// 				.store=${new Store({
-	// 					data: range(1, 101).map(n => ({id: n, value: Math.round(Math.random() * 100)})),
-	// 					key: 'id',
-	// 				})}
-	// 				.columns=${[
-	// 					{
-	// 						title: 'Index',
-	// 						render: (_item: {id: number, value: number}, index: number) => {
-	// 							return index
-	// 						},
-	// 					},
-	// 					{
-	// 						title: 'ID',
-	// 						orderBy: 'id',
-	// 						render: (item) => item.id,
-	// 					},
-	// 					{
-	// 						title: 'Name',
-	// 						render: (item) => `Name ${item.id}`,
-	// 					},
-	// 					{
-	// 						title: 'Random Value',
-	// 						orderBy: 'value',
-	// 						render: (item) => item.value,
-	// 						align: 'right',
-	// 					}
-	// 				] as TableColumn[]}
-	// 			/>
-	// 		</section>
-
-			
-	// 		<section>
-	// 			<h3>Table in Live Rendering Mode</h3>
-
-	// 			<f-table
-	// 				style="height: 204px;"
-	// 				.resizable
-	// 				.live
-	// 				.renderCount="20"
-	// 				.store=${new Store({
-	// 					data: range(1, 1001).map(n => ({id: n, value: Math.round(Math.random() * 100)})),
-	// 					key: 'id',
-	// 				})}
-	// 				.columns=${[
-	// 					{
-	// 						title: 'Index',
-	// 						render: (_item: {id: number, value: number}, index: number) => {
-	// 							return index
-	// 						},
-	// 					},
-	// 					{
-	// 						title: 'ID',
-	// 						orderBy: 'id',
-	// 						render: (item) => item.id,
-	// 					},
-	// 					{
-	// 						title: 'Name',
-	// 						render: (item) => `Name ${item.id}`,
-	// 					},
-	// 					{
-	// 						title: 'Random Value',
-	// 						orderBy: 'value',
-	// 						render: (item) => item.value,
-	// 						align: 'right',
-	// 					}
-	// 				] as TableColumn[]}
-	// 			/>
-	// 		</section>
+				<Table
+					.resizable
+					.store=${new Store({
+						data: [...range(1, 101)].map(n => ({id: n, value: Math.round(Math.random() * 100)})),
+					})}
+					.columns=${[
+						{
+							title: 'Index',
+							renderer: (_item: {id: number, value: number}, index: number) => {
+								return index
+							},
+						},
+						{
+							title: 'ID',
+							orderBy: 'id',
+							renderer: (item) => item.id,
+						},
+						{
+							title: 'Name',
+							orderBy: 'id',
+							renderer: (item) => `Name ${item.id}`,
+						},
+						{
+							title: 'Random Value',
+							orderBy: 'value',
+							renderer: (item) => item.value,
+							align: 'right',
+						}
+					] as TableColumn[]}
+				/>
+			</section>
 
 			
-	// 		<section>
-	// 			<h3>Table with Remote Data</h3>
+			<section>
+				<h3>Table on Live Mode</h3>
 
-	// 			<f-table
-	// 				.resizable
-	// 				.renderCount="20"
-	// 				.store=${new ExampleRemoteStore()}
-	// 				.columns=${[
-	// 					{
-	// 						title: 'Index',
-	// 						render: (_item: {id: number, value: number}, index: number) => {
-	// 							return index
-	// 						},
-	// 					},
-	// 					{
-	// 						title: 'ID',
-	// 						orderBy: 'id',
-	// 						render: (item) => item?.id ?? '--',
-	// 					},
-	// 					{
-	// 						title: 'Name',
-	// 						render: (item) => item ? `Name ${item.id}` : '--',
-	// 					},
-	// 					{
-	// 						title: 'Random Value',
-	// 						orderBy: 'value',
-	// 						render: (item) => item?.value ?? '--',
-	// 						align: 'right',
-	// 					}
-	// 				] as TableColumn[]}
-	// 			/>
-	// 		</section>
+				<Table
+					style="height: 204px;"
+					.resizable
+					.live
+					.store=${new Store({
+						data: [...range(1, 1001)].map(n => ({id: n, value: Math.round(Math.random() * 100)})),
+					})}
+					.columns=${[
+						{
+							title: 'Index',
+							renderer: (_item: {id: number, value: number}, index: number) => {
+								return index
+							},
+						},
+						{
+							title: 'ID',
+							orderBy: 'id',
+							renderer: (item) => item.id,
+						},
+						{
+							title: 'Name',
+							orderBy: 'id',
+							renderer: (item) => `Name ${item.id}`,
+						},
+						{
+							title: 'Random Value',
+							orderBy: 'value',
+							renderer: (item) => item.value,
+							align: 'right',
+						}
+					] as TableColumn[]}
+				/>
+			</section>
 
-	// 		`
-	// }
+			
+			<section>
+				<h3>Table with Remote Data</h3>
+
+				<f-table
+					.resizable
+					.renderCount="20"
+					.store=${new ExampleRemoteStore()}
+					.columns=${[
+						{
+							title: 'Index',
+							renderer: (_item: {id: number, value: number}, index: number) => {
+								return index
+							},
+						},
+						{
+							title: 'ID',
+							orderBy: 'id',
+							renderer: (item) => item?.id ?? '--',
+						},
+						{
+							title: 'Name',
+							orderBy: 'id',
+							renderer: (item) => item ? `Name ${item.id}` : '--',
+						},
+						{
+							title: 'Random Value',
+							orderBy: 'value',
+							renderer: (item) => item?.value ?? '--',
+							align: 'right',
+						}
+					] as TableColumn[]}
+				/>
+			</section>
+
+			`
+	}
 	
 	// leftData = observe([1, 2, 3])
 	// rightData = observe([4, 5, 6])
@@ -1190,27 +1194,26 @@ class MainColorSelect extends Select<string> {
 }
 
 
+class ExampleRemoteStore extends RemoteStore {
 
-// class ExampleRemoteStore extends RemoteStore {
-
-// 	protected key = 'id'
+	protected key = 'id'
 	
-// 	constructor() {
-// 		super({
-// 			pageSize: 20,
-// 			preloadPageCount: 0,
-// 		})
-// 	}
+	constructor() {
+		super({
+			pageSize: 20,
+			preloadPageCount: 0,
+		})
+	}
 
-// 	protected dataCount() {
-// 		return 1000
-// 	}
+	protected dataCountGetter() {
+		return 1000
+	}
 
-// 	async dataGetter(start: number, end: number) {
-// 		await ff.sleep(500)
-// 		return [...ff.range(start, end)].map(v => ({id: v + 1, value: Math.round(Math.random() * 100)}))
-// 	}
-// }
+	async pageDataGetter(start: number, end: number) {
+		await ff.sleep(500)
+		return [...ff.range(start, end)].map(v => ({id: v + 1, value: Math.round(Math.random() * 100)}))
+	}
+}
 
 
 ff.DOMEvents.untilWindowLoaded().then(() => {

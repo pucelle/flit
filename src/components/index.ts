@@ -44,3 +44,5 @@ export * from './loader'
 export * from './notification'
 export * from './dialog'
 export * from './modal'
+
+export * from './table'

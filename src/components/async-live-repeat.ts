@@ -44,6 +44,11 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 	private needsUpdateDataCount: boolean = true
 	private version: number = 0
 
+	/** Live data, rendering part of all the data. */
+	get liveData(): (T | null)[] {
+		return this.data
+	}
+
 	@immediateWatch('pageSize', 'dataCountGetter', 'pageDataGetter')
 	protected initDataLoader(pageSize: number, dataCountGetter: PageDataCountGetter, pageDataGetter: PageDataGetter<T>) {
 		this.dataLoader = new PageDataLoader(pageSize, dataCountGetter, pageDataGetter)
@@ -88,7 +93,7 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 	}
 
 	protected render() {
-		return html`<lupos:for ${this.data}>${this.renderFn}</lupos:for>`
+		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
 	}
 
 	/** 
