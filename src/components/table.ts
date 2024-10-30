@@ -433,6 +433,8 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 					.coverageRate=${this.coverageRate}
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
+					.dataCountGetter=${(this.store as RemoteStore).getDataCount.bind(this.store)}
+					.pageDataGetter=${(this.store as RemoteStore).getFreshData.bind(this.store)}
 					@freshly-updated=${this.onLiveDataUpdated}
 				/>
 			`
@@ -466,6 +468,8 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	 * if want to do more customized rendering.
 	 */
 	protected renderRow(item: T | null, index: number) {
+		index += this.startIndex
+
 		let tds = this.columns.map(column => {
 			let result = item && column.renderer ? column.renderer.call(this, item, index) : '\xa0'
 			return html`

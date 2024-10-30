@@ -1,7 +1,7 @@
 import {PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Repeat} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
-import {DOMEvents, LayoutWatcher, TransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
+import {DOMEvents, TransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
 import {html} from '@pucelle/lupos.js'
 
 
@@ -74,7 +74,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	locateVisibleIndex(direction: 'start' | 'end') {
-		return super.locateVisibleIndex(direction) + this.startIndex
+		return this.renderer!.locateVisibleIndex(direction)
 	}
 
 	
@@ -97,8 +97,8 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 		DOMEvents.on(this.scroller!, 'scroll', this.checkCoverage, this, {passive: true})
 
-		let unwatchScrollerSize = LayoutWatcher.watch(this.scroller!, 'size', this.checkCoverage.bind(this))
-		this.once('will-disconnect', unwatchScrollerSize)
+		// let unwatchScrollerSize = LayoutWatcher.watch(this.scroller!, 'size', this.checkCoverage.bind(this))
+		// this.once('will-disconnect', unwatchScrollerSize)
 	}
 
 	protected initPlaceholder() {
@@ -127,6 +127,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer = new PartialRenderer(
 			this.scroller!,
 			slider,
+			this.el,
 			this.placeholder!,
 			this.doa,
 			this.updateLiveData.bind(this)

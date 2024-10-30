@@ -1063,9 +1063,8 @@ class Preview extends Component {
 			<section>
 				<h3>Table with Remote Data</h3>
 
-				<f-table
+				<f-Table
 					.resizable
-					.renderCount="20"
 					.store=${new ExampleRemoteStore()}
 					.columns=${[
 						{

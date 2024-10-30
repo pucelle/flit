@@ -64,6 +64,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
+			0,
 			direction
 		)
 

@@ -42,6 +42,9 @@ export class PartialRendererSizeStat {
 			return 1
 		}
 
-		return Math.ceil(scrollerSize / safeSize * coverageRate)
+		// Has at least additional 100px to do scrolling.
+		let totalSize = Math.max(scrollerSize * coverageRate, scrollerSize + 100)
+
+		return Math.ceil(totalSize / safeSize)
 	}
 }

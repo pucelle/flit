@@ -4,31 +4,33 @@ import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 
 /** 
  * Locate the first or last element in els that is visible.
- * Returned range is `0 ~ list.length`.
+ * Returned range is `0 ~ list.length - 1`, and at least 0.
  */
 export function locateVisibleIndex(
 	scroller: HTMLElement,
 	els: ArrayLike<HTMLElement>,
 	doa: DirectionalOverflowAccessor,
+	sliderStartPosition: number,
 	direction: 'start' | 'end'
 ): number {
 	let scrollerSize = doa.getClientSize(scroller)
 	let scrolled = doa.getScrollPosition(scroller)
-	let locateLast = direction === 'end' ? 1 : -1
+	let locateLast = direction === 'end' ? -1 : 1
+	let translated = sliderStartPosition - scrolled
 
-	return ListUtils.quickBinaryFindInsertIndex(els, function(el) {
-		let start = doa.getOffset(el) - scrolled
+	let index = ListUtils.quickBinaryFindInsertIndex(els, function(el) {
+		let start = doa.getOffset(el) + translated
 		let size = doa.getClientSize(el)
 		let end = start + size
 
-		// Fully above.
+		// Above, move right.
 		if (end < 0) {
-			return 1
+			return -1
 		}
 
-		// Fully below.
+		// Below, move left.
 		else if (start > scrollerSize) {
-			return -1
+			return 1
 		}
 
 		// Move to right if `locateLast` is `1`.
@@ -36,4 +38,11 @@ export function locateVisibleIndex(
 			return locateLast
 		}
 	})
+
+	// If locate to `els.length`, minus.
+	if (index > 0 && index === els.length) {
+		index--
+	}
+
+	return index
 }
