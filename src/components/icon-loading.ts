@@ -1,4 +1,4 @@
-import {immediateWatch, WebTransition} from '@pucelle/ff'
+import {effect, WebTransition} from '@pucelle/ff'
 import {Icon} from './icon'
 
 
@@ -17,10 +17,10 @@ export class IconLoading extends Icon {
 	/** Each rotation duration, in milliseconds. */
 	duration: number = 1000
 
-	/** After loading property change. */
-	@immediateWatch('loading')
-	protected onLoadingChange(loading: boolean) {
-		if (loading) {
+	/** Apply loading property. */
+	@effect
+	protected applyLoading() {
+		if (this.loading) {
 			this.play()
 		}
 	}

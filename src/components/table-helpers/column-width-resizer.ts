@@ -1,4 +1,4 @@
-import {DOMEvents, DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
+import {DOMEvents, DOMUtils, ListUtils, Observed, untilUpdateComplete, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
 import {html, render} from '@pucelle/lupos.js'
 
@@ -7,53 +7,58 @@ import {html, render} from '@pucelle/lupos.js'
 export class ColumnWidthResizer {
 
 	/** Head container. */
-	protected readonly head: HTMLTableSectionElement
+	readonly head: HTMLTableSectionElement
 
 	/** Column container inside head. */
-	protected readonly columnContainer: HTMLElement
+	readonly columnContainer: HTMLElement
 
 	/** Colgroup inside table. */
-	protected readonly colgroup: HTMLTableColElement
+	readonly colgroup: HTMLTableColElement
 	
 	/** Table column configuration. */
-	protected columns: TableColumn[]
-
-	/** Column widths array. */
-	protected columnWidths: number[] | null = null
-
-	/** Column widths array when resizing. */
-	protected resizingColumnWidths: number[] | null = null
-
-	/** Whether column resized. */
-	protected columnResized: boolean = false
+	columns!: Observed<TableColumn[]>
 
 	/** Minimum column width in pixels. */
-	protected minColumnWidth: number
+	minColumnWidth!: number
+
+
+	/** Whether column resized. */
+	private columnResized: boolean = false
+
+	/** Column widths array. */
+	private columnWidths: number[] | null = null
+
+	/** Column widths array when resizing. */
+	private resizingColumnWidths: number[] | null = null
 
 	/** Class name of resizing mask element. */
-	protected resizingMaskClassName: string
+	private resizingMaskClassName: string
 
 	constructor(
 		head: HTMLTableSectionElement,
 		columnContainer: HTMLElement,
 		colgroup: HTMLTableColElement,
-		columns: TableColumn[],
-		minColumnWidth: number,
 		resizingMaskClassName: string
 	) {
 		this.head = head
 		this.columnContainer = columnContainer
 		this.colgroup = colgroup
+		this.resizingMaskClassName = resizingMaskClassName
+	}
+
+	/** Update properties from <Table>. */
+	update(columns: TableColumn[], minColumnWidth: number) {
 		this.columns = columns
 		this.minColumnWidth = minColumnWidth
-		this.resizingMaskClassName = resizingMaskClassName
 	}
 
 	/** 
 	 * Update column widths from column configuration.
 	 * Will check available column width and may cause page reflow.
 	 */
-	updateColumnWidths() {
+	async updateColumnWidths() {
+		await untilUpdateComplete()
+		
 		let headAvailableWidth = this.head.clientWidth
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingLeft')
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingRight')
@@ -62,8 +67,9 @@ export class ColumnWidthResizer {
 	}
 
 	/** Update column widths after knows available head width. */
-	protected updateColumnWidthsByAvailable(availableWidth: number) {
-		let widthAndFlexArray = this.columns.map(({flex, width}, index) => {
+	private updateColumnWidthsByAvailable(availableWidth: number) {
+		let widthAndFlexArray = this.columns.map((column: TableColumn, index) => {
+			let {flex, width} = column
 			let baseWidthInColumnConfig = Math.max(width || 0, this.minColumnWidth)
 
 			// If column resized, we use the column width percentage to calculate new column width.
@@ -93,7 +99,7 @@ export class ColumnWidthResizer {
 	 * except that the total column widths will always equal the available client width,
 	 * and no column width should less than `minColumnWidth`.
 	 */
-	protected calcColumnWidths(widthAndFlexArray: [number, number, number][], clientWidth: number, minColumnWidth: number): number[] {
+	private calcColumnWidths(widthAndFlexArray: [number, number, number][], clientWidth: number, minColumnWidth: number): number[] {
 
 		// Not enough space for even `minColumnWidth`, then average `clientWidth` to each column.
 		if (clientWidth < minColumnWidth * widthAndFlexArray.length) {
@@ -158,7 +164,7 @@ export class ColumnWidthResizer {
 		return widths
 	}
 
-	protected setColumnWidths(widths: number[]) {
+	private setColumnWidths(widths: number[]) {
 		let totalWidth = ValueListUtils.sum(widths)
 		
 		for (let index = 0; index < widths.length; index++) {
@@ -202,7 +208,7 @@ export class ColumnWidthResizer {
 		DOMEvents.once(document, 'mouseup', onMouseUp)
 	}
 
-	protected resizeColumnByMovementX(movementX: number, index: number) {
+	private resizeColumnByMovementX(movementX: number, index: number) {
 		let widths = [...this.columnWidths!]
 		let needShrink = Math.abs(movementX)
 		let moveLeft = movementX < 0

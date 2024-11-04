@@ -1,5 +1,4 @@
 import {RenderResultRenderer} from '@pucelle/lupos.js'
-import {ObjectUtils} from '@pucelle/ff'
 import {popup, PopupOptions} from './popup'
 
 
@@ -23,7 +22,7 @@ const DefaultContextMenuOptions: Partial<PopupOptions> = {
 export class contextmenu extends popup {
 
 	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
-		options = ObjectUtils.assignNonExisted(options, DefaultContextMenuOptions)
+		options = {...DefaultContextMenuOptions, ...options}
 		super.update(renderer, options)
 	}
 }

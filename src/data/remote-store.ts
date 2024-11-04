@@ -41,7 +41,7 @@ export abstract class RemoteStore<T = any> implements RemoteStoreOptions<T>, Obs
 	}
 
 	@computed
-	protected get dataLoader(): PageDataLoader<T> {
+	get dataLoader(): PageDataLoader<T> {
 		return new PageDataLoader(this.pageSize, this.dataCountGetter.bind(this), this.pageDataGetter.bind(this))
 	}
 

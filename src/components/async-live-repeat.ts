@@ -1,7 +1,6 @@
-import {effect, immediateWatch} from '@pucelle/ff'
+import {effect, watch} from '@pucelle/ff'
 import {LiveRepeat} from './live-repeat'
 import {PageDataCountGetter, PageDataGetter, PageDataLoader} from '../data'
-import {html} from '@pucelle/lupos.js'
 
 
 export interface AsyncLiveRepeatEvents {
@@ -39,25 +38,30 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 	/** Count of pages which will preload. */
 	preloadPageCount: number = 0
 
+	/** Page loader to load each page of data. */
+	dataLoader!: PageDataLoader<T>
 
-	private dataLoader!: PageDataLoader<T>
 	private needsUpdateDataCount: boolean = true
-	private version: number = 0
 
 	/** Live data, rendering part of all the data. */
 	get liveData(): (T | null)[] {
-		return this.data
+		return this.dataLoader.getImmediateData(this.startIndex, this.endIndex)
 	}
 
-	@immediateWatch('pageSize', 'dataCountGetter', 'pageDataGetter')
-	protected initDataLoader(pageSize: number, dataCountGetter: PageDataCountGetter, pageDataGetter: PageDataGetter<T>) {
-		this.dataLoader = new PageDataLoader(pageSize, dataCountGetter, pageDataGetter)
-		this.needsUpdateDataCount = true
-	}
+	/** Do nothing because `data` is not used as data source any more. */
+	@effect
+	protected applyDataCount() {}
 
+	/** Apply preload page count to page loader. */
 	@effect
 	protected applyPreloadPageCount() {
 		this.dataLoader.setPreloadPageCount(this.preloadPageCount)
+	}
+
+	/** Need to reload data after loader change.  */
+	@watch('dataLoader')
+	protected onDataLoaderChange() {
+		this.reload()
 	}
 
 	protected onConnected(): void {
@@ -69,31 +73,24 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 		}
 	}
 
+	/** Apply data count to renderer. */
 	protected async updateDataCount() {
 		let dataCount = await this.dataLoader.getDataCount()
 		this.renderer!.setDataCount(dataCount)
+		this.willUpdate()
 	}
 
-	protected async updateLiveData(this: AsyncLiveRepeat<any, {}>) {
-		this.data = this.dataLoader.getImmediateData(this.startIndex, this.endIndex)
-
-		let dataUnFresh = this.data.some(item => item === null)
-		if (dataUnFresh) {
-			let version = this.version
-			let freshData = await this.dataLoader.getFreshData(this.startIndex, this.endIndex)
-
-			if (version === this.version) {
-				this.data = freshData
-				this.fire('freshly-updated')
-			}
-		}
-		else {
+	protected async onUpdated(this: AsyncLiveRepeat) {
+		super.onUpdated()
+		
+		let dataFresh = this.dataLoader.isRangeFresh(this.startIndex, this.endIndex)
+		if (dataFresh) {
 			this.fire('freshly-updated')
 		}
-	}
-
-	protected render() {
-		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
+		else {
+			await this.dataLoader.getFreshData(this.startIndex, this.endIndex)
+			this.willUpdate()
+		}
 	}
 
 	/** 
@@ -102,9 +99,13 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 	 */ 
 	reload() {
 		this.dataLoader.clear()
-		this.updateDataCount()
-		this.needsUpdateDataCount = true
-		this.willUpdate()
-		this.version++
+
+		if (this.connected) {
+			this.updateDataCount()
+			this.willUpdate()
+		}
+		else {
+			this.needsUpdateDataCount = true
+		}
 	}
 }

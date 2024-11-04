@@ -1,7 +1,6 @@
 import {html, RenderResultRenderer} from '@pucelle/lupos.js'
 import {popup, PopupOptions} from './popup'
 import {TooltipType, Tooltip} from '../components'
-import {ObjectUtils} from '@pucelle/ff'
 import {ThemeSize} from '../style'
 
 
@@ -43,10 +42,10 @@ const DefaultTooltipOptions: Partial<TooltipOptions> = {
  */
 export class tooltip extends popup {
 
-	declare options: PartialKeys<TooltipOptions, 'key' | 'alignTo' | 'transition'>
+	declare options: TooltipOptions
 
 	update(renderer: string | RenderResultRenderer, options: Partial<TooltipOptions> = {}) {
-		options = ObjectUtils.assignNonExisted(options, DefaultTooltipOptions)
+		options = {...DefaultTooltipOptions, ...options}
 		super.update(this.popupRenderer.bind(this, renderer), options)
 	}
 

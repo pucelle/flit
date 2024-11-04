@@ -4,10 +4,7 @@ import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
-	dialog, Modal, loading, Table,
-	TableColumn,
-	Store,
-	RemoteStore
+	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore
 } from '../../out'
 import {range, watch} from '@pucelle/ff'
 
@@ -1026,7 +1023,7 @@ class Preview extends Component {
 				<h3>Table on Live Mode</h3>
 
 				<Table
-					style="height: 204px;"
+					style="height: 200px;"
 					.resizable
 					.live
 					.store=${new Store({
@@ -1063,7 +1060,7 @@ class Preview extends Component {
 			<section>
 				<h3>Table with Remote Data</h3>
 
-				<f-Table
+				<Table
 					.resizable
 					.store=${new ExampleRemoteStore()}
 					.columns=${[

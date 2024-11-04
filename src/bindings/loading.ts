@@ -1,4 +1,4 @@
-import {fade, ObjectUtils, TransitionResult} from '@pucelle/ff'
+import {fade, TransitionResult} from '@pucelle/ff'
 import {Binding, render, html, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Loader} from '../components'
 
@@ -45,9 +45,9 @@ export class loading implements Binding, Part {
 		this.el = el
 	}
 
-	async afterConnectCallback(_param: PartCallbackParameterMask | 0) {
+	afterConnectCallback(_param: PartCallbackParameterMask | 0) {
 		if (this.value && !this.loader) {
-			this.loader = await this.renderLoader()
+			this.loader = this.renderLoader()
 			this.loader.appendTo(this.el)
 		}
 	}
@@ -74,11 +74,11 @@ export class loading implements Binding, Part {
 		}
 
 		this.value = value
-		this.options = ObjectUtils.assignNonExisted(options, DefaultLoadingOptions)
+		this.options = {...options, ...DefaultLoadingOptions}
 
 		if (this.value) {
 			if (!this.loader) {
-				this.loader = await this.renderLoader()
+				this.loader = this.renderLoader()
 				this.loader.appendTo(this.el)
 			}
 		}

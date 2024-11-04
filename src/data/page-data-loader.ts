@@ -1,6 +1,3 @@
-import {ListUtils} from '@pucelle/ff'
-
-
 /** Page data count getter. */
 export type PageDataCountGetter = () => (number | Promise<number>)
 
@@ -68,44 +65,57 @@ export class PageDataLoader<T> {
 		return this.knownDataCount
 	}
 
+	/** Get page indices that should visit. */
+	private getPageIndices(startIndex: number, endIndex: number): [number, number] {
+		let startPageIndex = Math.floor(startIndex / this.pageSize)		// 49 -> 0, 50 -> 1
+		let endPageIndex = Math.floor((endIndex - 1) / this.pageSize)	// 50 -> 0, 51 -> 1
+
+		return [startPageIndex, endPageIndex]
+	}
+
 	/** 
 	 * Get data items immediately.
 	 * If data items haven't been requested, use `null` as placeholder.
 	 */
 	getImmediateData(startIndex: number, endIndex: number): (T | null)[] {
-		let startPageIndex = Math.floor(startIndex / this.pageSize)		// 49 -> 0, 50 -> 1
-		let endPageIndex = Math.floor((endIndex - 1) / this.pageSize)	// 50 -> 0, 51 -> 1
+		let [startPageIndex, endPageIndex] = this.getPageIndices(startIndex, endIndex)
 		let items: (T | null)[] = []
 
 		for (let i = startPageIndex; i <= endPageIndex; i++) {
+			let start = Math.max(0, startIndex - i * this.pageSize)
+			let end = Math.min(this.pageSize, endIndex - i * this.pageSize)
+
 			let pageItems = this.cacheMap.get(i)
 			if (!pageItems) {
-				pageItems = ListUtils.repeatForTimes(null, this.pageSize)
-			}
-
-			if (i === startPageIndex && i === endPageIndex) {
-				items.push(...pageItems.slice(startIndex - startPageIndex * this.pageSize, endIndex - endPageIndex * this.pageSize))
-			}
-			else if (i === startPageIndex) {
-				items.push(...pageItems.slice(startIndex - startPageIndex * this.pageSize))
-			}
-			else if (i === endPageIndex) {
-				items.push(...pageItems.slice(0, endIndex - endPageIndex * this.pageSize))
+				for (let j = start; j < end; j++) {
+					items.push(null)
+				}
 			}
 			else {
-				items.push(...pageItems)
+				items.push(...pageItems.slice(start, end))
 			}
 		}
-
-		this.preloadIfNeeded(endPageIndex + 1)
 
 		return items
 	}
 
+	/** Check whether all data items within range index are fresh. */
+	isRangeFresh(startIndex: number, endIndex: number): boolean {
+		let [startPageIndex, endPageIndex] = this.getPageIndices(startIndex, endIndex)
+	
+		for (let i = startPageIndex; i <= endPageIndex; i++) {
+			let pageItems = this.cacheMap.get(i)
+			if (!pageItems) {
+				return false
+			}
+		}
+
+		return true
+	}
+
 	/** Get fresh data items. */
 	async getFreshData(startIndex: number, endIndex: number): Promise<T[]> {
-		let startPageIndex = Math.floor(startIndex / this.pageSize)		// 49 -> 0, 50 -> 1
-		let endPageIndex = Math.floor((endIndex - 1) / this.pageSize)	// 50 -> 0, 51 -> 1
+		let [startPageIndex, endPageIndex] = this.getPageIndices(startIndex, endIndex)
 		let promises: Promise<void>[] = []
 
 		for (let i = startPageIndex; i <= endPageIndex; i++) {

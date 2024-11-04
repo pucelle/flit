@@ -12,12 +12,12 @@ export class PartialRendererSizeStat {
 	}
 
 	/** After every time rendered, update indices and sizes. */
-	update(startIndex: number, endIndex: number, renderedSize: number) {
-		if (endIndex === startIndex) {
+	update(count: number, renderedSize: number) {
+		if (count === 0) {
 			return
 		}
 
-		let size = renderedSize / (endIndex - startIndex)
+		let size = renderedSize / count
 		this.rv.update(size)
 	}
 
@@ -42,8 +42,9 @@ export class PartialRendererSizeStat {
 			return 1
 		}
 
-		// Has at least additional 100px to do scrolling.
-		let totalSize = Math.max(scrollerSize * coverageRate, scrollerSize + 100)
+		// At least render additional 200px.
+		// Because normally can scroll twice per frame.
+		let totalSize = Math.max(scrollerSize * coverageRate, scrollerSize + 400)
 
 		return Math.ceil(totalSize / safeSize)
 	}

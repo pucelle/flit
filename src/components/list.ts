@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme, ThemeSize} from '../style'
-import {DOMEvents, EventKeys, immediateWatch, Observed, fold} from '@pucelle/ff'
+import {DOMEvents, EventKeys, Observed, fold, effect} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip} from '../bindings'
@@ -235,14 +235,14 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * Selected and all parental indices by keyboard navigation.
 	 * Only the last index is the truly selected.
 	 */
-	protected keyNavigator: ListDataNavigator<T> = new ListDataNavigator()
+	protected readonly keyNavigator: ListDataNavigator<T> = new ListDataNavigator()
 
 	/** Whether watching keyboard navigation events. */
 	private inKeyNavigating: boolean = false
 
-	@immediateWatch('data', 'expanded')
-	protected updateKeyNavigator(data: ListItem<T>[], expanded: T[]) {
-		this.keyNavigator.update(data, expanded)
+	@effect
+	protected applyKeyNavigatorProperties() {
+		this.keyNavigator.update(this.data, this.expanded)
 	}
 
 	protected render() {
@@ -414,9 +414,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	private lastKeyComeFrom: HTMLElement | null = null
 
 	/** On `keyComeFrom` property change. */
-	@immediateWatch('keyComeFrom')
-	protected onKeyComeFromChange(keyComeFrom: HTMLElement | null) {
-		if (!keyComeFrom) {
+	@effect
+	protected onKeyComeFromChange() {
+		if (!this.keyComeFrom) {
 			return
 		}
 
@@ -425,12 +425,12 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			DOMEvents.off(this.lastKeyComeFrom, 'blur', this.onKeyComeFromBlur, this)
 		}
 
-		if (keyComeFrom) {
-			DOMEvents.on(keyComeFrom, 'keydown', this.keyNavigateByEvent as any, this)
-			DOMEvents.on(keyComeFrom, 'blur', this.onKeyComeFromBlur, this)
+		if (this.keyComeFrom) {
+			DOMEvents.on(this.keyComeFrom, 'keydown', this.keyNavigateByEvent as any, this)
+			DOMEvents.on(this.keyComeFrom, 'blur', this.onKeyComeFromBlur, this)
 		}
 
-		this.lastKeyComeFrom = keyComeFrom
+		this.lastKeyComeFrom = this.keyComeFrom
 	}
 
 	/** Moves arrow selected by a keyboard event. */

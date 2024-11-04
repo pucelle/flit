@@ -1,6 +1,6 @@
 import {css, html, Component, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style'
-import {Timeout, Color, Observed, fold, fade} from '@pucelle/ff'
+import {Timeout, Color, fold, fade} from '@pucelle/ff'
 import {Icon} from './icon'
 import {Button} from './button'
 
@@ -184,7 +184,7 @@ export class Notification<E = {}> extends Component<E> {
 	protected render() {
 		return html`
 		<template class="notification">
-			<lu:for ${this.items}>${(item: Observed<NotificationItem>) => html`
+			<lu:for ${this.items}>${(item: NotificationItem) => html`
 				<div class="notification-item"
 					:class="notification-type-${item.type}"
 					@mouseenter=${() => this.onMouseEnter(item)}

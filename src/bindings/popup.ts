@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, DOMEvents, ObjectUtils} from '@pucelle/ff'
+import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, DOMEvents} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -113,7 +113,7 @@ interface PopupBindingEvents {
 
 
 /** Default popup options. */
-export const DefaultPopupOptions: PartialKeys<PopupOptions, 'key' | 'alignTo'> = {
+export const DefaultPopupOptions: PopupOptions = {
 
 	position: 'b',
 	gap: 0,
@@ -151,11 +151,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected readonly binder: PopupTriggerBinder
 
 	protected transition: Transition | null = null
-	protected options: PartialKeys<PopupOptions, 'key' | 'alignTo' | 'transition'> = DefaultPopupOptions
+	protected options: PopupOptions = DefaultPopupOptions
 	protected renderer: RenderResultRenderer = null as any
 
 	/** Used to watch rect change after popup opened. */
-	protected unwatchRect: (() => void) | null = null
+	protected rectWatcher: LayoutWatcher<'rect'>
 
 	/** Help to update popup content by newly rendered result. */
 	protected rendered: RenderedComponentLike | null = null
@@ -176,6 +176,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.context = context
 		this.binder = new PopupTriggerBinder(this.el)
 		this.state = new PopupState()
+		this.rectWatcher = new LayoutWatcher(this.el, 'rect', this.onTriggerRectChanged, this)
 
 		this.initEvents()
 	}
@@ -205,7 +206,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		this.state.clear()
 		this.binder.unbindLeave()
-		this.unwatchRect?.()
+		this.rectWatcher.unwatch()
 		this.preventedHiding = false
 	}
 
@@ -339,7 +340,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
 		this.renderer = renderer
-		this.options = ObjectUtils.assignNonExisted(options, DefaultPopupOptions)
+		this.options = {...DefaultPopupOptions, ...options} as PopupOptions
 
 		// If popup has popped-up, should also update it.
 		if (this.state.opened) {
@@ -354,9 +355,9 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Show popup immediately, currently in opened. */
 	protected async doingShowPopup() {
-		await this.updatePopup()
+		this.updatePopup()
 
-		let aligned = this.alignPopup()
+		let aligned = await this.alignPopup()
 		if (aligned) {
 			this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
 		}
@@ -378,12 +379,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		this.binder.unbindLeave()
-		this.unwatchRect?.()
+		this.rectWatcher.unwatch()
 		this.preventedHiding = false
 	}
 
 	/** Update popup content, if haven't rendered, render it firstly. */
-	protected async updatePopup() {
+	protected updatePopup() {
 		this.updateRendering()
 
 		// Update popup properties.
@@ -395,7 +396,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Update rendered and popup property, and may use and add cache. */
-	protected async updateRendering() {
+	protected updateRendering() {
 		let rendered = this.rendered
 		let popup = this.popup
 
@@ -450,7 +451,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** After popup content get updated. */
 	protected async onRenderedUpdated() {
 		if (this.state.opened && this.popup) {
-			await untilUpdateComplete()
 			this.alignPopup()
 		}
 	}
@@ -476,21 +476,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		// Watch it's rect changing.
-		if (!this.unwatchRect) {
-			let unwatchRect = LayoutWatcher.watch(this.el, 'rect', this.onTriggerRectChanged.bind(this))
-			
-			this.unwatchRect = () => {
-				unwatchRect()
-				this.unwatchRect = null
-			}
-		}
+		this.rectWatcher.watch()
 	}
 
 	/** After trigger element position changed. */
-	protected async onTriggerRectChanged() {
-
-		// Avoid synchronous watching and updating cause infinite loop.
-		await untilUpdateComplete()
+	protected onTriggerRectChanged() {
 
 		if (this.options.stickToEdges && !DOMUtils.isRectIntersectWithViewport(this.el.getBoundingClientRect())) {
 			this.hidePopup()
@@ -501,7 +491,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Align popup content, returns whether align successfully. */
-	protected alignPopup(): boolean {
+	protected async alignPopup(): Promise<boolean> {
+
+		// First wait for updating complete, then can read dom properties safely.
+		await untilUpdateComplete()
+
 		if (!this.state.opened) {
 			return false
 		}
@@ -599,7 +593,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		this.binder.unbindLeave()
 		this.state.clear()
-		this.unwatchRect?.()
+		this.rectWatcher.unwatch()
 		this.rendered?.off('updated', this.onRenderedUpdated, this)
 		this.rendered = null
 		this.popup = null

@@ -1,49 +1,27 @@
-import {untilUpdateComplete} from '@pucelle/ff'
+import {DOMEvents, ResizeEvents, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
-import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
+import {PartialRendererMeasurement} from './partial-renderer-measurement'
 
 
 /** Function for doing updating. */
 type UpdateRenderingFn = () => void
 
 
-/** Latest render state, values keep change after each time rendering. */
-interface PartialRendererStates {
-
-	/** Whether still in rendering. */
-	rendering: boolean
-
-	/** Latest scroller size. */
-	scrollerSize: number
-
-	/** 
-	 * Latest end index when last time update and measure placeholder,
-	 * thus, can avoid update placeholder when scrolling up.
-	 */
-	latestEndIndexForPlaceholderMeasuring: number
-
-	/** Latest placeholder size. */
-	placeholderSize: number
-
-	/** Latest top/left position of slider, update it before or after every time rendered. */
-	sliderStartPosition: number
-
-	/** Latest bottom/right position of slider, update it before or after every time rendered. */
-	sliderEndPosition: number
+interface NeedToApply {
 
 	/** 
 	 * Latest `startIndex` property has changed and need to be applied.
 	 * Soon need to re-render according to the new start index.
 	 * Note it was initialized as `0`.
 	 */
-	startIndexNeededToApply: number | null
+	startIndex: number | null
 
 	/** Latest `endIndex` property has changed and need to be applied. */
-	endIndexNeededToApply: number | null
+	endIndex: number | null
 
 	/** Latest `alignDirection` property has changed and need to be applied. */
-	alignDirectionNeededToApply: 'start' | 'end' | null
+	alignDirection: 'start' | 'end' | null
 }
 
 
@@ -70,11 +48,17 @@ export class PartialRenderer {
 	private coverageRate: number = 1
 	private dataCount: number = 0
 	
-	/** Do rendered item size statistic, guess item size. */
-	private readonly stat: PartialRendererSizeStat = new PartialRendererSizeStat()
+	/** Do rendered items measurement. */
+	private readonly measurement: PartialRendererMeasurement
 
 	/** Help to get and set based on overflow direction. */
 	private readonly doa: DirectionalOverflowAccessor
+
+	/** Whether still in rendering. */
+	private rendering: boolean = false
+
+	/** Indices and align direction that need to apply. */
+	private needToApply: NeedToApply | null = {startIndex: 0, endIndex: null, alignDirection: null}
 
 	/** 
 	 * The start index of the first item in the whole data.
@@ -96,19 +80,6 @@ export class PartialRenderer {
 	 */
 	alignDirection: 'start' | 'end' = 'start'
 
-	/** Cache render state values, and use them for later rendering. */
-	private readonly state: PartialRendererStates = {
-		rendering: false,
-		scrollerSize: 0,
-		latestEndIndexForPlaceholderMeasuring: 0,
-		placeholderSize: 0,
-		sliderStartPosition: 0,
-		sliderEndPosition: 0,
-		startIndexNeededToApply: 0,
-		endIndexNeededToApply: null,
-		alignDirectionNeededToApply: null,
-	}
-
 	constructor(
 		scroller: HTMLElement,
 		slider: HTMLElement,
@@ -123,6 +94,16 @@ export class PartialRenderer {
 		this.placeholder = placeholder
 		this.doa = doa
 		this.updateRendering = updateRendering
+
+		this.measurement = new PartialRendererMeasurement(scroller, slider, doa)
+	}
+
+	/** 
+	 * Set latest `alignDirection`.
+	 * Normally should do it before update rendering.
+	 */
+	protected setAlignDirection(direction: 'start' | 'end') {
+		this.alignDirection = direction
 	}
 
 	/** Set `coverageRate` property. */
@@ -132,7 +113,10 @@ export class PartialRenderer {
 		}
 	}
 
-	/** Set total data count before updating. */
+	/** 
+	 * Set total data count before updating.
+	 * Not set data count will not update or enqueue update.
+	 */
 	setDataCount(dataCount: number) {
 		this.dataCount = dataCount
 	}
@@ -151,27 +135,47 @@ export class PartialRenderer {
 	 * been located at the end edge of scroll viewport.
 	 */
 	setRenderPart(startIndex: number, endIndex: number | null, alignDirection: 'start' | 'end' | null = null) {
-		this.state.startIndexNeededToApply = startIndex
-		this.state.endIndexNeededToApply = endIndex
-		this.state.alignDirectionNeededToApply = alignDirection
+		this.needToApply = {
+			startIndex,
+			endIndex: endIndex,
+			alignDirection: alignDirection,
+		}
+	}
+
+	/** After component use this partial renderer get connected. */
+	async connect() {
+		DOMEvents.on(this.scroller, 'scroll', this.updateCoverage, this, {passive: true})
+
+		await untilUpdateComplete()
+		this.readScrollerSize()
+		ResizeEvents.on(this.scroller, this.readScrollerSize, this)
+	}
+
+	/** After component use this partial renderer will get disconnected. */
+	disconnect() {
+		DOMEvents.off(this.scroller, 'scroll', this.updateCoverage, this)
+		ResizeEvents.off(this.scroller, this.readScrollerSize, this)
+	}
+
+	/** Read new scroller size. */
+	protected readScrollerSize() {
+		this.measurement.readScrollerSize()
 	}
 
 	/** Update from applying start index or updating data. */
 	async update() {
-		if (this.state.rendering) {
+		if (this.rendering) {
 			return
 		}
 
 
 		//// Can only write dom properties now.
-		this.state.rendering = true
+		this.rendering = true
 
 		// Adjust scroll position by specified indices.
-		if (this.state.startIndexNeededToApply !== null) {
+		if (this.needToApply) {
 			this.updateWithNewIndices()
-			this.state.startIndexNeededToApply = null
-			this.state.endIndexNeededToApply = null
-			this.state.alignDirectionNeededToApply = null
+			this.needToApply = null
 		}
 
 		// Data changed, try persist indices, especially start index and scroll position.
@@ -179,7 +183,7 @@ export class PartialRenderer {
 			this.updateWithStartIndexPersist()
 		}
 
-		let haveNotMeasured = this.stat.getAverageSize() === 0
+		let haveNotMeasured = !this.measurement.hasMeasuredItemSize()
 		if (!haveNotMeasured) {
 			this.updatePlaceholderSizeProgressively()
 		}
@@ -188,20 +192,20 @@ export class PartialRenderer {
 		//// Can only read dom properties now.
 
 		await untilUpdateComplete()
-		this.collectStateAfterRendered()
-		this.state.rendering = false
+		this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
+		this.rendering = false
 
 
 		// Update again after known size.
-		if (haveNotMeasured && this.stat.getAverageSize() > 0) {
+		if (haveNotMeasured && this.measurement.hasMeasuredItemSize()) {
 			this.updateCoverage()
 		}
 	}
 
 	/** Update when start index specified and need to apply. */
 	private updateWithNewIndices() {
-		this.setIndices(this.state.startIndexNeededToApply!, this.state.endIndexNeededToApply)
-		this.setAlignDirection(this.state.alignDirectionNeededToApply ?? 'start')
+		this.setIndices(this.needToApply!.startIndex!, this.needToApply!.endIndex)
+		this.setAlignDirection(this.needToApply!.alignDirection ?? 'start')
 		this.updateRendering()
 		this.resetPositions(false)
 	}
@@ -225,7 +229,7 @@ export class PartialRenderer {
 			// Rendered things may change, should not persist end scroll position.
 			// Here we try to toggle to persist start scroll position.
 			if (oldAlignDirection === 'end') {
-				this.setSliderPosition(this.state.sliderStartPosition)
+				this.setSliderPosition(this.measurement.cachedSliderStartPosition)
 			}
 		}
 
@@ -237,10 +241,7 @@ export class PartialRenderer {
 
 	/** Update start and end indices before rendering. */
 	private setIndices(newStartIndex: number, newEndIndex: number | null = null) {
-
-		// At least render `100 * coverageRate`.
-		let scrollerSize = Math.max(this.state.scrollerSize, 100)
-		let renderCount = this.stat.getSafeRenderCount(this.coverageRate, scrollerSize)
+		let renderCount = this.measurement.getSafeRenderCount(this.coverageRate)
 
 		newStartIndex = Math.min(newStartIndex, this.dataCount - renderCount)
 		newStartIndex = Math.max(0, newStartIndex)
@@ -253,28 +254,12 @@ export class PartialRenderer {
 	}
 
 	/** 
-	 * Set latest `alignDirection`.
-	 * Normally should do it before update rendering.
-	 */
-	private setAlignDirection(direction: 'start' | 'end') {
-		this.alignDirection = direction
-	}
-
-	/** 
 	 * Reset slider and scroll position, make first item appear in the start edge.
 	 * `alignDirection` must have been updated.
 	 * `indicesFromScrollOffset` specified as `true` if current indices is calculated from current scroll offset.
 	 */
 	private resetPositions(indicesFromScrollOffset: boolean) {
-		let newPosition: number
-
-		if (this.alignDirection === 'start') {
-			newPosition = this.stat.getAverageSize() * this.startIndex
-		}
-		else {
-			newPosition = this.stat.getAverageSize() * this.endIndex + this.state.scrollerSize
-		}
-		
+		let newPosition = this.measurement.calcSliderPositionByIndices(this.startIndex, this.endIndex, this.alignDirection)
 		this.setSliderPosition(newPosition)
 
 		if (!indicesFromScrollOffset) {
@@ -286,7 +271,7 @@ export class PartialRenderer {
 
 			// Align scroller end with slider end.
 			else {
-				this.doa.setScrollOffset(this.scroller, newPosition - this.state.scrollerSize)
+				this.doa.setScrollOffset(this.scroller, newPosition - this.measurement.scrollerSize)
 			}
 		}
 	}
@@ -303,15 +288,10 @@ export class PartialRenderer {
 		}
 		else {
 			this.doa.setStartPosition(this.slider, 'auto')
-			this.doa.setEndPosition(this.slider, this.state.scrollerSize - position + 'px')
+			this.doa.setEndPosition(this.slider, this.measurement.scrollerSize - position + 'px')
 		}
 
-		if (this.alignDirection === 'start') {
-			this.state.sliderStartPosition = position
-		}
-		else {
-			this.state.sliderEndPosition = position
-		}
+		this.measurement.cacheSliderPosition(position, this.alignDirection)
 	}
 
 	/** 
@@ -320,47 +300,19 @@ export class PartialRenderer {
 	 * No need to update when scrolling up.
 	 */
 	private updatePlaceholderSizeProgressively() {
-		let expanded = this.endIndex > this.state.latestEndIndexForPlaceholderMeasuring
-		let placeholderSize: number
-
-		if (!expanded) {
+		let shouldUpdate = this.measurement.shouldUpdatePlaceholderSize(this.endIndex)
+		if (!shouldUpdate) {
 			return
 		}
 
-		let averageSize = this.stat.getAverageSize()
-		
-		if (this.alignDirection === 'start') {
-			placeholderSize = averageSize * (this.dataCount - this.startIndex) + this.state.sliderStartPosition
-		}
-		else {
-			placeholderSize = averageSize * (this.dataCount - this.endIndex) + this.state.sliderEndPosition
-		}
-
+		let placeholderSize = this.measurement.calcPlaceholderSizeByIndices(this.startIndex, this.endIndex, this.dataCount, this.alignDirection)
 		this.setPlaceholderSize(placeholderSize)
-		this.state.latestEndIndexForPlaceholderMeasuring = this.endIndex
 	}
 
 	/** Set placeholder size. */
 	private setPlaceholderSize(size: number) {
 		this.doa.setSize(this.placeholder, size)
-		this.state.placeholderSize = size
-	}
-
-	/** Every time after render complete, update state data.  */
-	private collectStateAfterRendered() {
-		let scrollerSize = this.doa.getClientSize(this.scroller)
-		let sliderSize = this.doa.getClientSize(this.slider)
-
-		this.state.scrollerSize = scrollerSize
-
-		if (this.alignDirection === 'start') {
-			this.state.sliderEndPosition = this.state.sliderStartPosition + sliderSize
-		}
-		else {
-			this.state.sliderStartPosition = this.state.sliderEndPosition - sliderSize
-		}
-
-		this.stat.update(this.startIndex, this.endIndex, sliderSize)
+		this.measurement.cachePlaceholderSize(size)
 	}
 
 	/** 
@@ -368,11 +320,11 @@ export class PartialRenderer {
 	 * and update if can't, and will also persist content continuous if possible.
 	 */
 	async updateCoverage() {
-		if (this.state.rendering) {
+		if (this.rendering) {
 			return
 		}
 
-		// Reach start and end edge.
+		// Reach both start and end edge.
 		if (this.startIndex === 0 && this.endIndex === this.dataCount) {
 			return
 		}
@@ -380,9 +332,9 @@ export class PartialRenderer {
 
 		//// Can only read dom properties now.
 
-		this.state.rendering = true
+		this.rendering = true
 		
-		let unCoveredDirection = this.checkUnCoveredDirection()
+		let unCoveredDirection = this.measurement.checkUnCoveredDirection(this.startIndex, this.endIndex, this.dataCount)
 		let position: number | null = null
 	
 		if (unCoveredDirection === 'end' || unCoveredDirection === 'start') {
@@ -399,7 +351,7 @@ export class PartialRenderer {
 				let elIndex = this.startIndex - oldStartIndex
 				let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.state.sliderStartPosition + this.doa.getOffset(el)
+				position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el)
 			}
 
 			// Scrolling up.
@@ -408,13 +360,13 @@ export class PartialRenderer {
 				let newEndIndex = visibleIndex
 				let newStartIndex = this.startIndex - this.endIndex + newEndIndex
 
-				this.setIndices(newStartIndex, newEndIndex)
+				this.setIndices(newStartIndex)
 
 				// Locate to the end position of the last element.
 				let elIndex = this.endIndex - oldStartIndex - 1
 				let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.state.sliderStartPosition + this.doa.getOffset(el) + this.doa.getClientSize(el)
+				position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el) + this.doa.getClientSize(el)
 			}
 		}
 	
@@ -439,11 +391,11 @@ export class PartialRenderer {
 		await untilUpdateComplete()
 
 		if (unCoveredDirection !== null) {
-			this.collectStateAfterRendered()
+			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 			this.checkEdgeCases()
 		}
 
-		this.state.rendering = false
+		this.rendering = false
 	}
 
 	/** Locate start or end index at which the item is visible in viewport. */
@@ -452,44 +404,11 @@ export class PartialRenderer {
 			this.scroller,
 			this.repeat.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
-			this.state.sliderStartPosition,
+			this.measurement.cachedSliderStartPosition,
 			direction
 		)
 
 		return visibleIndex + this.startIndex
-	}
-
-	/** Check cover direction and decide where to render more contents. */
-	private checkUnCoveredDirection(): 'start' | 'end' | 'break' | null {
-		let scrollerSize = this.doa.getClientSize(this.scroller)
-		let scrolled = this.doa.getScrollPosition(this.scroller)
-		let sliderStart = this.state.sliderStartPosition - scrolled
-		let sliderEnd = sliderStart + this.doa.getClientSize(this.slider)
-		let unexpectedScrollStart = scrolled === 0 && this.startIndex > 0
-
-		let unexpectedScrollEnd = scrolled + this.doa.getClientSize(this.scroller) === this.doa.getScrollSize(this.scroller)
-			&& this.endIndex < this.dataCount
-
-		// No intersection, reset indices by current scroll position.
-		let hasNoIntersection = sliderEnd < 0 || sliderStart > scrollerSize
-		if (hasNoIntersection) {
-			return 'break'
-		}
-
-		// Can't cover and need to render more items at bottom/right.
-		else if (sliderEnd < scrollerSize || unexpectedScrollEnd) {
-			return 'end'
-		}
-
-		// Can't cover and need to render more items at top/left.
-		else if (sliderStart > 0 || unexpectedScrollStart) {
-			return 'start'
-		}
-
-		// No need to render more.
-		else {
-			return null
-		}
 	}
 
 	/** Reset indices by current scroll position. */
@@ -502,7 +421,7 @@ export class PartialRenderer {
 
 	/** Reset indices by current scroll position. */
 	private resetIndicesByCurrentPosition() {
-		let itemSize = this.stat.getAverageSize()
+		let itemSize = this.measurement.getAverageSize()
 		let scrolled = this.doa.getScrollPosition(this.scroller)
 		let newStartIndex = itemSize > 0 ? Math.floor(scrolled / itemSize) : 0
 
@@ -518,35 +437,37 @@ export class PartialRenderer {
 
 	/** After render complete, do more check for edge cases. */
 	protected checkEdgeCases() {
-		
+
 		// When reach start index but may not reach scroll start.
-		if (this.startIndex === 0 && this.alignDirection === 'end') {
+		if (this.startIndex === 0) {
 
 			// E.g., `sliderStartPosition` is `10`,
 			// means have 10px higher than start,
 			// reset to start position 0 cause this 10px get removed,
 			// And we need to scroll up (element down) for 10px.
-			this.scroller.scrollTop -= this.state.sliderStartPosition
-			this.state.sliderEndPosition -= this.state.sliderStartPosition
-			this.state.sliderStartPosition = 0
+			this.scroller.scrollTop -= this.measurement.cachedSliderStartPosition
+
 			this.setAlignDirection('start')
 			this.setSliderPosition(0)
+
+			// Should also update `sliderEndPosition`,
+			// but it will not be used before next update.
 		}
 
 		// When reach scroll index but not start index.
-		else if (this.startIndex > 0 && this.state.sliderStartPosition <= 0) {
-			let newPosition = this.stat.getAverageSize() * this.startIndex
-			let moreSize = newPosition - this.state.sliderStartPosition
+		else if (this.startIndex > 0 && this.measurement.cachedSliderStartPosition <= 0) {
+			let newPosition = this.measurement.getAverageSize() * this.startIndex
+			let moreSize = newPosition - this.measurement.cachedSliderStartPosition
 
 			this.scroller.scrollTop += moreSize
-			this.setPlaceholderSize(this.state.placeholderSize + moreSize)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
 			this.setAlignDirection('start')
 			this.setSliderPosition(newPosition)
 		}
 
 		// When reach end index but not scroll end.
 		else if (this.endIndex === this.dataCount) {
-			this.setPlaceholderSize(this.state.sliderEndPosition)
+			this.setPlaceholderSize(this.measurement.cachedSliderEndPosition)
 		}
 
 		// When reach scroll end but not end index.
@@ -554,8 +475,8 @@ export class PartialRenderer {
 		else if (this.endIndex < this.dataCount
 			&& this.scroller.scrollTop + this.scroller.clientHeight >= this.scroller.scrollHeight
 		) {
-			let moreSize = this.stat.getAverageSize() * (this.dataCount - this.endIndex)
-			this.setPlaceholderSize(this.state.placeholderSize + moreSize)
+			let moreSize = this.measurement.getAverageSize() * (this.dataCount - this.endIndex)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
 		}
 	}
 }

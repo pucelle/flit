@@ -1,7 +1,7 @@
 import {PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Repeat} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
-import {DOMEvents, TransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
+import {TransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
 import {html} from '@pucelle/lupos.js'
 
 
@@ -19,8 +19,11 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/**
 	* Rate of how many items to render compare with the minimum items that can cover scroll viewport.
-	* - Set it small like `1.25` can render fewer contents each time, but update more frequently when scrolling.
+	* - Set it small like `1.5` can render fewer contents each time, but update more frequently when scrolling.
     * - Set it large like `2` cause render more contents each time, but update less frequently when scrolling.
+	* 
+	* Note even set this value small, renderer will also render at least
+	* additional `200px` to ensure scrolling smooth enough.
 	* 
 	* Must larger than `1`.
 	*/
@@ -58,6 +61,19 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.data.slice(this.startIndex, this.endIndex)
 	}
 
+	/** Apply `coverageRate` property to renderer. */
+	@effect
+	protected applyCoverageRate() {
+		this.renderer!.setCoverageRate(this.coverageRate)
+	}
+
+	/** Apply `data` count to renderer. */
+	@effect
+	protected applyDataCount() {
+		this.renderer!.setDataCount(this.data.length)
+		this.willUpdate()
+	}
+
 	/** Update after data change. */
 	update() {
 		this.renderer!.update()
@@ -65,12 +81,15 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/** Update live data by new indices. */
 	protected updateLiveData() {
+
+		// May update rendered data several times of each enqueuing.
+		this.needsUpdate = true
+
 		super.update()
 	}
 
 	protected render() {
-		let liveData = this.data.slice(this.startIndex, this.endIndex)
-		return html`<lu:for ${liveData}>${this.renderFn}</lu:for>`
+		return html`<lu:for ${this.liveData}>${this.renderFn}</lu:for>`
 	}
 
 	locateVisibleIndex(direction: 'start' | 'end') {
@@ -95,10 +114,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.initPlaceholder()
 		this.initRenderer()
 
-		DOMEvents.on(this.scroller!, 'scroll', this.checkCoverage, this, {passive: true})
-
-		// let unwatchScrollerSize = LayoutWatcher.watch(this.scroller!, 'size', this.checkCoverage.bind(this))
-		// this.once('will-disconnect', unwatchScrollerSize)
+		this.renderer!.connect()
 	}
 
 	protected initPlaceholder() {
@@ -136,22 +152,8 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	
 	protected onWillDisconnect() {
 		super.onWillDisconnect()
-		DOMEvents.off(this.scroller!, 'scroll', this.checkCoverage, this)
+		this.renderer!.disconnect()
 	}
-
-	/** After `coverageRate` property change. */
-	@effect
-	protected applyCoverageRate() {
-		this.renderer!.setCoverageRate(this.coverageRate)
-	}
-
-	/** After `data` property change. */
-	@effect
-	protected applyDataChange() {
-		this.renderer!.setDataCount(this.data.length)
-		this.willUpdate()
-	}
-
 
 	/** Check whether current rendering can cover scroll viewport. */
 	protected checkCoverage() {

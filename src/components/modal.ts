@@ -1,6 +1,6 @@
 import {css, html, Component} from '@pucelle/lupos.js'
 import {theme} from '../style'
-import {DOMEvents, Aligner, fade, onUpdateComplete} from '@pucelle/ff'
+import {DOMEvents, Aligner, fade, untilUpdateComplete} from '@pucelle/ff'
 import {Icon} from './icon'
 
 
@@ -142,7 +142,7 @@ export class Modal<E = {}> extends Component<E> {
 	protected onConnected() {
 		super.onConnected()
 		
-		onUpdateComplete(() => {
+		untilUpdateComplete().then(() => {
 			if (this.maskEl && this.el.previousElementSibling !== this.maskEl) {
 				this.el.before(this.maskEl)
 			}

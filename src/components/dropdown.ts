@@ -3,7 +3,7 @@ import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'
 import {TriggerType} from '../bindings'
-import {AlignerPosition, computed, TransitionResult} from '@pucelle/ff'
+import {AlignerPosition, computed, ObjectUtils, TransitionResult} from '@pucelle/ff'
 
 
 /** `<Dropdown>` for containing both trigger element and popup content.  */
@@ -87,7 +87,7 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	/** Avoid this option object get changed, and cause `:popup` re-update. */
 	@computed
 	protected get popupOptions(): Partial<PopupOptions> {
-		return {
+		return ObjectUtils.cleanEmptyValues({
 			position: this.position,
 			gap: this.gap,
 			stickToEdges: this.stickToEdges,
@@ -106,7 +106,7 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 			pointable: this.pointable,
 			cacheable: this.cacheable,
 			keepVisible: this.keepVisible,
-		}
+		})
 	}
 
 	/** 

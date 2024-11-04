@@ -1,6 +1,6 @@
 import {css, html, Component, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style'
-import {Aligner, DOMEvents, fade, GlobalTranslations, onUpdateComplete} from '@pucelle/ff'
+import {Aligner, DOMEvents, fade, GlobalTranslations, untilUpdateComplete} from '@pucelle/ff'
 import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
@@ -281,7 +281,7 @@ export class Dialog<E = {}> extends Component<E> {
 	protected onConnected() {
 		super.onConnected()
 		
-		onUpdateComplete(() => {
+		untilUpdateComplete().then(() => {
 			if (this.maskEl && this.el.previousElementSibling !== this.maskEl) {
 				this.el.before(this.maskEl)
 			}

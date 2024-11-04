@@ -1,7 +1,7 @@
 import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {theme} from '../style'
 import {Store} from '../data'
-import {computed, DOMScroll, effect, immediateWatch, LayoutWatcher, Observed, TransitionEasingName, TransitionResult, untilUpdateComplete} from '@pucelle/ff'
+import {DOMScroll, effect, LayoutWatcher, Observed, TransitionEasingName, TransitionResult} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './live-repeat'
@@ -123,7 +123,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 			max-width: 100%;
 
 			&:hover .table-order{
-				display: flex;
+				visibility: visible;
 			}
 		}
 
@@ -146,15 +146,12 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		.table-order{
 			width: 1.2em;
 			flex: none;
-			margin-right: 0.6em;	// Gives 16 - 8 = 8px as cell padding-right.
-			display: none;
-
-			f-icon{
-				margin: auto;
-			}
+			display: flex;
+			visibility: hidden;
+			margin-right: -0.5em;
 
 			&.current{
-				display: flex;
+				visibility: visible;
 			}
 		}
 
@@ -244,6 +241,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	/**
 	* Rate of how many items to render compare with the minimum items that can cover scroll viewport.
 	* Works only when `live` is `true`.
+	* See `LiveRepeat.coverageRate` for more info.
 	*/
 	coverageRate: number = 1.5
 
@@ -273,6 +271,16 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 	/** Current column order direction. */
 	orderDirection: 'asc' | 'desc' | null = null
+
+	/** 
+	 * Help to resize column widths when `resizable` is `true`.
+	 * Get updated of columns config get changed.
+	 * Must get it after render completed.
+	 */
+	protected columnResizer: ColumnWidthResizer | null = null
+
+	/** Help to watch size of current element. */
+	protected sizeWatcher!: LayoutWatcher<"size">
 
 	/** Repeat component used. */
 	protected repeatComponent!: Repeat<T> | LiveRepeat<T> | AsyncLiveRepeat<T>
@@ -308,47 +316,50 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	}
 
 	/** 
-	 * Help to resize column widths when `resizable` is `true`.
-	 * Get updated of columns config get changed.
-	 * and must get it after render completed.
+	 * Apply properties to resizer after properties change,
+	 * and also update column widths.
 	 */
-	@computed
-	protected get columnResizer(): ColumnWidthResizer {
+	@effect
+	protected applyColumnResizerProperties() {
+		this.columnResizer?.update(this.columns, this.minColumnWidth)
+		this.columnResizer?.updateColumnWidths()
+	}
+
+	protected onCreated() {
+		super.onCreated()
+		this.sizeWatcher = new LayoutWatcher(this.el, 'size', this.onSizeChange, this)
+	}
+
+	protected onConnected() {
+		super.onConnected()
+		this.sizeWatcher.watch()
+	}
+
+	protected onReady() {
+		this.initColumnResizer()
+	}
+
+	protected onWillDisconnect() {
+		this.sizeWatcher.unwatch()
+	}
+
+	/** After element size change, update column widths. */
+	protected onSizeChange() {
+		this.columnResizer?.updateColumnWidths()
+	}
+
+	/** Initialize `columnResizer` after ready. */
+	protected initColumnResizer() {
 		let head = this.el.querySelector('.table-head') as HTMLTableSectionElement
 		let columnContainer = this.el.querySelector('.table-columns') as HTMLElement
 		let colgroup = this.el.querySelector('.table-table > colgroup') as HTMLTableColElement
 
-		return new ColumnWidthResizer(
+		this.columnResizer = new ColumnWidthResizer(
 			head,
 			columnContainer,
 			colgroup,
-			this.columns,
-			this.minColumnWidth,
 			'table-resizing-mask'
 		)
-	}
-
-
-	private unwatchSize: (() => void) | null = null
-
-	/** Watch element size change. */
-	@effect
-	protected async toggleSizeWatching() {
-		await untilUpdateComplete()
-
-		if (this.resizable) {
-			this.columnResizer.updateColumnWidths()
-			this.unwatchSize = LayoutWatcher.watch(this.el, 'size', () => this.columnResizer.updateColumnWidths())
-		}
-		else {
-			this.unwatchSize?.()
-			this.unwatchSize = null
-		}
-	}
-
-	protected onWillDisconnect() {
-		super.onWillDisconnect()
-		this.unwatchSize?.()
 	}
 
 	protected render(): TemplateResult {
@@ -406,7 +417,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 			<lu:if ${this.resizable && index < this.columns.length - 1}>
 				<div class="table-resizer"
-					@mousedown=${(e: MouseEvent) => this.columnResizer.onStartResize(e, index)}
+					@mousedown=${(e: MouseEvent) => this.columnResizer!.onStartResize(e, index)}
 				/>
 			</lu:if>
 		</div>`
@@ -433,8 +444,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 					.coverageRate=${this.coverageRate}
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
-					.dataCountGetter=${(this.store as RemoteStore).getDataCount.bind(this.store)}
-					.pageDataGetter=${(this.store as RemoteStore).getFreshData.bind(this.store)}
+					.dataLoader=${(this.store as RemoteStore).dataLoader}
 					@freshly-updated=${this.onLiveDataUpdated}
 				/>
 			`
@@ -493,7 +503,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	}
 
 	/** Do column ordering for column with specified index. */
-	protected doOrdering(e: MouseEvent, index: number) {
+	protected doOrdering(this: Table, e: MouseEvent, index: number) {
 
 		// Clicked column resizer.
 		if ((e.target as HTMLElement).closest('.resizer')) {
@@ -527,6 +537,8 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 		this.orderName = columnName
 		this.orderDirection = direction
+
+		this.fire('order-change', this.orderName, this.orderDirection)
 	}
 
 	protected getColumnName(column: TableColumn, index: number): string {
@@ -534,20 +546,18 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	}
 
 	/** Order specified column with specified direction by column name. */
-	@immediateWatch('orderName', 'orderDirection')
-	protected applyOrder(this: Table, orderName: string | null, orderDirection: 'asc' | 'desc' | null) {
+	@effect
+	protected applyOrderProperties() {
 		let column = this.columns.find((c, index) => this.getColumnName(c, index) === this.orderName)
 
 		if (this.store instanceof RemoteStore) {
-			this.store.orderName = orderName
-			this.store.orderDirection = orderDirection
+			this.store.orderName = this.orderName
 		}
 		else {
-			this.store.order = column?.orderBy ?? orderName
-			this.store.orderDirection = orderDirection
+			this.store.order = column?.orderBy ?? this.orderName
 		}
 
-		this.fire('order-change', orderName, orderDirection)
+		this.store.orderDirection = this.orderDirection
 	}
 
 	/** Locate start or end index at which the item is visible in viewport. */
