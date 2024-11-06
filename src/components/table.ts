@@ -1,7 +1,7 @@
 import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {theme} from '../style'
 import {Store} from '../data'
-import {DOMScroll, effect, LayoutWatcher, Observed, PerFrameTransitionEasingName, TransitionResult} from '@pucelle/ff'
+import {effect, LayoutWatcher, Observed, PerFrameTransitionEasingName, TransitionResult} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './live-repeat'
@@ -80,7 +80,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 	static style() {
 		let {mainColor, textColor, backgroundColor} = theme
-		let scrollbarWidth = DOMScroll.getScrollbarWidth()
+		let scrollbarWidth = 8
 
 		return css`
 		.table{

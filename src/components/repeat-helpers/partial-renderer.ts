@@ -169,9 +169,11 @@ export class PartialRenderer {
 
 		//// Can only write dom properties now.
 
+		let hasMeasured = this.measurement.hasMeasuredItemSize()
+
 		// Adjust scroll position by specified indices.
 		if (this.needToApply) {
-			this.updateWithNewIndices()
+			this.updateWithNewIndices(hasMeasured)
 			this.needToApply = null
 		}
 
@@ -180,8 +182,7 @@ export class PartialRenderer {
 			this.updateWithStartIndexPersist()
 		}
 
-		let haveNotMeasured = !this.measurement.hasMeasuredItemSize()
-		if (!haveNotMeasured) {
+		if (hasMeasured) {
 			this.updatePlaceholderSizeProgressively()
 		}
 
@@ -194,17 +195,17 @@ export class PartialRenderer {
 
 
 		// Update again after known size.
-		if (haveNotMeasured && this.measurement.hasMeasuredItemSize()) {
+		if (!hasMeasured && this.measurement.hasMeasuredItemSize()) {
 			this.updateCoverage()
 		}
 	}
 
 	/** Update when start index specified and need to apply. */
-	private updateWithNewIndices() {
+	private updateWithNewIndices(hasMeasured: boolean) {
 		this.setIndices(this.needToApply!.startIndex!, this.needToApply!.endIndex)
 		this.setAlignDirection(this.needToApply!.alignDirection ?? 'start')
 		this.updateRendering()
-		this.resetPositions(false)
+		this.resetPositions(hasMeasured)
 	}
 
 	/** Update data normally, and try to keep indices and scroll position. */
@@ -232,7 +233,7 @@ export class PartialRenderer {
 
 		// If start index has changed, reset positions.
 		else {
-			this.resetPositions(false)
+			this.resetPositions(true)
 		}
 	}
 
@@ -253,13 +254,15 @@ export class PartialRenderer {
 	/** 
 	 * Reset slider and scroll position, make first item appear in the start edge.
 	 * `alignDirection` must have been updated.
-	 * `indicesFromScrollOffset` specified as `true` if current indices is calculated from current scroll offset.
+	 * 
+	 * `needRestScrollOffset`: specifies as `false` if current indices is calculated from current scroll offset,
+	 * 	  or for the first time rendering.
 	 */
-	private resetPositions(indicesFromScrollOffset: boolean) {
+	private resetPositions(needRestScrollOffset: boolean) {
 		let newPosition = this.measurement.calcSliderPositionByIndices(this.startIndex, this.endIndex, this.alignDirection)
 		this.setSliderPosition(newPosition)
 
-		if (!indicesFromScrollOffset) {
+		if (needRestScrollOffset) {
 
 			// Align scroller start with slider start.
 			if (this.alignDirection === 'start') {
@@ -410,7 +413,7 @@ export class PartialRenderer {
 		this.resetIndicesByCurrentPosition()
 		this.setAlignDirection('start')
 		this.updateRendering()
-		this.resetPositions(true)
+		this.resetPositions(false)
 	}
 
 	/** Reset indices by current scroll position. */

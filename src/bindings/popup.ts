@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, DOMEvents} from '@pucelle/ff'
+import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -193,7 +193,9 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		if (this.shouldShowImmediately()) {
 
 			// If window is not loaded, page scroll position may not determined yet.
-			DOMEvents.untilWindowLoaded().then(() => {
+			// Sleep to avoid it affects browser paint.
+			DOMEvents.untilWindowLoaded().then(async () => {
+				await sleep(0)
 				this.showPopupLater()
 			})
 		}

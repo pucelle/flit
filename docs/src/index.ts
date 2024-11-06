@@ -4,7 +4,8 @@ import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
-	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore, draggable, droppable
+	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore, draggable, droppable,
+	Resizer
 } from '../../out'
 import {range, watch} from '@pucelle/ff'
 
@@ -54,6 +55,7 @@ class Preview extends Component {
 				${this.renderModal()}
 				${this.renderTable()}
 				${this.renderDragDrop()}
+				${this.renderResizer()}
 			</div>
 		</template>
 		`
@@ -1151,22 +1153,22 @@ class Preview extends Component {
 			`
 	}
 
-	// private renderResizer() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Resizer</h3>
+	private renderResizer() {
+		return html`
+			<section>
+				<h3>Resizer</h3>
 
-	// 			<div style="position: relative; display: inline-flex; justify-content: center; line-height: 100px; font-size: 14px; text-align: center; width: 200px; height: 100px;"
-	// 				:style.background=${theme.backgroundColor.toMiddle(5).toString()}
-	// 			>
-	// 				Resizer on the Right
-	// 				<f-resizer .position="right" .min=${200} .max=${600} style="background: ${theme.backgroundColor.toMiddle(15)}"></f-resizer>
-	// 			</div>
-	// 			<br>
-	// 		</section>
+				<div style="position: relative; display: inline-flex; justify-content: center; line-height: 100px; font-size: 14px; text-align: center; width: 200px; height: 100px;"
+					:style.background=${theme.backgroundColor.toIntermediate(0.05).toString()}
+				>
+					Resizer on the Right
+					<Resizer .position="right" .min=${200} .max=${600} style="background: ${theme.backgroundColor.toIntermediate(0.15)}"></f-resizer>
+				</div>
+				<br>
+			</section>
 
-	// 	</div>
-	// `}
+		</div>
+	`}
 }
 
 

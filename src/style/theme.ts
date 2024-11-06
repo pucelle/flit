@@ -337,10 +337,12 @@ theme.set('light', 'medium')
 
 addGlobalStyle(() => {
 	let {backgroundColor} = theme
+	let trackColor = backgroundColor.toIntermediate(14/255)
+	let thumbColor = backgroundColor.toIntermediate(62/255)
 
 	return css`
 	::-webkit-scrollbar{
-		background: ${backgroundColor.toIntermediate(14/255)};
+		background: ${trackColor};
 	}
 
 	::-webkit-scrollbar-thumb{
@@ -352,6 +354,13 @@ addGlobalStyle(() => {
 
 		&:active{
 			background: ${backgroundColor.toIntermediate(135/255)};
+		}
+	}
+
+	@supports not selector(::-webkit-scrollbar) {
+		*{
+			scrollbar-width: thin;
+			scrollbar-color: ${thumbColor} ${trackColor};
 		}
 	}
 
