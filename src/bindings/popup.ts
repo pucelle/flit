@@ -494,10 +494,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Align popup content, returns whether align successfully. */
 	protected async alignPopup(): Promise<boolean> {
-
-		// First wait for updating complete, then can read dom properties safely.
-		await untilUpdateComplete()
-
 		if (!this.state.opened) {
 			return false
 		}
@@ -515,11 +511,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		if (this.options.followEvents) {
 			let event = this.binder.getLatestTriggerEvent()
 			if (event) {
-				aligned = this.aligner.alignToEvent(event, this.getAlignerOptions())
+				aligned = await this.aligner.alignToEvent(event, this.getAlignerOptions())
 			}
 		}
 		else {
-			aligned = this.aligner.align(this.getAlignerOptions())
+			aligned = await this.aligner.align(this.getAlignerOptions())
 		}
 
 		if (!aligned) {

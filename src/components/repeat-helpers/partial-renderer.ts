@@ -1,4 +1,4 @@
-import {AsyncTaskQueue, DOMEvents, ResizeEvents, untilUpdateComplete} from '@pucelle/ff'
+import {AsyncTaskQueue, DOMEvents, ResizeEvents, untilReadComplete, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialRendererMeasurement} from './partial-renderer-measurement'
@@ -366,10 +366,12 @@ export class PartialRenderer {
 				position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el) + this.doa.getClientSize(el)
 			}
 		}
+
+
+		//// Read complete, now can only write.
+		await untilReadComplete()
 	
 
-		//// Can only write dom properties now.
-		
 		// No intersection, reset indices by current scroll position.
 		if (unCoveredDirection === 'break') {
 			this.updatePersistScrollPosition()
@@ -383,10 +385,10 @@ export class PartialRenderer {
 		this.updatePlaceholderSizeProgressively()
 
 
-		//// Can only read dom properties below.
-
+		//// Write complete, now can only read dom properties below.
 		await untilUpdateComplete()
 
+		
 		if (unCoveredDirection !== null) {
 			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 			this.checkEdgeCases()

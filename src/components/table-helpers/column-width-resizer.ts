@@ -1,4 +1,4 @@
-import {DOMEvents, DOMUtils, ListUtils, Observed, untilUpdateComplete, ValueListUtils} from '@pucelle/ff'
+import {DOMEvents, DOMUtils, ListUtils, Observed, untilReadComplete, untilUpdateComplete, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
 import {html, render} from '@pucelle/lupos.js'
 
@@ -57,11 +57,16 @@ export class ColumnWidthResizer {
 	 * Will check available column width and may cause page reflow.
 	 */
 	async updateColumnWidths() {
+
+		// Now can read dom properties.
 		await untilUpdateComplete()
 		
 		let headAvailableWidth = this.head.clientWidth
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingLeft')
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingRight')
+
+		// Now can write dom properties.
+		await untilReadComplete()
 
 		this.updateColumnWidthsByAvailable(headAvailableWidth)
 	}
