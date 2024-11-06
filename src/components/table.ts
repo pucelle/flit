@@ -1,7 +1,7 @@
 import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {theme} from '../style'
 import {Store} from '../data'
-import {DOMScroll, effect, LayoutWatcher, Observed, TransitionEasingName, TransitionResult} from '@pucelle/ff'
+import {DOMScroll, effect, LayoutWatcher, Observed, PerFrameTransitionEasingName, TransitionResult} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './live-repeat'
@@ -477,11 +477,11 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	 * You may define a new component and overwrite this method
 	 * if want to do more customized rendering.
 	 */
-	protected renderRow(item: T | null, index: number) {
+	protected renderRow(item: T, index: number) {
 		index += this.startIndex
 
 		let tds = this.columns.map(column => {
-			let result = item && column.renderer ? column.renderer.call(this, item, index) : '\xa0'
+			let result = column.renderer ? column.renderer.call(this, item, index) : '\xa0'
 			return html`
 				<td class="table-cell"
 					:style.text-align=${column.align || ''}
@@ -570,7 +570,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	 * or leftmost of the whole scroll viewport.
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
 	 */
-	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: TransitionEasingName): Promise<boolean> {
+	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		return this.repeatComponent.scrollIndexToStart(index, gap, duration, easing)
 	}
 
@@ -578,7 +578,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	 * Scroll the closest viewport for minimum, make the element at this index to be scrolled into viewport.
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
 	 */
-	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: TransitionEasingName): Promise<boolean> {
+	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		return this.repeatComponent.scrollIndexToView(index, gap, duration, easing)
 	}
 }

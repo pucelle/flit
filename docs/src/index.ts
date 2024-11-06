@@ -4,7 +4,7 @@ import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
-	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore
+	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore, draggable, droppable
 } from '../../out'
 import {range, watch} from '@pucelle/ff'
 
@@ -53,6 +53,7 @@ class Preview extends Component {
 				${this.renderDialog()}
 				${this.renderModal()}
 				${this.renderTable()}
+				${this.renderDragDrop()}
 			</div>
 		</template>
 		`
@@ -1062,6 +1063,7 @@ class Preview extends Component {
 
 				<Table
 					.resizable
+					.live
 					.store=${new ExampleRemoteStore()}
 					.columns=${[
 						{
@@ -1093,60 +1095,61 @@ class Preview extends Component {
 			`
 	}
 	
-	// leftData = observe([1, 2, 3])
-	// rightData = observe([4, 5, 6])
 
-	// private renderDragDrop() {
-	// 	return html`
-	// 		<section>
-	// 			<h3>Drag & Drop</h3>
+	leftData = [1, 2, 3]
+	rightData = [4, 5, 6]
 
-	// 			<div style="display: inline-flex; padding: 4px; background: ${theme.backgroundColor.toMiddle(5)}; line-height: 100px; font-size: 60px; text-align: center; height: 116px;"
-	// 				${droppable((value: number, index: number) => {
-	// 					ff.remove(this.leftData, value)
-	// 					ff.remove(this.rightData, value)
+	private renderDragDrop() {
+		return html`
+			<section>
+				<h3>Drag & Drop</h3>
+					
+			<div style="display: inline-flex; vertical-align: top; padding: 4px; background: ${theme.backgroundColor.toIntermediate(0.05)}; line-height: 100px; font-size: 60px; text-align: center; height: 116px; min-width: 116px; v"
+					:droppable=${((value: number, index: number) => {
+						this.leftData = this.leftData.filter(v => v !== value)
+						this.rightData = this.rightData.filter(v => v !== value)
 
-	// 					if (index === -1) {
-	// 						this.leftData.push(value)
-	// 					}
-	// 					else {
-	// 						this.leftData.splice(index, 0, value)
-	// 					}
-	// 				})}
-	// 			>
-	// 				${repeat(this.leftData, (data: number, index: number) => html`
-	// 					<div style="width: 100px; margin: 4px;"
-	// 						:style.background=${theme.backgroundColor.toMiddle(15).toString()}
-	// 						${draggable(data, index)}
-	// 					>${data}</div>
-	// 				`)}
-	// 			</div>
-	// 			<br>
+						if (index === -1) {
+							this.leftData.push(value)
+						}
+						else {
+							this.leftData.splice(index, 0, value)
+						}
+					}), {itemsAlignDirection: 'horizontal'}}
+				>
+					${this.leftData.map((data: number, index: number) => html`
+						<div style="width: 100px; margin: 4px; cursor: grab;"
+							:style.background=${theme.backgroundColor.toIntermediate(0.15).toString()}
+							:draggable=${data, index}
+						>${data}</div>
+					`)}
+				</div>
+				<br>
 
-	// 			<div style="display: inline-flex; padding: 4px; margin-top: -8px; background: ${theme.backgroundColor.toMiddle(5)}; line-height: 100px; font-size: 60px; text-align: center; height: 116px;"
-	// 				${droppable((value: number, index: number) => {
-	// 					ff.remove(this.leftData, value)
-	// 					ff.remove(this.rightData, value)
+				<div style="display: inline-flex; vertical-align: top; padding: 4px; margin-top: -8px; background: ${theme.backgroundColor.toIntermediate(0.05)}; line-height: 100px; font-size: 60px; text-align: center; height: 116px; min-width: 116px;"
+					:droppable=${((value: number, index: number) => {
+						this.leftData = this.leftData.filter(v => v !== value)
+						this.rightData = this.rightData.filter(v => v !== value)
 
-	// 					if (index === -1) {
-	// 						this.rightData.push(value)
-	// 					}
-	// 					else {
-	// 						this.rightData.splice(index, 0, value)
-	// 					}
-	// 				})}
-	// 			>
-	// 				${repeat(this.rightData, (data: number, index: number) => html`
-	// 					<div style="width: 100px; margin: 4px;"
-	// 						:style.background=${theme.backgroundColor.toMiddle(15).toString()}
-	// 						${draggable(data, index)}
-	// 					>${data}</div>
-	// 				`)}
-	// 			</div>
-	// 		</section>
+						if (index === -1) {
+							this.rightData.push(value)
+						}
+						else {
+							this.rightData.splice(index, 0, value)
+						}
+					}), {itemsAlignDirection: 'horizontal'}}
+				>
+					${this.rightData.map((data: number, index: number) => html`
+						<div style="width: 100px; margin: 4px; cursor: grab;"
+							:style.background=${theme.backgroundColor.toIntermediate(0.15).toString()}
+							:draggable=${data, index}
+						>${data}</div>
+					`)}
+				</div>
+			</section>
 
-	// 		`
-	// }
+			`
+	}
 
 	// private renderResizer() {
 	// 	return html`
@@ -1192,11 +1195,9 @@ class MainColorSelect extends Select<string> {
 
 class ExampleRemoteStore extends RemoteStore {
 
-	protected key = 'id'
-	
 	constructor() {
 		super({
-			pageSize: 20,
+			pageSize: 10,
 			preloadPageCount: 0,
 		})
 	}

@@ -44,7 +44,7 @@ export class PartialRendererSizeStat {
 
 		// At least render additional 200px.
 		// Because normally can scroll twice per frame.
-		let totalSize = Math.max(scrollerSize * coverageRate, scrollerSize + 400)
+		let totalSize = Math.max(scrollerSize * coverageRate, scrollerSize + 200)
 
 		return Math.ceil(totalSize / safeSize)
 	}

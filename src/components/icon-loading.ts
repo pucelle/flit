@@ -26,12 +26,13 @@ export class IconLoading extends Icon {
 	}
 
 	private play() {
-		WebTransition.playBetween(
-			this.el,
+		new WebTransition(this.el, {
+			duration: this.duration,
+			easing: 'linear',
+		})
+		.playBetween(
 			{transform: `rotate(0)`},
 			{transform: `rotate(360deg)`},
-			this.duration,
-			'linear'
 		)
 		.then(() => {
 			if (this.loading) {

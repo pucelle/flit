@@ -1,4 +1,4 @@
-import {DOMEvents, ResizeEvents, untilUpdateComplete} from '@pucelle/ff'
+import {AsyncTaskQueue, DOMEvents, ResizeEvents, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialRendererMeasurement} from './partial-renderer-measurement'
@@ -54,8 +54,8 @@ export class PartialRenderer {
 	/** Help to get and set based on overflow direction. */
 	private readonly doa: DirectionalOverflowAccessor
 
-	/** Whether still in rendering. */
-	private rendering: boolean = false
+	/** Enqueue rendering. */
+	private renderQueue: AsyncTaskQueue = new AsyncTaskQueue()
 
 	/** Indices and align direction that need to apply. */
 	private needToApply: NeedToApply | null = {startIndex: 0, endIndex: null, alignDirection: null}
@@ -164,13 +164,10 @@ export class PartialRenderer {
 
 	/** Update from applying start index or updating data. */
 	async update() {
-		if (this.rendering) {
-			return
-		}
+		let completeRender = await this.renderQueue.request()
 
 
 		//// Can only write dom properties now.
-		this.rendering = true
 
 		// Adjust scroll position by specified indices.
 		if (this.needToApply) {
@@ -193,7 +190,7 @@ export class PartialRenderer {
 
 		await untilUpdateComplete()
 		this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
-		this.rendering = false
+		completeRender()
 
 
 		// Update again after known size.
@@ -320,10 +317,9 @@ export class PartialRenderer {
 	 * and update if can't, and will also persist content continuous if possible.
 	 */
 	async updateCoverage() {
-		if (this.rendering) {
-			return
-		}
+		let completeRender = await this.renderQueue.request()
 
+		
 		// Reach both start and end edge.
 		if (this.startIndex === 0 && this.endIndex === this.dataCount) {
 			return
@@ -332,8 +328,6 @@ export class PartialRenderer {
 
 		//// Can only read dom properties now.
 
-		this.rendering = true
-		
 		let unCoveredDirection = this.measurement.checkUnCoveredDirection(this.startIndex, this.endIndex, this.dataCount)
 		let position: number | null = null
 	
@@ -395,7 +389,7 @@ export class PartialRenderer {
 			this.checkEdgeCases()
 		}
 
-		this.rendering = false
+		completeRender()
 	}
 
 	/** Locate start or end index at which the item is visible in viewport. */

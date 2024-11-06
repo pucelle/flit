@@ -1,7 +1,7 @@
 import {PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Repeat} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
-import {TransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
+import {PerFrameTransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
 import {html} from '@pucelle/lupos.js'
 
 
@@ -96,7 +96,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.renderer!.locateVisibleIndex(direction)
 	}
 
-	
 	beforeDisconnectCallback(param: PartCallbackParameterMask): void {
 		super.beforeDisconnectCallback(param)
 
@@ -160,7 +159,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.updateCoverage()
 	}
 
-	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: TransitionEasingName): Promise<boolean> {
+	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		// No need to worry about coverage, set scroll position cause scroll event emitted.
 
 		if (!this.isIndexRendered(index)) {
@@ -190,7 +189,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return super.scrollIndexToStart(index - this.startIndex, gap, duration, easing)
 	}
 
-	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: TransitionEasingName): Promise<boolean> {
+	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		if (!this.isIndexRendered(index)) {
 			let renderCount = this.endIndex - this.startIndex
 			let startIndex: number

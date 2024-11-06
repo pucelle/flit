@@ -1,6 +1,6 @@
 import {css, html, Component, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style'
-import {Aligner, DOMEvents, fade, GlobalTranslations, untilUpdateComplete} from '@pucelle/ff'
+import {Aligner, DOMEvents, fade, GlobalTranslations, promiseWithResolves, untilUpdateComplete} from '@pucelle/ff'
 import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
@@ -314,20 +314,16 @@ export class Dialog<E = {}> extends Component<E> {
 
 	/** Add an option to stack. */
 	async addOptions(options: DialogOptions): Promise<string | undefined> {
-		let resolve: (value: string | undefined) => void
-
-		let promise = new Promise(scopedResolve => {
-			resolve = scopedResolve
-		}) as Promise<string | undefined>
+		let {promise, resolve} = promiseWithResolves<string | undefined>()
 
 		if (this.resolve) {
 			this.stack.push({
 				options,
-				resolve: resolve!,
+				resolve,
 			})
 		}
 		else {
-			this.applyOptions(options, resolve!)
+			this.applyOptions(options, resolve)
 			this.show()
 		}
 
