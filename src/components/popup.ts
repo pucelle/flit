@@ -20,7 +20,7 @@ export class Popup<E = {}> extends Component<E> {
 			top: 0;
 			background: ${popupBackgroundColor};
 			border-radius: ${popupBorderRadius}px;
-			max-width: 100vh;
+			max-width: 100vw;
 			max-height: 100vh;
 
 			// Same with window type components, so if inside of a window, we must move it behind the window.
