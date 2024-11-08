@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, untilUpdateComplete, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
+import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'

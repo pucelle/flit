@@ -64,4 +64,15 @@ export class Popup<E = {}> extends Component<E> {
 			binding.hidePopup()
 		}
 	}
+
+	/** Get the trigger element, which cause current popup pop-up. */
+	getTriggerElement(): HTMLElement | null {
+		let binding = SharedPopups.getUser(this)
+		if (binding) {
+			return binding.el
+		}
+		else {
+			return null
+		}
+	}
 }
