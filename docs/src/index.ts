@@ -527,7 +527,7 @@ class Preview extends Component {
 
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">With Subsection</header>
-						<List .type="navigation" .data=${[
+						<List .mode="navigation" .data=${[
 							{value: 1, text: 'Folder A', children:
 								[
 									{value: 11, text: 'Sub Folder a', children: [
@@ -911,8 +911,8 @@ class Preview extends Component {
 											value: 'ok',
 											text: 'OK',
 											handler() {
-												if (!input.touched || !input.valid) {
-													input.touched = true
+												if (!input!.touched || !input!.valid) {
+													input!.touched = true
 													return true
 												}
 												return null

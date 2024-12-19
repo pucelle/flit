@@ -433,8 +433,8 @@ export class TypedDialog {
 			actions: [
 				{value: 'cancel', text: GlobalTranslations.get('cancel')},
 				{value: 'ok', text: GlobalTranslations.get('ok'), primary: true, handler() {
-					if (!input.touched || !input.valid) {
-						input.touched = true
+					if (!input!.touched || !input!.valid) {
+						input!.touched = true
 						return true
 					}
 

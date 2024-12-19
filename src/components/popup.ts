@@ -1,7 +1,7 @@
 import {css, Component, html, ComponentStyle} from '@pucelle/lupos.js'
 import {theme} from '../style/theme'
-import {Triangle} from './triangle'
 import {SharedPopups} from '../bindings'
+import {Triangle} from './triangle'
 
 
 /** 
@@ -23,10 +23,13 @@ export class Popup<E = {}> extends Component<E> {
 			max-width: 100vw;
 			max-height: 100vh;
 
-			// Same with window type components, so if inside of a window, we must move it behind the window.
+			/* 
+			Same with window type components, so if inside of a window,
+			we must move it behind the window.
+			*/
 			z-index: 1000;
 
-			// 3px drop shadow nearly equals 6px of box-shadow.
+			/* 3px drop shadow nearly equals 6px of box-shadow. */
 			filter: drop-shadow(0 0 ${popupShadowBlurRadius / 2}px ${popupShadowColor});
 		}
 		`
@@ -46,6 +49,20 @@ export class Popup<E = {}> extends Component<E> {
 	/** The direction triangle acute angle point to. */
 	triangleDirection: 'top' | 'bottom' | 'left' | 'right' = 'top'
 
+	/** 
+	 * Get the trigger element, which cause current popup pop-up.
+	 * Only exist after current popup get popped-up.
+	 */
+	getTriggerElement(): HTMLElement | null {
+		let binding = SharedPopups.getUser(this)
+		if (binding) {
+			return binding.el
+		}
+		else {
+			return null
+		}
+	}
+
 	protected render() {
 		return html`
 			<template class="popup" tabindex="0">
@@ -62,17 +79,6 @@ export class Popup<E = {}> extends Component<E> {
 		let binding = SharedPopups.getUser(this)
 		if (binding) {
 			binding.hidePopup()
-		}
-	}
-
-	/** Get the trigger element, which cause current popup pop-up. */
-	getTriggerElement(): HTMLElement | null {
-		let binding = SharedPopups.getUser(this)
-		if (binding) {
-			return binding.el
-		}
-		else {
-			return null
 		}
 	}
 }

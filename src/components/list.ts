@@ -277,19 +277,19 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 					>
 						<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} .size="inherit" />
 					</div>
-				</lu:if>
+				</>
 
 				<lu:elseif ${anySiblingHaveChildren}>
 					<div class='list-toggle-placeholder' />
-				</lu:elseif>
+				</>
 
 				<lu:if ${item.icon !== undefined}>
 					<div class='list-icon'>
 						<lu:if ${item.icon}>
 							<Icon .type=${item.icon} .size="inherit" />
-						</lu:if>
+						</>
 					</div>
-				</lu:if>
+				</>
 
 				<div class="list-content">
 					${this.renderItemContent(item)}
@@ -297,14 +297,14 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 				<lu:if ${this.mode === 'selection' && this.isSelected(item)}>
 					<Icon class="list-selected-icon" .type="checked" .size="inherit" />
-				</lu:if>
+				</>
 			</div>
 
 			<lu:if ${item.children && expanded}>
 				<div class="list-subsection" :transition.immediate=${fold()}>
 					${this.renderItems(item.children!)}
 				</div>
-			</lu:if>
+			</>
 		`
 	}
 

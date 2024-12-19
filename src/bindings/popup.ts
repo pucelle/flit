@@ -360,8 +360,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.updatePopup()
 
 		let aligned = await this.alignPopup()
-		if (aligned) {
-			this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
+		if (aligned && this.popup) {
+			this.binder.bindLeave(this.options.hideDelay, this.popup.el)
 		}
 	}
 
@@ -372,7 +372,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		if (this.options.transition && this.transition) {
 			let finish = await this.transition.leave(this.options.transition)
 			if (finish) {
-				this.popup!.remove()
+				this.popup?.remove()
 			}
 		
 			if (this.state.opened) {

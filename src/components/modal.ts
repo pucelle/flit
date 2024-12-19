@@ -20,7 +20,7 @@ export class Modal<E = {}> extends Component<E> {
 			position: fixed;
 			display: flex;
 			flex-direction: column;
-			z-index: 1000;	// Same with popup
+			z-index: 1000;	/* Same with popup. */
 			border-radius: ${popupBorderRadius}px;
 			box-shadow: 0 0 ${popupShadowBlurRadius}px ${popupShadowColor};
 			background: ${popupBackgroundColor};

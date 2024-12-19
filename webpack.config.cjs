@@ -3,21 +3,25 @@ const path = require('path')
 
 
 module.exports = {
-	entry: path.join(__dirname, 'out/index.js'),
+	entry: path.join(__dirname, 'docs/out/index.js'),
 	mode: 'development',
 	output: {
-		filename: 'js/bundle.js',
+		filename: 'docs/js/bundle.js',
 	},
 	optimization: {},
 	plugins: [
 		//new ForkTsCheckerWebpackPlugin()
 	],
 	devServer: {
-		static: __dirname,
+		static: {
+			directory: __dirname,
+			watch: false,
+		},
 		historyApiFallback: {
-			index: 'index.html'
+			index: 'docs/index.html'
 		},
 		allowedHosts: 'all',
+		openPage: 'docs/index.html' 
 	},
 	devtool: 'cheap-source-map',
 	resolve: {

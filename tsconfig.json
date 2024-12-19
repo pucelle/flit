@@ -6,8 +6,6 @@
 		"lib": ["ESNext", "DOM", "DOM.Iterable"],
 		"rootDir": "src",
 		"outDir": "out",
-		"allowJs": true,
-		"esModuleInterop": true, 
 		"composite": false,
 		"declaration": true,
 		"strict": true,
@@ -17,9 +15,6 @@
 		"noFallthroughCasesInSwitch": true,
 		"noImplicitAny": true,
 		"noImplicitThis": true,
-		"plugins": [
-			{"transform": "@pucelle/lupos.compiler/src/index.ts"},
-		],
 	},
 	"exclude": [
 		"node_modules",
@@ -28,9 +23,6 @@
 		"docs",
 		"dist",
 		"*.js",
-		"*.cjs",
-		"src/*2",
-		"src/components2",
-		"src/bindings2"
+		"*.cjs"
 	],
 }

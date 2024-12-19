@@ -1,33 +1,32 @@
 {
-	"name": "@pucelle/ff",
+	"name": "@pucelle/flit.ui",
 	"version": "1.0.0",
 	"description": "A light weight Web UI Framework, based on lupos.js",
 	"author": "pucelle",
 	"license": "MIT",
-	"homepage": "https://github.com/pucelle/lupos.ui",
+	"homepage": "https://github.com/pucelle/flit.ui",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/pucelle/lupos.ui.git"
+		"url": "https://github.com/pucelle/flit.ui.git"
 	},
 	"main": "out/index.js",
 	"types": "out/index.d.ts",
 	"sideEffects": false,
 	"scripts": {
-		"build": "tspc",
-		"watch": "tspc -w",
-		"build-docs": "cd docs && webpack",
-		"watch-docs": "cd docs && webpack --watch",
-		"start-docs": "cd docs && webpack serve --open",
-		"prepublish": "tspc"
+		"build": "luc",
+		"watch": "luc -w",
+		"build-docs": "cd docs && luc",
+		"watch-docs": "cd docs && luc -w",
+		"start-docs": "webpack serve --open",
+		"prepublish": "npm run build && npm run build-docs"
 	},
 	"dependencies": {
 		"@pucelle/ff": "^2.0.0",
-		"@pucelle/lupos.compiler": "^1.0.0",
 		"@pucelle/lupos.js": "^1.0.0"
 	},
 	"devDependencies": {
+		"@pucelle/lupos.compiler": "^1.0.0",
 		"@pucelle/webpack-svg-loader": "^1.0.0",
-		"ts-patch": "^3.2.1",
 		"typescript": "^5.6.2",
 		"webpack": "^5.95.0",
 		"webpack-dev-server": "^5.1.0"

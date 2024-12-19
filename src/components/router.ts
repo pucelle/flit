@@ -36,14 +36,8 @@ export interface RouteItem {
 
 export interface RouterEvents {
 
-	/** After push new state, note updating are not completed right now. */
-	'push': (newState: RouterHistoryState, oldState: RouterHistoryState | null) => void
-
-	/** After replace current state, note updating are not completed right now. */
-	'replace': (newState: RouterHistoryState, oldState: RouterHistoryState | null) => void
-
 	/** After push or replace current state, note updating are not completed right now. */
-	'change': (newState: RouterHistoryState, oldState: RouterHistoryState | null) => void
+	'change': (type: RouterChangeType, newState: RouterHistoryState, oldState: RouterHistoryState | null) => void
 }
 
 /** Current history state. */
@@ -55,6 +49,10 @@ export interface RouterHistoryState {
 	/** State path, normally starts with `/`. */
 	path: string
 }
+
+
+/** Whether router has redirected or replaced. */
+type RouterChangeType = 'redirect' | 'goto'
 
 
 /** 
@@ -180,8 +178,7 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 		this.state = state
 		this.pushHistoryState(state)
 
-		this.fire('push', this.state, oldState)
-		this.fire('change', this.state, oldState)
+		this.onRouterChange('goto', this.state, oldState)
 	}
 
 	protected pushHistoryState(state: RouterHistoryState) {
@@ -215,13 +212,16 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 		this.state = state
 		this.replaceHistoryState(state)
 
-		this.fire('replace', state, oldState)
-		this.fire('change', this.state, oldState)
+		this.onRouterChange('redirect', this.state, oldState)
 	}
 
 	protected replaceHistoryState(state: RouterHistoryState) {
 		let uri = state.path
 		history.replaceState(state, '', uri)
+	}
+
+	protected onRouterChange(this: Router, type: RouterChangeType, newState: RouterHistoryState, oldState: RouterHistoryState | null) {
+		this.fire('change', type, newState, oldState)
 	}
 
 	/** Test whether current path match specified route path. */

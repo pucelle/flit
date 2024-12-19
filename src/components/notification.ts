@@ -77,7 +77,7 @@ export class Notification<E = {}> extends Component<E> {
 			bottom: 1em;
 			min-width: 20em;
 			max-width: 30em;
-			z-index: 1100;	// Higher than tooltip, dialog, ...
+			z-index: 1100;	/* Higher than tooltip, dialog, ... */
 			font-size: 0.928em;
 		}
 

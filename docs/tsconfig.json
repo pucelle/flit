@@ -10,7 +10,7 @@
 		"esModuleInterop": true, 
 		"declaration": false,
 		"strict": true,
-		"noUnusedLocals": false,
+		"noUnusedLocals": true,
 		"noUnusedParameters": true,
 		"noImplicitReturns": true,
 		"noFallthroughCasesInSwitch": true,
@@ -18,8 +18,5 @@
 		"noImplicitThis": true,
 		"skipLibCheck": true,
 		"allowUnusedLabels": true,
-		"plugins": [
-			{"transform": "@pucelle/lupos.compiler/src/index.ts"},
-		],
 	}
 }
