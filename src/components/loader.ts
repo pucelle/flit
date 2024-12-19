@@ -1,18 +1,14 @@
 import {Component, css, html} from '@pucelle/lupos.js'
-import {theme} from '../style'
 
 
 /** `<Loader>` shows an loading animation to indicate resource is loading. */
 export class Loader<E = {}> extends Component<E> {
 
-	static style() {
-		let {mainColor, textColor} = theme
-
-		return css`
+	static style = css`
 		.loader{
 			display: inline-block;
 			vertical-align: top;
-			color: ${mainColor};
+			color: var(--primary-color);
 		}
 
 		.loader.as-cover{
@@ -22,7 +18,7 @@ export class Loader<E = {}> extends Component<E> {
 			right: 0;
 			bottom: 0;
 			z-index: 10;
-			background: ${textColor.alpha(0.05)};
+			background: color-mix(in srgb, var(--text-color) 5%, transparent);
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
@@ -43,8 +39,7 @@ export class Loader<E = {}> extends Component<E> {
 		.loader-bg{
 			stroke-opacity: 0.3;
 		}
-		`
-	}
+	`
 
 
 	/** 

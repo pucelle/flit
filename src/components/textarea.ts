@@ -1,4 +1,4 @@
-import {ComponentStyle, css, html} from '@pucelle/lupos.js'
+import {css, html} from '@pucelle/lupos.js'
 import {Input} from './input'
 
 
@@ -8,7 +8,7 @@ import {Input} from './input'
  */
 export class Textarea extends Input {
 
-	static style: ComponentStyle = css`
+	static style = css`
 		.textarea-field{
 			height: auto;
 		}

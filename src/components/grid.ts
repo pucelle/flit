@@ -1,5 +1,5 @@
 import {ListUtils} from '@pucelle/ff'
-import {Component, ComponentStyle, css, html} from '@pucelle/lupos.js'
+import {Component, css, html} from '@pucelle/lupos.js'
 
 
 /** 
@@ -8,14 +8,12 @@ import {Component, ComponentStyle, css, html} from '@pucelle/lupos.js'
  */
 export class Row extends Component {
 
-	static style: ComponentStyle = () => {
-		return css`
+	static style = css`
 		.row{
 			display: flex;
 			flex-wrap: wrap;
 		}
-		`
-	}
+	`
 
 	/** Column count in one line. */
 	columnCount: number = 24

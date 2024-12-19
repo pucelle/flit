@@ -1,7 +1,7 @@
-import {Component, ComponentStyle, css, html} from '@pucelle/lupos.js'
+import {Component, css, html} from '@pucelle/lupos.js'
 import {tooltip} from '../bindings'
 import {Icon} from './icon'
-import {theme, ThemeSize} from '../style'
+import {ThemeSize} from '../style'
 import {DOMModifiableEvents, watch} from '@pucelle/ff'
 
 
@@ -21,18 +21,15 @@ interface InputEvents {
  */
 export class Input<E = {}> extends Component<InputEvents & E> {
 
-	static style: ComponentStyle = () => {
-		let {errorColor, borderColor, mainColor, successColor, fieldBackgroundColor} = theme
-
-		return css`
+	static style = css`
 		.input{
 			display: inline-block;
 			vertical-align: top;
 			position: relative;
 			width: 15em;
 			padding-bottom: 1px solid none;
-			background: ${fieldBackgroundColor};
-			box-shadow: inset 0 -1px 0 0 ${borderColor};
+			background: var(--field-color);
+			box-shadow: inset 0 -1px 0 0 var(--border-color);
 		}
 
 		.input-field{
@@ -44,11 +41,11 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		}
 
 		.input-focus{
-			box-shadow: inset 0 -1px 0 0 ${mainColor};
+			box-shadow: inset 0 -1px 0 0 var(--primary-color);
 		}
 
 		.input-valid{
-			box-shadow: inset 0 -1px 0 0 ${successColor};
+			box-shadow: inset 0 -1px 0 0 var(--success-color);
 
 			input, textarea{
 				padding-right: 2em;
@@ -56,7 +53,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		}
 
 		.input-invalid{
-			box-shadow: inset 0 -1px 0 0 ${errorColor};
+			box-shadow: inset 0 -1px 0 0 var(--error-color);
 
 			input, textarea{
 				padding-right: 2em;
@@ -68,7 +65,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			top: 0;
 			bottom: 0;
 			right: 6px;
-			color: ${successColor};
+			color: var(--success-color);
 		}
 
 		.input-error{
@@ -76,10 +73,9 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			left: 0;
 			top: 100%;
 			font-size: 0.928em;
-			color: ${errorColor};
+			color: var(--error-color);
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

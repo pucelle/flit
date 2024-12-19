@@ -1,5 +1,4 @@
 import {Component, html, css} from '@pucelle/lupos.js'
-import {theme} from '../style'
 import {DOMEvents, MouseLeaveControl, NumberUtils} from '@pucelle/ff'
 import {tooltip, TooltipOptions} from '../bindings'
 
@@ -20,13 +19,11 @@ interface SliderEvents {
 /** `<Slider>` provides a range picker, you may pick one value by sliding on the bar. */
 export class Slider<E = {}> extends Component<E & SliderEvents> {
 
-	static style() {
-		let {mainColor, borderColor, focusBlurRadius, backgroundColor} = theme
-		let grooveSize = 1
-		let ballSize = 15
-
-		return css`
+	static style = css`
 		.slider{
+			--groove-size: 1px;
+			--ball-size: 15px;
+
 			display: inline-flex;
 			vertical-align: top;
 			flex-direction: column;
@@ -37,8 +34,8 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 			cursor: pointer;
 
 			&:focus .ball{
-				box-shadow: 0 0 ${focusBlurRadius}px ${mainColor};
-				border-color: ${mainColor};
+				box-shadow: 0 0 var(--focus-shadow-blur-radius) var(--primary-color);
+				border-color: var(--primary-color);
 			}
 		}
 
@@ -52,40 +49,40 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 			top: 0;
 			width: 100%;
 			height: 100%;
-			background: ${borderColor};
+			background: var(--border-color);
 		}
 	
 		.slider-progress{
 			position: absolute;
 			height: 1px;
-			background: ${mainColor};
+			background: var(--primary-color);
 		}
 	
 		.slider-ball{
 			position: absolute;
 			will-change: top, left;
 			border-radius: 50%;
-			border: ${grooveSize}px solid ${borderColor};
-			background: ${backgroundColor};
+			border: var(--groove-size) solid var(--border-color);
+			background: var(--background-color);
 			float: right;
-			width: ${ballSize}px;
-			height: ${ballSize}px;
+			width: var(--ball-size);
+			height: var(--ball-size);
 
 			&:hover{
-				border-color: ${mainColor};
+				border-color: var(--primary-color);
 			}
 		}
 
 		.slider.dragging{
-			.ball{
-				border-color: ${mainColor.darken(10)};
-				background: ${mainColor.darken(10)};
+			.slider-ball{
+				border-color: color-mix(in srgb, var(--primary-color) 90%, black);
+				background: color-mix(in srgb, var(--primary-color) 90%, black);
 			}
 		}
 
 		.slider-horizontal{
 			.slider-groove{
-				height: ${grooveSize}px;
+				height: var(--groove-size);
 			}
 
 			.slider-progress{
@@ -93,8 +90,8 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 			}
 
 			.slider-ball{
-				top: -${(ballSize - grooveSize) / 2}px;
-				margin-left: -${Math.round(ballSize / 2)}px;
+				top: calc((var(--ball-size) - var(--groove-size)) / -2);
+				margin-left: calc(var(--ball-size) / -2);
 			}
 		}
 
@@ -104,7 +101,7 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 			flex-direction: row;
 
 			.slider-groove{
-				width: ${grooveSize}px;
+				width: var(--groove-size);
 			}
 
 			.slider-progress{
@@ -112,16 +109,15 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 			}
 
 			.slider-ball{
-				left: -${(ballSize - grooveSize) / 2}px;
-				margin-top: -${Math.round(ballSize / 2)}px;
+				left: calc((var(--ball-size) - var(--groove-size)) / -2);
+				margin-top: calc(var(--ball-size) / -2);
 			}
 		}
 
 		.slider-tooltip{
 			font-family: consolas;
 		}
-		`
-	}
+	`
 
 
 	/** Groove size, default value is `1`. */
@@ -170,6 +166,8 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 				class="slider"
 				:class=${this.vertical ? 'slider-vertical' : 'slider-horizontal'}
 				:class.slider-dragging=${this.dragging}
+				:style.--ball-size.px=${this.ballSize}
+				:style.--groove-size.px=${this.grooveSize}
 				:tooltip=${this.renderTooltipContent, tooltipOptions}
 				@mousedown=${this.onMouseDown}
 				@focus=${this.onFocus}
@@ -191,20 +189,13 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 
 	protected renderHorizontalGroove() {
 		let percentage = this.getPercentage()
-		let {ballSize, grooveSize} = this
 
 		let ballStyle = {
-			'width': ballSize + 'px',
-			'height': ballSize + 'px',
-			'border-width': grooveSize + 'px',
 			'left': percentage + '%',
-			'top': -(ballSize - grooveSize) / 2 + 'px',
-			'margin-left': -Math.round(ballSize / 2) + 'px'
 		}
 
 		return html`
 			<div class="slider-groove"
-				:style.height.px=${grooveSize}
 				:ref=${this.grooveEl}
 			>
 				<div class="slider-groove-bg" />
@@ -220,15 +211,9 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 
 	protected renderVerticalGroove() {
 		let percentage = this.getPercentage()
-		let {ballSize, grooveSize} = this
 
 		let ballStyle = {
-			'width': ballSize + 'px',
-			'height': ballSize + 'px',
-			'border-width': grooveSize + 'px',
 			'top': 100 - percentage + '%',
-			'left': -(ballSize - grooveSize) / 2 + 'px',
-			'margin-top': -Math.round(ballSize / 2) + 'px',
 		}
 
 		return html`

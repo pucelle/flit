@@ -1,14 +1,10 @@
-import {css, Component, html, ComponentStyle} from '@pucelle/lupos.js'
-import {theme} from '../style/theme'
+import {css, Component, html} from '@pucelle/lupos.js'
 
 
 /** `<Triangle>` represents a small triangle to be contained by popup or tooltip. */
 export class Triangle<E = {}> extends Component<E> {
 
-	static style: ComponentStyle = () => {
-		let {popupBackgroundColor} = theme
-
-		return css`
+	static style = css`
 		.triangle{
 			position: absolute;
 		}
@@ -19,10 +15,9 @@ export class Triangle<E = {}> extends Component<E> {
 
 		.triangle path{
 			stroke: none;
-			fill: ${popupBackgroundColor};
+			fill: var(--popup-background-color);
 		}
-		`
-	}
+	`
 
 	/** Triangle width when triangle point to top position. */
 	width: number = 10

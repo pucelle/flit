@@ -1,5 +1,4 @@
-import {css, Component, html, ComponentStyle} from '@pucelle/lupos.js'
-import {theme} from '../style/theme'
+import {css, Component, html} from '@pucelle/lupos.js'
 import {SharedPopups} from '../bindings'
 import {Triangle} from './triangle'
 
@@ -10,16 +9,13 @@ import {Triangle} from './triangle'
  */
 export class Popup<E = {}> extends Component<E> {
 
-	static style: ComponentStyle = () => {
-		let {popupBorderRadius, popupBackgroundColor, popupShadowBlurRadius, popupShadowColor} = theme
-
-		return css`
+	static style = css`
 		.popup{
 			position: absolute;
 			left: 0;
 			top: 0;
-			background: ${popupBackgroundColor};
-			border-radius: ${popupBorderRadius}px;
+			background: var(--popup-background-color);
+			border-radius: var(--popup-border-radius);
 			max-width: 100vw;
 			max-height: 100vh;
 
@@ -30,10 +26,9 @@ export class Popup<E = {}> extends Component<E> {
 			z-index: 1000;
 
 			/* 3px drop shadow nearly equals 6px of box-shadow. */
-			filter: drop-shadow(0 0 ${popupShadowBlurRadius / 2}px ${popupShadowColor});
+			filter: drop-shadow(0 0 calc(var(--popup-shadow-blur-radius) / 2) var(--popup-shadow-color));
 		}
-		`
-	}
+	`
 
 	/** 
 	 * Options to overwrite default `:popup` binding options,

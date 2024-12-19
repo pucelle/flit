@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Aligner, AlignerPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -118,7 +118,7 @@ export const DefaultPopupOptions: PopupOptions = {
 	position: 'b',
 	gap: 0,
 	stickToEdges: true,
-	canSwapPosition: true,
+	canFlip: true,
 	canShrinkOnY: true,
 	fixTriangle: false,
 
@@ -164,7 +164,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected popup: Popup | null = null
 
 	/** Align to current popup. */
-	protected aligner: Aligner | null = null
+	protected aligner: AnchorAligner | null = null
 
 	/** Whether have prevent hiding popup content. */
 	protected preventedHiding: boolean = false
@@ -390,7 +390,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.updateRendering()
 
 		// Update popup properties.
-		this.popup!.triangleDirection = Aligner.getTargetFaceDirection(this.options.position).opposite.toBoxEdgeKey()!
+		this.popup!.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toBoxEdgeKey()!
 		this.popup!.el.style.pointerEvents = this.options.pointable ? '' : 'none'
 
 		/** Append popup element into document. */
@@ -500,12 +500,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		this.fire('will-align', this.popup!)
 
-		let target = this.getAlignToElement()
+		let anchor = this.getAlignAnchorElement()
 		let aligned = false
 
 		// Update aligner if required.
-		if (!this.aligner || this.aligner.target !== target || this.aligner.content !== this.popup!.el) {
-			this.aligner = new Aligner(this.popup!.el, target)
+		if (!this.aligner || this.aligner.anchor !== anchor || this.aligner.content !== this.popup!.el) {
+			this.aligner = new AnchorAligner(this.popup!.el, anchor)
 		}
 
 		if (this.options.followEvents) {
@@ -526,7 +526,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 }
 
 	/** Get element popup will align to. */
-	protected getAlignToElement(): Element {
+	protected getAlignAnchorElement(): Element {
 		if (!this.options.alignTo) {
 			return this.el
 		}
@@ -543,10 +543,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
 
 		return {
-			position: this.options?.position as AlignerPosition,
+			position: this.options?.position as AnchorPosition,
 			gap: this.options?.gap,
 			stickToEdges: this.options?.stickToEdges,
-			canSwapPosition: this.options?.canSwapPosition,
+			canFlip: this.options?.canFlip,
 			canShrinkOnY: this.options?.canShrinkOnY,
 			fixTriangle: this.options?.fixTriangle,
 			triangle: triangle ?? undefined,

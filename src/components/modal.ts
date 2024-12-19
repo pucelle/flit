@@ -1,6 +1,6 @@
 import {css, html, Component} from '@pucelle/lupos.js'
 import {theme} from '../style'
-import {DOMEvents, Aligner, fade, untilUpdateComplete} from '@pucelle/ff'
+import {DOMEvents, AnchorAligner, fade, untilUpdateComplete} from '@pucelle/ff'
 import {Icon} from './icon'
 
 
@@ -164,7 +164,7 @@ export class Modal<E = {}> extends Component<E> {
 	}
 
 	protected toCenter() {
-		new Aligner(this.el, document.documentElement).align({position: 'c'})
+		new AnchorAligner(this.el, document.documentElement).align({position: 'c'})
 	}
 
 	/**

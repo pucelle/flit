@@ -1,6 +1,6 @@
 import {DOMScroll, untilUpdateComplete} from '@pucelle/ff'
-import {ComponentStyle, css, html, TemplateResult} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {css, html, TemplateResult} from '@pucelle/lupos.js'
+import {ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
 import {ListItem, List} from './list'
 import {Popup} from './popup'
@@ -28,27 +28,24 @@ interface SelectEvents<T> {
  */
 export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 	
-	static style: ComponentStyle = () => {
-		let {mainColor, borderColor, popupShadowBlurRadius, fieldBackgroundColor, popupShadowColor} = theme
-
-		return css`
+	static style = css`
 		.select{
 			display: inline-flex;
 			vertical-align: top;
 			width: calc(20em + 20px);
 			height: 2em;
 			padding: 0.2em 0;
-			background: ${fieldBackgroundColor};
+			background: var(--field-color);
 			justify-content: space-between;
 			align-items: center;
 			cursor: pointer;
-			box-shadow: inset 0 -1px 0 0 ${borderColor};
+			box-shadow: inset 0 -1px 0 0 var(--border-color);
 
 			&:hover, &.opened{
-				box-shadow: inset 0 -1px 0 0 ${mainColor};
+				box-shadow: inset 0 -1px 0 0 var(--primary-color);
 
 				.select-dropdown-icon{
-					color: ${mainColor};
+					color: var(--primary-color);
 				}
 			}
 
@@ -89,8 +86,6 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 		.select-popup{
 			padding: 0;
 			border-radius: 0;
-			filter: none;
-			box-shadow: 0 1px ${popupShadowBlurRadius}px ${popupShadowColor};
 		}
 
 		.select-list{
@@ -105,8 +100,7 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 		.select-selected-icon{
 			margin-right: -4px;
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

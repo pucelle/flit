@@ -1,5 +1,5 @@
-import {ComponentStyle, css, html} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style/'
+import {css, html} from '@pucelle/lupos.js'
+import {ThemeSize} from '../style/'
 import {Popup} from './popup'
 import {Triangle} from './triangle'
 import {Icon} from './icon'
@@ -12,10 +12,7 @@ import {Icon} from './icon'
  */
 export class Popover<E = {}> extends Popup<E> {
 
-	static style: ComponentStyle = () => {
-		let {textColor} = theme
-
-		return css`
+	static style = css`
 		.popover{
 			padding: 0.6em 1em;
 			min-width: 15em;
@@ -29,9 +26,9 @@ export class Popover<E = {}> extends Popup<E> {
 		.popover-header{
 			display: flex;
 			font-size: 0.928em;
-			padding-bottom: 0.4em;
-			border-bottom: 1px solid ${textColor.alpha(0.8)};
-			margin-bottom: 0.6em;
+			padding-bottom: 0.3em;
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 80%, var(--background-color));
+			margin-bottom: 0.5em;
 		}
 
 		.popover-title{
@@ -74,8 +71,7 @@ export class Popover<E = {}> extends Popup<E> {
 			line-height: 1.5em;
 			padding: 0.2em 0;
 		}
-		`
-	}
+	`
 
 
 	/** Normally action button or a container of buttons. */

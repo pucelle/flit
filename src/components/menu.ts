@@ -1,16 +1,13 @@
 import {css, html} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Triangle} from './triangle'
+import {ThemeSize} from '../style'
 
 
 /** `<Menu>` shows a menu with a list inside. */
 export class Menu<E = {}> extends Popup<E> {
 
-	static style() {
-		let {textColor} = theme
-
-		return css`
+	static style = css`
 		.menu{
 			min-width: 15em;
 			max-width: 30em;
@@ -31,7 +28,7 @@ export class Menu<E = {}> extends Popup<E> {
 			display: flex;
 			font-size: 0.928em;
 			padding-bottom: 0.4em;
-			border-bottom: 1px solid ${textColor.alpha(0.8)};
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 80%, var(--background-color));
 		}
 
 		.menu-title{
@@ -43,8 +40,7 @@ export class Menu<E = {}> extends Popup<E> {
 			white-space: nowrap;
 			text-overflow: ellipsis;
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

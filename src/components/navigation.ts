@@ -1,19 +1,15 @@
 import {css, html} from '@pucelle/lupos.js'
 import {List} from './list'
-import {theme} from '../style'
 
 
 /** `<Navigation>` can navigate through various sections or pages. */
 export class Navigation<T> extends List<T> {
 
-	static style() {
-		let {backgroundColor} = theme
-
-		return css`
+	static style = css`
 		.navigation{
 			padding: 0.6em 1.2em;
 			border-bottom: none;
-			background: ${backgroundColor.toIntermediate(0.09)};
+			background: color-mix(in srgb, var(--background-color) 90%, var(--text-color));
 			overflow-y: auto;
 		}
 
@@ -23,8 +19,7 @@ export class Navigation<T> extends List<T> {
 			margin-top: 0.3em;
 			margin-bottom: 0.6em;
 		}
-		`
-	}
+	`
 
 	/** Type, always be `navigation`. */
 	readonly mode: 'selection' | 'navigation' = 'navigation'

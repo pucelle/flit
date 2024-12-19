@@ -1,5 +1,5 @@
 import {Component, html, css} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {ThemeSize} from '../style'
 import {DOMModifiableEvents} from '@pucelle/ff'
 import {CheckboxGroup} from './checkbox-group'
 import {Icon} from './icon'
@@ -17,10 +17,7 @@ interface CheckboxEvents {
  */
 export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 
-	static style() {
-		let {mainColor} = theme
-
-		return css`
+	static style = css`
 		.checkbox{
 			display: inline-flex;
 			vertical-align: top;
@@ -28,16 +25,16 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 			cursor: pointer;
 
 			&:hover{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 
 			&:focus{
-				color: ${mainColor};
-				box-shadow: 0 0 0 1px ${mainColor};
+				color: var(--primary-color);
+				box-shadow: 0 0 0 1px var(--primary-color);
 			}
 
 			&.indeterminate, &.checked{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 		}
 
@@ -53,8 +50,7 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 			text-overflow: ellipsis;
 			padding-right: 0.2em;
 		}
-		`
-	}
+	`
 
 	size: ThemeSize = 'default'
 	

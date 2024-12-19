@@ -1,5 +1,5 @@
 import {Component, html, css} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {ThemeSize} from '../style'
 import {Icon} from './icon'
 
 
@@ -13,14 +13,11 @@ interface TagEvents {
 /** `<Tag>` used to give a tag label to a kind of items. */
 export class Tag<E = {}> extends Component<E & TagEvents> {
 
-	static style() {
-		let {borderColor, borderRadius} = theme
-
-		return css`
+	static style = css`
 		.tag{
 			display: inline-flex;
-			border: 1px solid ${borderColor};
-			border-radius: ${borderRadius}px;
+			border: 1px solid var(--border-color);
+			border-radius: var(--border-radius);
 			line-height: 1.4;
 			padding: 0 0.4em;
 			cursor: pointer;
@@ -51,8 +48,7 @@ export class Tag<E = {}> extends Component<E & TagEvents> {
 				transform: translateY(1px);
 			}
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

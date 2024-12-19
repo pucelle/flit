@@ -1,26 +1,24 @@
-import {css, html, Component, RenderResultRenderer, RenderResult, ComponentStyle} from '@pucelle/lupos.js'
+import {css, html, Component, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
 import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'
 import {TriggerType} from '../bindings'
-import {AlignerPosition, computed, ObjectUtils, TransitionResult} from '@pucelle/ff'
+import {AnchorPosition, computed, ObjectUtils, TransitionResult} from '@pucelle/ff'
 
 
 /** `<Dropdown>` for containing both trigger element and popup content.  */
 export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptions> {
 
-	static style: ComponentStyle = () => {
-		return css`
+	static style = css`
 		.dropdown{
 			display: inline-flex;
 		}
-		`
-	}
+	`
 
 
 	// When these options are undefined, use default `:popup` options.
 
-	position: AlignerPosition | undefined = undefined
+	position: AnchorPosition | undefined = undefined
 	gap: number | number[] | undefined = undefined
 	stickToEdges: boolean | undefined = undefined
 	canSwapPosition: boolean | undefined = undefined

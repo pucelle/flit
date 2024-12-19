@@ -1,6 +1,5 @@
-import {css, html, Component, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
-import {theme} from '../style'
-import {Timeout, Color, fold, fade} from '@pucelle/ff'
+import {css, html, Component, TemplateResult} from '@pucelle/lupos.js'
+import {Timeout, fold, fade} from '@pucelle/ff'
 import {Icon} from './icon'
 import {Button} from './button'
 
@@ -60,17 +59,7 @@ interface NotificationItem extends NotificationOptions {
 /** `<Notification>` shows a notification list to notify about infos. */
 export class Notification<E = {}> extends Component<E> {
 
-	static style: ComponentStyle = () => {
-		let {infoColor, successColor, errorColor, warningColor, popupBorderRadius, popupShadowBlurRadius, backgroundColor, textColor, popupShadowColor} = theme
-		
-		let types = [
-			['info', infoColor],
-			['warning', warningColor],
-			['error', errorColor],
-			['success', successColor]
-		] as [NotificationType, Color][]
-
-		return css`
+	static style = css`
 		.notification{
 			position: fixed;
 			right: 1em;
@@ -85,11 +74,11 @@ export class Notification<E = {}> extends Component<E> {
 			position: relative;
 			display: flex;
 			margin-top: 0.8em;
-			background: ${backgroundColor};
-			box-shadow: 0 0 ${popupShadowBlurRadius}px ${popupShadowColor};
+			background: var(--background-color);
+			box-shadow: 0 0 var(--popup-shadow-blur-radius) var(--popup-shadow-color);
 			cursor: pointer;
 			overflow: hidden;
-			border-radius: ${popupBorderRadius}px;
+			border-radius: var(--popup-border-radius);
 		}
 
 		.notification-stripe{
@@ -114,14 +103,14 @@ export class Notification<E = {}> extends Component<E> {
 			display: flex;
 			width: 2em;
 			height: 2em;
-			color: ${textColor};
+			color: var(--text-color);
 
 			.icon{
 				margin: auto;
 			}
 
 			&:hover{
-				color: ${textColor.toIntermediate(0.1)};
+				color: color-mix(in srgb, var(--text-color) 90%, var(--background-color));
 			}
 
 			&:active{
@@ -164,19 +153,46 @@ export class Notification<E = {}> extends Component<E> {
 			padding: 0 0.6em;
 		}
 
-		${types.map(([type, color]) => css`
-			.notification-type-${type}{
-				&:hover{
-					background: ${color.mix(backgroundColor, 0.95)};
-				}
-
-				.notification-stripe{
-					background: ${color};
-				}
+		.notification-type-info{
+			&:hover{
+				background: color-mix(in srgb, var(--info-color) 5%, var(--background-color));
 			}
-		`)}
-		`
-	}
+
+			.notification-stripe{
+				background: var(--info-color);
+			}
+		}
+
+		.notification-type-warning{
+			&:hover{
+				background: color-mix(in srgb, var(--warning-color) 5%, var(--background-color));
+			}
+
+			.notification-stripe{
+				background: var(--warning-color);
+			}
+		}
+
+		.notification-type-success{
+			&:hover{
+				background: color-mix(in srgb, var(--success-color) 5%, var(--background-color));
+			}
+
+			.notification-stripe{
+				background: var(--success-color);
+			}
+		}
+
+		.notification-type-error{
+			&:hover{
+				background: color-mix(in srgb, var(--error-color) 5%, var(--background-color));
+			}
+
+			.notification-stripe{
+				background: var(--error-color);
+			}
+		}
+	`
 
 	protected seed: number = 1
 	protected items: NotificationItem[] = []

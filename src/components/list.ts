@@ -1,5 +1,5 @@
-import {css, Component, html, RenderResult, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {css, Component, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
+import {ThemeSize} from '../style'
 import {DOMEvents, EventKeys, Observed, fold, effect} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
@@ -74,13 +74,10 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 	}
 
-	static style: ComponentStyle = () => {
-		let {mainColor, borderColor} = theme
-
-		return css`
+	static style = css`
 		.list{
 			display: block;
-			border-bottom: 1px solid ${borderColor.alpha(0.4)};
+			border-bottom: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
 		}
 		
 		.list-item{
@@ -88,22 +85,22 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			display: flex;
 			padding: 0.4em 0;
 			cursor: pointer;
-			border-top: 1px solid ${borderColor.alpha(0.4)};
+			border-top: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
 
 			&:first-child{
 				border-top: none;
 			}
 
 			&:hover{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 
 			&.selected{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 
 			&.navigated{
-				color: ${mainColor};
+				color: var(--primary-color);
 
 				&::after{
 					content: '';
@@ -112,12 +109,12 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 					bottom: 3px;
 					right: 0;
 					width: 2px;
-					background: ${mainColor.alpha(0.8)};
+					background: color-mix(in srgb, var(--primary-color) 80%, var(--background-color));
 				}
 			}
 
 			&.arrow-selected{
-				background-color: ${mainColor.alpha(0.1)};
+				background-color: color-mix(in srgb, var(--primary-color) 10%, var(--background-color));
 			}
 		}
 
@@ -170,7 +167,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			.list-subsection:not(:last-child){
 				padding-bottom: 3px;
 				margin-bottom: 3px;
-				border-bottom: 1px solid ${borderColor.alpha(0.4)};
+				border-bottom: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
 			}
 
 			.list-subsection:last-child{
@@ -178,8 +175,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				margin-bottom: 0;
 			}
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

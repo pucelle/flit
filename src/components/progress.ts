@@ -1,15 +1,11 @@
 import {Component, css, html} from '@pucelle/lupos.js'
-import {theme} from '../style'
 import {tooltip, TooltipOptions} from '../bindings'
 
 
 /** `<Progress>` gives a progress indicate in percentage, just like `<input type=progress>`. */
 export class Progress<E = {}> extends Component<E> {
 
-	static style() {
-		let {mainColor} = theme
-
-		return css`
+	static style = css`
 		.progress{
 			display: inline-flex;
 			align-items: center;
@@ -20,19 +16,18 @@ export class Progress<E = {}> extends Component<E> {
 		.progress-groove{
 			width: 100%;
 			height: 1px;
-			background: ${mainColor.alpha(0.2)};
+			background: color-mix(in srgb, var(--primary-color) 20%, var(--background-color));
 		}
 
 		.progress-progress{
 			height: 100%;
-			background: ${mainColor};
+			background: var(--primary-color);
 		}
 
 		.progress-tooltip{
 			font-family: consolas;
 		}
-		`
-	}
+	`
 
 
 	/** 

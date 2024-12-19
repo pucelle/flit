@@ -1,6 +1,5 @@
-import {Color} from '@pucelle/ff'
-import {ComponentStyle, css, html} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {css, html} from '@pucelle/lupos.js'
+import {ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Icon} from './icon'
 import {Triangle} from './triangle'
@@ -18,16 +17,7 @@ export type TooltipType = 'default' | 'prompt' | 'error'
 /** `<Tooltip>` shows a short text or html type message beside it's trigger element. */
 export class Tooltip<E = {}> extends Popup<E> {
 
-	static style: ComponentStyle = () => {
-		let {popupBackgroundColor, textColor, errorColor} = theme
-
-		let types = [
-			['default', popupBackgroundColor.toIntermediate(0.05)],
-			['prompt', textColor.toIntermediate(0.1)],
-			['error', errorColor.toIntermediate(0.05)]
-		] as [TooltipType, Color][]
-
-		return css`
+	static style = css`
 		.tooltip{
 			display: flex;
 			max-width: 15em;
@@ -58,26 +48,34 @@ export class Tooltip<E = {}> extends Popup<E> {
 			}
 		}
 
-		${types.map(([type, color]) => {
-			let textColor = color.gray > 0.5 ? '#000' : '#fff'
+		.tooltip.type-default{
+			background: color-mix(in srgb, var(--popup-background-color) 95%, var(--text-color));
+			color: var(--text-color);
 
-			return css`
-			.tooltip.type-${type}{
-				background: ${color};
-				color: ${textColor};
-
-				.triangle path{
-					fill: ${color};
-				}
+			.triangle path{
+				fill: color-mix(in srgb, var(--popup-background-color) 95%, var(--text-color));
 			}
-			`
-		})}
+		}
 
 		.tooltip.type-prompt{
+			background: var(--text-color);
+			color: var(--background-color);
 			pointer-events: auto;
+
+			.triangle path{
+				fill: var(--text-color);
+			}
 		}
-		`
-	}
+
+		.tooltip.type-error{
+			background: var(--error-color);
+			color: var(--background-color);
+
+			.triangle path{
+				fill: var(--error-color);
+			}
+		}
+	`
 
 	
 	size: ThemeSize = 'default'

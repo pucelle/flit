@@ -1,5 +1,4 @@
 import {Color, ListMap, Observed} from '@pucelle/ff'
-import {addGlobalStyle, css} from '@pucelle/lupos.js'
 
 
 export interface ThemeOptions {
@@ -333,45 +332,3 @@ theme.define('large', 'size', {
 })
 
 theme.set('light', 'medium')
-
-
-addGlobalStyle(() => {
-	let {backgroundColor} = theme
-	let trackColor = backgroundColor.toIntermediate(14/255)
-	let thumbColor = backgroundColor.toIntermediate(62/255)
-
-	return css`
-	::-webkit-scrollbar{
-		background: ${trackColor};
-	}
-
-	::-webkit-scrollbar-thumb{
-		background: ${backgroundColor.toIntermediate(62/255)};
-
-		&:hover{
-			background: ${backgroundColor.toIntermediate(87/255)};
-		}
-
-		&:active{
-			background: ${backgroundColor.toIntermediate(135/255)};
-		}
-	}
-
-	@supports not selector(::-webkit-scrollbar) {
-		*{
-			scrollbar-width: thin;
-			scrollbar-color: ${thumbColor} ${trackColor};
-		}
-	}
-
-	${['small', 'medium', 'large', 'default', 'inherit'].map(size => {
-		let options = size === 'inherit' ? null : size === 'default' ? theme.getOptions() : theme.getOptionsOf(size)
-		let fontSize = size === 'inherit' ? 'inherit' : options!.fontSize! + 'px'
-
-		return css`
-			.size-${size}{
-				font-size: ${fontSize};
-			}
-		`
-	})}
-`})

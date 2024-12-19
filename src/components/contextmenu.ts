@@ -1,11 +1,11 @@
-import {ComponentStyle, css, html} from '@pucelle/lupos.js'
+import {css, html} from '@pucelle/lupos.js'
 import {Popup} from './popup'
 
 
 /** `<Contextmenu>` to render a simple context menu with a list inside. */
 export class ContextMenu<E = {}> extends Popup<E> {
 
-	static style: ComponentStyle = css`
+	static style = css`
 		.contextmenu{
 			position: fixed;
 			border-radius: 0;

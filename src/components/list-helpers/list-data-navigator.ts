@@ -84,8 +84,8 @@ export class ListDataNavigator<T = any> implements Observed {
 
 		if (this.path.length === 0) {
 			this.path = [{
-				index: 0,
-				item: this.data[0],
+				index: this.data.length - 1,
+				item: this.data[this.data.length - 1],
 			}]
 			return
 		}
@@ -101,7 +101,7 @@ export class ListDataNavigator<T = any> implements Observed {
 
 		// Moves upward.
 		else {
-			lastPath.index++
+			lastPath.index--
 			lastPath.item = siblings[lastPath.index]
 		}
 	}
@@ -112,8 +112,8 @@ export class ListDataNavigator<T = any> implements Observed {
 
 		if (this.path.length === 0) {
 			this.path = [{
-				index: this.data.length - 1,
-				item: this.data[this.data.length - 1],
+				index: 0,
+				item: this.data[0],
 			}]
 			return
 		}
@@ -129,7 +129,7 @@ export class ListDataNavigator<T = any> implements Observed {
 
 		// Move downward.
 		else {
-			lastPath.index--
+			lastPath.index++
 			lastPath.item = siblings[lastPath.index]
 		}
 	}

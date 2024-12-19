@@ -23,11 +23,9 @@ window.ff = ff
 class Preview extends Component {
 
 	protected render() {
-		let {textColor, backgroundColor} = theme
-
 		return html`
 		<template class="preview size-default"
-			style="color: ${textColor}; background: ${backgroundColor}"
+			style="color: var(--text-color); background: var(--background-color)"
 		>
 			<div class="wrapper">
 				${this.renderTheme()}
@@ -69,7 +67,8 @@ class Preview extends Component {
 				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Light Mode</Col>
 					<Col .span=${20}>
-						<RadioGroup .value="light" @change=${(name: string) => theme.apply(name)}>
+						<RadioGroup .value="light dark" @change=${(name: string) => document.documentElement.style.setProperty('color-scheme', name)}>
+							<Radio .value="light dark" style="margin-right: 20px;">Auto</Radio>
 							<Radio .value="light" style="margin-right: 20px;">Light</Radio>
 							<Radio .value="dark" style="margin-right: 20px;">Dark</Radio>
 						</RadioGroup>
@@ -111,7 +110,7 @@ class Preview extends Component {
 					<Col .span=${4}>
 						<header>Normal</header>
 						<Button style="margin: 8px 0;">Button Text</Button><br>
-						<Button style="margin: 8px 0;"><span>Button Text</span><Icon .type="right" /></Button><br>
+						<Button style="margin: 8px 0;"><span>Button Text</span><Icon .type="love" /></Button><br>
 						<Button style="margin: 8px 0;"><Icon .type="love" /></Button><br>
 					</Col>
 					<Col .span=${4}>
@@ -453,7 +452,6 @@ class Preview extends Component {
 						<header>Size</header>
 						<Slider style="width: calc(100% - 2em); margin-right: 1em;" .value=${50} .grooveSize=${1} />1<br>
 						<Slider style="width: calc(100% - 2em); margin-right: 1em;" .value=${50} .grooveSize=${2} .ballSize=${18} />2<br>
-						<Slider style="width: calc(100% - 2em); margin-right: 1em;" .value=${50} .grooveSize=${3} .ballSize=${20} />3<br>
 					</Col>
 				</Row>
 			</section>

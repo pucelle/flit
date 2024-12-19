@@ -10,6 +10,8 @@ module.exports = {
 	},
 	optimization: {},
 	plugins: [
+
+		// Required when use `ts-loader`.
 		//new ForkTsCheckerWebpackPlugin()
 	],
 	devServer: {
@@ -21,7 +23,7 @@ module.exports = {
 			index: 'docs/index.html'
 		},
 		allowedHosts: 'all',
-		openPage: 'docs/index.html' 
+		open: ['docs/index.html'],
 	},
 	devtool: 'cheap-source-map',
 	resolve: {

@@ -1,5 +1,5 @@
 import {Component, html, css} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {ThemeSize} from '../style'
 import {DOMEvents, EventKeys, getCSSEasingValue} from '@pucelle/ff'
 
 
@@ -13,52 +13,48 @@ interface SwitchEvents {
 /** `<Switch>` work just like `<Checkbox>` but easier to interact with. */
 export class Switch<E = {}> extends Component<E & SwitchEvents> {
 
-	static style() {
-		let {mainColor, focusBlurRadius, backgroundColor} = theme
-
-		return css`
+	static style = css`
 		.switch{
 			display: inline-block;
 			vertical-align: top;
 			width: 2em;
 			height: 1.25em;
 			border-radius: 0.625em;
-			background: ${backgroundColor.toIntermediate(0.2)};
+			background: var(--field-color);
 			padding: 1px;
 			transition: background-color 0.2s ${getCSSEasingValue('ease-out-cubic')};
 			cursor: pointer;
 
 			&:hover{
-				background: ${backgroundColor.toIntermediate(0.3)};
+				background: color-mix(in srgb, var(--field-color) 80%, var(--text-color));
 			}
 			
 			&:focus{
-				box-shadow: 0 0 ${focusBlurRadius}px ${mainColor};
+				box-shadow: 0 0 var(--focus-shadow-blur-radius) var(--primary-color);
 			}
 		}
 	
 		.switch-ball{
 			width: calc(1.25em - 2px);
 			height: calc(1.25em - 2px);
-			background: ${backgroundColor};
+			background: var(--background-color);
 			border-radius: 50%;
 			transition: margin 0.2s ${getCSSEasingValue('ease-out-cubic')};
 		}
 	
 		.switch-on{		
-			background: ${mainColor};
+			background: var(--primary-color);
 
 			.switch-ball{
-				border-color: ${backgroundColor};
+				border-color: var(--background-color);
 				margin-left: 0.75em;
 			}
 
 			&:hover{
-				background: ${mainColor.toIntermediate(0.1)};
+				background: var(--primary-color);
 			}
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

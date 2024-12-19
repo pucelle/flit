@@ -1,54 +1,50 @@
-import {Component, ComponentStyle, css, html, TemplateResult} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {Component, css, html, TemplateResult} from '@pucelle/lupos.js'
+import {ThemeSize} from '../style'
 
 
 /** `<Button>` is nearly equals <button> element. */
 export class Button<E = {}> extends Component<E> {
 
-	static style: ComponentStyle = () => {
-		let {mainColor, textColor, borderColor, borderRadius, focusBlurRadius, backgroundColor, lightMode} = theme
-		
-		return css`	
+	static style = css`	
 		.button{
 			display: inline-flex;
 			justify-content: center;
 			align-items: center;
-			border: 1px solid ${borderColor};
-			color: ${textColor};
-			border-radius: ${borderRadius}px;
-			padding: calc(0.2em - 1px) 0.8em;
-			background: ${backgroundColor};
+			border: 1px solid var(--border-color);
+			color: var(--border-color);
+			border-radius: var(--border-radius);
+			padding: calc(0.2em - 1px) 0.6em;
+			background: var(--background-color);
 			text-align: center;
 			cursor: pointer;
 			vertical-align: top;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
-			
+		
 			&:hover, &:focus{
-				border-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 160 : 60) / 255)};
-				background-color: ${backgroundColor.toIntermediate((lightMode === 'light' ? 160 : 60) / 255)};
-				color: #fff;
+				background-color: var(--border-color);
+				color: var(--background-color);
 			}
 
 			&:focus{
-				box-shadow: 0 0 ${focusBlurRadius}px ${mainColor};
+				box-shadow: 0 0 var(--focus-shadow-blur-radius) var(--primary-color);
 			}
 
 			&:active{
-				background: ${textColor};
-				border-color: ${textColor};
-				color: ${backgroundColor};
+				background: var(--border-color);
+				border-color: var(--border-color);
+				color: var(--background-color);
 			}
 
 			.icon, .icon-loading{
 				&:first-child{
-					margin-right: 0.25em;
+					margin-right: 0.15em;
 					margin-left: -0.25em;
 				}
 
 				&:last-child{
-					margin-left: 0.25em;
+					margin-left: 0.15em;
 					margin-right: -0.25em;
 				}
 
@@ -59,18 +55,18 @@ export class Button<E = {}> extends Component<E> {
 			}
 
 			&.primary{
-				background: ${mainColor};
-				border-color: ${mainColor};
+				background: var(--primary-color);
+				border-color: var(--primary-color);
 				color: #fff;
 
 				&:hover, &:focus{
-					background: ${mainColor.darken(15/255)};
-					border-color: ${mainColor.darken(15/255)};
+					background: color-mix(in srgb, var(--primary-color) 80%, var(--text-color));
+					border-color: color-mix(in srgb, var(--primary-color) 80%, var(--text-color));
 				}
 			
 				&:active{
-					background: ${mainColor.darken(30/255)};
-					border-color: ${mainColor.darken(30/255)};
+					background: color-mix(in srgb, var(--primary-color) 60%, var(--text-color));
+					border-color: color-mix(in srgb, var(--primary-color) 60%, var(--text-color));
 				}
 			}
 
@@ -78,10 +74,11 @@ export class Button<E = {}> extends Component<E> {
 				border-color: transparent;
 				padding-left: 0;
 				padding-right: 0;
+				color: color-mix(in srgb, var(--border-color) 66%, var(--text-color));
 
 				&:hover, &:focus{
 					background: none;
-					color: ${textColor};
+					color: var(--text-color);
 				}
 
 				&:active{
@@ -93,8 +90,7 @@ export class Button<E = {}> extends Component<E> {
 				}
 			}
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

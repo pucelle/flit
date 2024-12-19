@@ -1,4 +1,4 @@
-import {Component, html, css, ComponentStyle} from '@pucelle/lupos.js'
+import {Component, html, css} from '@pucelle/lupos.js'
 import {icons} from '../icons'
 import {ThemeSize} from '../style'
 
@@ -6,19 +6,19 @@ import {ThemeSize} from '../style'
 /** `<Icon .type>` will show a specified type of svg icon. */
 export class Icon<Events = any> extends Component<Events> {
 
-	static style: ComponentStyle = css`
-	.icon{
-		display: inline-flex;
-		stroke: currentColor;
-		fill: none;
-		vertical-align: middle;
-		position: relative;
+	static style = css`
+		.icon{
+			display: inline-flex;
+			stroke: currentColor;
+			fill: none;
+			vertical-align: middle;
+			position: relative;
 
-		svg{
-			width: 1lh;
-			height: 1lh;
+			svg{
+				width: 1lh;
+				height: 1lh;
+			}
 		}
-	}
 	`
 
 

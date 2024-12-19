@@ -1,5 +1,5 @@
-import {Component, html, css, ComponentStyle} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {Component, html, css} from '@pucelle/lupos.js'
+import {ThemeSize} from '../style'
 import {Icon} from './icon'
 import {RadioGroup} from './radio-group'
 import {DOMEvents, DOMModifiableEvents} from '@pucelle/ff'
@@ -20,10 +20,7 @@ interface RadioEvents {
 /** `<Radio>` is just like `<input type=radio>`, you can click to check one radio in a radio group. */
 export class Radio<E = {}> extends Component<E & RadioEvents> {
 
-	static style: ComponentStyle = () => {
-		let {mainColor} = theme
-
-		return css`
+	static style = css`
 		.radio{
 			display: inline-flex;
 			vertical-align: top;
@@ -31,12 +28,12 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 			cursor: pointer;
 
 			&:hover{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 
 			&:focus{
-				color: ${mainColor};
-				box-shadow: 0 0 0 1px ${mainColor};
+				color: var(--primary-color);
+				box-shadow: 0 0 0 1px var(--primary-color);
 			}
 		
 			&-icon{
@@ -46,7 +43,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 			}
 
 			&.checked{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 		
 			&-label{
@@ -57,8 +54,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 				padding-right: 0.2em;
 			}
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

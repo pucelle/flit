@@ -12,21 +12,29 @@ html{
 	height: 100%;
 	tab-size: 4;
 	font-size: 14px;
-	line-height: 28px;
-	-webkit-text-size-adjust: none;
+	line-height: 1.6;
+
+	/** Not adjust character width. */
+	text-size-adjust: none;
 }
 
 body{
-	-webkit-tap-highlight-color: rgba(#000, 0);
+
+	/* Disables tap highlight on apple mobile devices. */
+	-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
 
 a{
-	color: inherit;
+	color: var(--link-color);
 	text-decoration: none;
 	cursor: pointer;
 
 	&:hover{
 		text-decoration: underline;
+	}
+
+	&:visited{
+		color: var(--visited-color);
 	}
 }
 
@@ -84,4 +92,77 @@ table{
 ::-webkit-scrollbar{
 	height: 10px;
 	width: 10px;
+	background: color-mix(in srgb, var(--background-color) 94.5%, var(--text-color));
+}
+
+::-webkit-scrollbar-thumb{
+	background: color-mix(in srgb, var(--background-color) 75.7%, var(--text-color));
+
+	&:hover{
+		background: color-mix(in srgb, var(--background-color) 65.9%, var(--text-color));
+	}
+
+	&:active{
+		background: color-mix(in srgb, var(--background-color) 47%, var(--text-color));
+	}
+}
+
+@supports not selector(::-webkit-scrollbar) {
+	*{
+		scrollbar-width: thin;
+		scrollbar-color: color-mix(in srgb, var(--background-color) 94.5%, var(--text-color))
+		                 color-mix(in srgb, var(--background-color) 75.7%, var(--text-color));
+	}
+}
+
+.size-small{
+	font-size: 13;
+}
+
+.size-medium{
+	font-size: 14;
+}
+
+.size-large{
+	font-size: 16;
+}
+
+.size-default{
+	font-size: var(--text-size);
+}
+
+.size-inherit{
+	font-size: inherit;
+}
+
+
+
+/* Theme variables. */
+:root{
+	color-scheme: light dark;
+	background: color-mix(in srgb, color percentage, color percentage);
+
+	--primary-color: ActiveText;
+	--background-color: light-dark(white, #333);
+	--text-color: CanvasText;
+	--border-color: light-dark(#808080, #888);
+	--selected-color: SelectedItem;
+	--selected-text-color: SelectedItemText;
+	--field-color: light-dark(#e5e5e5, #444);
+	--field-text-color: FieldText;
+	--link-color: LinkText;
+	--visited-color: VisitedColor;
+	
+	--popup-shadow-color: light-dark(rgba(0, 0, 0, 0.5), black);
+	--popup-background-color: light-dark(white, #333);
+	--info-color: #3369fa;
+	--success-color: #29bc04;
+	--error-color: #e10000;
+	--warning-color: #f3b907;
+
+	--text-size: 14px;
+	--border-radius: 4px;
+	--focus-shadow-blur-radius: 4px;
+	--popup-border-radius: 4px;
+	--popup-shadow-blur-radius: 6px;
 }

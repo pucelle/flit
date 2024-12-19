@@ -1,22 +1,17 @@
 
-import {Component, html, css, ComponentStyle} from '@pucelle/lupos.js'
-import {theme} from '../style'
+import {Component, html, css} from '@pucelle/lupos.js'
 
 
 /** `<Link>` can include `<a>`. */
 export class Link<Events = any> extends Component<Events> {
 
-	static style: ComponentStyle = () => {
-		let {mainColor} = theme
-
-		return css`
+	static style = css`
 		.link.primary{
 			a{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 		}
-		`
-	}
+	`
 
 	/** Whether be primary link. */
 	primary: boolean = false

@@ -17,7 +17,7 @@
 		"watch": "luc -w",
 		"build-docs": "cd docs && luc",
 		"watch-docs": "cd docs && luc -w",
-		"start-docs": "webpack serve --open",
+		"start-docs": "webpack serve",
 		"prepublish": "npm run build && npm run build-docs"
 	},
 	"dependencies": {

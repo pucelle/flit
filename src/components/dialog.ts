@@ -1,6 +1,5 @@
-import {css, html, Component, TemplateResult, ComponentStyle} from '@pucelle/lupos.js'
-import {theme} from '../style'
-import {Aligner, DOMEvents, fade, GlobalTranslations, promiseWithResolves, untilUpdateComplete} from '@pucelle/ff'
+import {css, html, Component, TemplateResult} from '@pucelle/lupos.js'
+import {AnchorAligner, DOMEvents, fade, GlobalTranslations, promiseWithResolves, untilUpdateComplete} from '@pucelle/ff'
 import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
@@ -79,17 +78,14 @@ interface DialogItem {
  */
 export class Dialog<E = {}> extends Component<E> {
 	
-	static style: ComponentStyle = () => {
-		let {textColor, popupBorderRadius, popupShadowBlurRadius, popupShadowColor, popupBackgroundColor} = theme
-
-		return css`
+	static style = css`
 		.dialog{
 			z-index: 1000;
 			width: 25em;
 			position: fixed;
-			border-radius: ${popupBorderRadius}px;
-			box-shadow: 0 0 ${popupShadowBlurRadius}px ${popupShadowColor};
-			background: ${popupBackgroundColor};
+			border-radius: var(--popup-border-radius);
+			box-shadow: 0 0 var(--popup-shadow-blur-radius) var(--popup-shadow-color);
+			background: var(--popup-background-color);
 			max-width: 95%;
 			max-height: 95%;
 			padding: 0.6em 1.2em 1.2em;
@@ -109,7 +105,7 @@ export class Dialog<E = {}> extends Component<E> {
 			display: flex;
 			font-size: 0.928em;
 			padding-bottom: 0.4em;
-			border-bottom: 1px solid ${textColor.alpha(0.8)};
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 80%, var(--background-color));
 		}
 
 		.dialog-title{
@@ -166,8 +162,7 @@ export class Dialog<E = {}> extends Component<E> {
 			margin-bottom: 0.6em;
 			width: 100%;
 		}
-		`
-	}
+	`
 
 
 	/** Mask element. */
@@ -303,7 +298,7 @@ export class Dialog<E = {}> extends Component<E> {
 	}
 
 	protected toCenter() {
-		new Aligner(this.el, document.documentElement).align({position: 'c'})
+		new AnchorAligner(this.el, document.documentElement).align({position: 'c'})
 	}
 
 	/** Apply options as current options. */

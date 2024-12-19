@@ -1,5 +1,4 @@
 import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
-import {theme} from '../style'
 import {Store} from '../data'
 import {effect, LayoutWatcher, Observed, PerFrameTransitionEasingName, TransitionResult} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
@@ -78,11 +77,7 @@ export interface TableColumn<T = any> {
  */
 export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
-	static style() {
-		let {mainColor, textColor, backgroundColor} = theme
-		let scrollbarWidth = 8
-
-		return css`
+	static style = css`
 		.table{
 			display: flex;
 			flex-direction: column;
@@ -90,8 +85,8 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		}
 
 		.table-head{
-			padding-right: ${scrollbarWidth}px;
-			color: ${textColor.toIntermediate(0.2)};
+			padding-right: 8px;
+			color: color-mix(in srgb, var(--text-color) 70%, var(--background-color));;
 			font-size: 0.928em;
 			font-weight: bold;
 			user-select: none;
@@ -107,13 +102,13 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 			display: flex;
 			align-items: stretch;
 			padding: 0.2em 0.6em;
-			border-bottom: 1px solid ${backgroundColor.toIntermediate(0.2)};
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 20%, var(--background-color));;
 
 			&:last-child{
 				flex: 1;
 				min-width: 0;
-				padding-right: ${scrollbarWidth}px;
-				margin-right: -${scrollbarWidth}px;
+				padding-right: 8px;
+				margin-right: -8px;
 			}
 		}
 
@@ -170,7 +165,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 				top: 6px;
 				bottom: 6px;
 				width: 1px;
-				background: ${backgroundColor.toIntermediate(0.2)};
+				background: color-mix(in srgb, var(--text-color) 20%, var(--background-color));
 			}
 		}
 
@@ -185,7 +180,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 			overflow-y: scroll;
 			overflow-x: hidden;
 			position: relative;
-			border-bottom: 1px solid ${backgroundColor.toIntermediate(0.13)};
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, var(--background-color));
 		}
 
 		.table-table{
@@ -196,11 +191,11 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 		.table-row{
 			&:hover{
-				background: ${mainColor.alpha(0.05)};
+				background: color-mix(in srgb, var(--primary-color) 5%, var(--background-color));
 			}
 
 			&.selected{
-				background: ${mainColor.alpha(0.1)};
+				background: color-mix(in srgb, var(--primary-color) 10%, var(--background-color));
 			}
 
 			&:last-child .table-cell{
@@ -211,7 +206,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		.table-cell{
 			vertical-align: middle;
 			padding: 0.4em 0.6em;
-			border-bottom: 1px solid ${backgroundColor.toIntermediate(0.13)};
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, var(--background-color));;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -227,8 +222,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 			bottom: 0;
 			cursor: ew-resize;
 		}
-		`
-	}
+	`
 
 
 	/** 

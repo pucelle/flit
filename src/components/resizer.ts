@@ -18,8 +18,7 @@ export type ResizerPosition = 'top' | 'right' | 'bottom' | 'left'
 /** `<f-resizer>` should an absolute type resizer bar, drag it will */
 export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 	
-	static style() {
-		return css`
+	static style = css`
 		.resizer{
 			position: absolute;
 			z-index: 100;
@@ -73,8 +72,7 @@ export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 				cursor: ns-resize;
 			}
 		}
-		`
-	}
+	`
 
 	/** Which position should align resizer relative to it's parent. */
 	position: ResizerPosition = 'right'
