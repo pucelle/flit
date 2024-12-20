@@ -2,7 +2,7 @@ import * as ff from '@pucelle/ff'
 import {html, Component, render} from '@pucelle/lupos.js'
 import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
-	theme, Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
+	Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
 	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore, draggable, droppable,
 	Resizer
@@ -78,7 +78,9 @@ class Preview extends Component {
 				<Row style="margin: 12px 0;">
 					<Col .span=${4}>Size</Col>
 					<Col .span=${20}>
-						<RadioGroup .value="medium" @change=${(name: string) => theme.apply(name)}>
+						<RadioGroup .value="medium" @change=${(name: string) => {
+							document.documentElement.style.setProperty('--text-size', String(name === 'small' ? 13 : name === 'large' ? 16 : 14) + 'px')
+						}}>
 							<Radio .value="small" style="margin-right: 20px;">Small</Radio>
 							<Radio .value="medium" style="margin-right: 20px;">Medium</Radio>
 							<Radio .value="large" style="margin-right: 20px;">Large</Radio>
@@ -941,7 +943,7 @@ class Preview extends Component {
 
 						<Button @click=${() => {
 							render(html`
-								<Modal style="width: ${theme.emOf(360)};"
+								<Modal style="width: 25em;"
 									.title="Modal Title"
 									:ref=${((m: Modal) => m.show())}
 								>
@@ -960,7 +962,7 @@ class Preview extends Component {
 							let modal: Modal
 
 							render(html`
-								<Modal style="width: ${theme.emOf(360)};"
+								<Modal style="width: 25em;"
 									.title="Modal Title"
 									:ref=${((m: Modal) => {modal = m; m.show()})}
 								>
@@ -1169,6 +1171,7 @@ class Preview extends Component {
 class MainColorSelect extends Select<string> {
 
 	data = [
+		{value: 'ActiveText', text: html`<div style="color: ActiveText;">Auto</div>`},
 		{value: '#3a6cf6', text: html`<div style="color: #3a6cf6;">Blue</div>`},
 		{value: '#0077cf', text: html`<div style="color: #0077cf;">Darkblue</div>`},
 		{value: '#4eb2ea', text: html`<div style="color: #4eb2ea;">Skyblue</div>`},
@@ -1180,11 +1183,11 @@ class MainColorSelect extends Select<string> {
 		{value: '#888888', text: html`<div style="color: #888888;">Grey</div>`},
 	]
 
-	value: string[] = ['#3a6cf6']
+	value: string[] = ['ActiveText']
 
 	@watch('value')
 	protected onValueChange(value: string[]) {
-		theme.overwrite({mainColor: value[0]})
+		document.documentElement.style.setProperty('--primary-color', value[0])
 	}
 }
 

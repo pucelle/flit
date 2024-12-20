@@ -190,10 +190,6 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 	protected renderHorizontalGroove() {
 		let percentage = this.getPercentage()
 
-		let ballStyle = {
-			'left': percentage + '%',
-		}
-
 		return html`
 			<div class="slider-groove"
 				:ref=${this.grooveEl}
@@ -203,7 +199,7 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 					:style.width.percent=${percentage}
 				/>
 				<div class="slider-ball"
-					:style=${ballStyle}
+					:style.left.percent=${percentage}
 				/>
 			</div>
 		`
@@ -212,10 +208,6 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 	protected renderVerticalGroove() {
 		let percentage = this.getPercentage()
 
-		let ballStyle = {
-			'top': 100 - percentage + '%',
-		}
-
 		return html`
 			<div class="slider-groove"
 				:style.width.px=${this.grooveSize}
@@ -223,10 +215,10 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 			>
 				<div class="slider-groove-bg" />
 				<div class="slider-progress"
-					:style.height.percent=${percentage}
+					:style.height.percent=${100 - percentage}
 				/>
 				<div class="slider-ball"
-					:style=${ballStyle}
+					:style.top.percent=${100 - percentage}
 				/>
 			</div>
 		`

@@ -28,7 +28,8 @@ export class Button<E = {}> extends Component<E> {
 			}
 
 			&:focus{
-				box-shadow: 0 0 var(--focus-shadow-blur-radius) var(--primary-color);
+				outline: 1px solid var(--primary-color);
+				outline-offset: 2px;
 			}
 
 			&:active{
