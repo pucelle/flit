@@ -1104,7 +1104,7 @@ class Preview extends Component {
 			<section>
 				<h3>Drag & Drop</h3>
 					
-			<div style="display: inline-flex; vertical-align: top; padding: 4px; background: ${theme.backgroundColor.toIntermediate(0.05)}; line-height: 100px; font-size: 60px; text-align: center; height: 116px; min-width: 116px; v"
+			<div style="display: inline-flex; vertical-align: top; padding: 4px; background: color-mix(in srgb, var(--background-color) 95%, var(--text-color)); line-height: 100px; font-size: 60px; text-align: center; height: 116px; min-width: 116px; v"
 					:droppable=${((value: number, index: number) => {
 						this.leftData = this.leftData.filter(v => v !== value)
 						this.rightData = this.rightData.filter(v => v !== value)
@@ -1118,15 +1118,14 @@ class Preview extends Component {
 					}), {itemsAlignDirection: 'horizontal'}}
 				>
 					${this.leftData.map((data: number, index: number) => html`
-						<div style="width: 100px; margin: 4px; cursor: grab;"
-							:style.background=${theme.backgroundColor.toIntermediate(0.15).toString()}
+						<div style="width: 100px; vertical-align: top; margin: 4px; cursor: grab; background: color-mix(in srgb, var(--background-color) 85%, var(--text-color))"
 							:draggable=${data, index}
 						>${data}</div>
 					`)}
 				</div>
 				<br>
 
-				<div style="display: inline-flex; vertical-align: top; padding: 4px; margin-top: -8px; background: ${theme.backgroundColor.toIntermediate(0.05)}; line-height: 100px; font-size: 60px; text-align: center; height: 116px; min-width: 116px;"
+				<div style="display: inline-flex; padding: 4px; margin-top: -8px; background: color-mix(in srgb, var(--background-color) 95%, var(--text-color)); line-height: 100px; font-size: 60px; text-align: center; height: 116px; min-width: 116px;"
 					:droppable=${((value: number, index: number) => {
 						this.leftData = this.leftData.filter(v => v !== value)
 						this.rightData = this.rightData.filter(v => v !== value)
@@ -1140,8 +1139,7 @@ class Preview extends Component {
 					}), {itemsAlignDirection: 'horizontal'}}
 				>
 					${this.rightData.map((data: number, index: number) => html`
-						<div style="width: 100px; margin: 4px; cursor: grab;"
-							:style.background=${theme.backgroundColor.toIntermediate(0.15).toString()}
+						<div style="width: 100px; vertical-align: top; margin: 4px; cursor: grab; background: color-mix(in srgb, var(--background-color) 85%, var(--text-color));"
 							:draggable=${data, index}
 						>${data}</div>
 					`)}
@@ -1156,11 +1154,9 @@ class Preview extends Component {
 			<section>
 				<h3>Resizer</h3>
 
-				<div style="position: relative; display: inline-flex; justify-content: center; line-height: 100px; font-size: 14px; text-align: center; width: 200px; height: 100px;"
-					:style.background=${theme.backgroundColor.toIntermediate(0.05).toString()}
-				>
+				<div style="position: relative; display: inline-flex; justify-content: center; line-height: 100px; font-size: 14px; text-align: center; width: 200px; height: 100px; background: color-mix(in srgb, var(--background-color) 95%, var(--text-color));">
 					Resizer on the Right
-					<Resizer .position="right" .min=${200} .max=${600} style="background: ${theme.backgroundColor.toIntermediate(0.15)}"></f-resizer>
+					<Resizer .position="right" .min=${200} .max=${600} style="background: color-mix(in srgb, var(--background-color) 85%, var(--text-color));"></f-resizer>
 				</div>
 				<br>
 			</section>

@@ -1,5 +1,4 @@
 import {css, html, Component} from '@pucelle/lupos.js'
-import {theme} from '../style'
 import {DOMEvents, AnchorAligner, fade, untilUpdateComplete} from '@pucelle/ff'
 import {Icon} from './icon'
 
@@ -12,18 +11,15 @@ import {Icon} from './icon'
  */
 export class Modal<E = {}> extends Component<E> {
 
-	static style() {
-		let {textColor, popupBorderRadius, popupShadowBlurRadius, popupBackgroundColor, popupShadowColor} = theme
-
-		return css`
+	static style = css`
 		.modal{
 			position: fixed;
 			display: flex;
 			flex-direction: column;
 			z-index: 1000;	/* Same with popup. */
-			border-radius: ${popupBorderRadius}px;
-			box-shadow: 0 0 ${popupShadowBlurRadius}px ${popupShadowColor};
-			background: ${popupBackgroundColor};
+			border-radius: var(--popup-border-radius);
+			box-shadow: 0 0 var(--popup-shadow-blur-radius) var(--popup-shadow-color);
+			background: var(--popup-background-color);
 			max-width: 100%;
 			max-height: 100%;
 			padding: 0.6em 1.2em;
@@ -45,7 +41,7 @@ export class Modal<E = {}> extends Component<E> {
 			flex: none;
 			font-size: 0.928em;
 			padding-bottom: 0.4em;
-			border-bottom: 1px solid ${textColor.alpha(0.8)};
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 80%, var(--background-color));
 			margin-bottom: 0.6em;
 		}
 
@@ -89,7 +85,7 @@ export class Modal<E = {}> extends Component<E> {
 			padding-top: 0.2em;
 			padding-bottom: 0.2em;
 		}
-	`}
+	`
 	
 	/** Mask element. */
 	protected maskEl!: HTMLElement

@@ -1,7 +1,6 @@
 import {DOMUtils, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
 import type {draggable} from '../draggable'
 import {droppable} from '../droppable'
-import {theme} from '../../style'
 
 
 /** 
@@ -101,7 +100,7 @@ export class DragDropMovement {
 		this.el.style.height = this.rect.height + 'px'
 		this.el.style.left = this.rect.left + 'px'
 		this.el.style.top = this.rect.top + 'px'
-		this.el.style.boxShadow = `0 0 ${theme.popupShadowBlurRadius}px #888`
+		this.el.style.boxShadow = `0 0 var(--popup-shadow-blur-radius) var(--popup-shadow-color)`
 		this.el.style.pointerEvents = 'none'
 		this.el.style.opacity = '1'
 		this.el.style.willChange = 'transform'

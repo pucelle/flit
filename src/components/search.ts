@@ -1,5 +1,5 @@
 import {Component, css, html} from '@pucelle/lupos.js'
-import {theme, ThemeSize} from '../style'
+import {ThemeSize} from '../style'
 import {DOMEvents, watch} from '@pucelle/ff'
 import {Icon} from './icon'
 
@@ -17,21 +17,18 @@ interface SearchEvents {
  */
 export class Search<E = {}> extends Component<SearchEvents & E> {
 
-	static style() {
-		let {borderColor, borderRadius, mainColor, focusBlurRadius, fieldBackgroundColor} = theme
-
-		return css`
+	static style = css`
 		.search{
 			display: inline-flex;
 			align-items: center;
-			background: ${fieldBackgroundColor};
-			border: 1px solid ${borderColor};
-			border-radius: ${borderRadius}px;
+			background: var(--field-background-color);
+			border: 1px solid var(--border-color);
+			border-radius: var(--border-radius);
 			padding: 0 0.2em;
 			
 			&:focus{
-				border-color: ${mainColor};
-				box-shadow: 0 0 ${focusBlurRadius}px ${mainColor.alpha(0.5)};
+				border-color: var(--primary-color);
+				box-shadow: 0 0 var(--focus-shadow-blur-radius) var(--primary-color);
 			}
 		}
 
@@ -46,23 +43,22 @@ export class Search<E = {}> extends Component<SearchEvents & E> {
 		}
 
 		.search-icon{
-			color: ${borderColor.toIntermediate(0.1)};
+			color: var(--border-color);
 		}
 
 		.search-clear-icon{
-			color: ${borderColor.toIntermediate(0.1)};
+			color: var(--border-color);
 			cursor: pointer;
 
 			&:hover{
-				color: ${mainColor};
+				color: var(--primary-color);
 			}
 
 			&:active{
 				transform: translateY(1px);
 			}
 		}
-		`
-	}
+	`
 
 
 	size: ThemeSize = 'default'

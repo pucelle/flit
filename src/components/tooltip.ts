@@ -69,7 +69,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 
 		.tooltip.type-error{
 			background: var(--error-color);
-			color: var(--background-color);
+			color: #fff;
 
 			.triangle path{
 				fill: var(--error-color);
