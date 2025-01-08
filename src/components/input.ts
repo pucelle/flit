@@ -100,7 +100,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 
 	/** Placeholder shows when input content is empty. */
 	placeholder: string = ''
-
+	
 	/** Current value. */
 	value: string = ''
 

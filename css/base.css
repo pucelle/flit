@@ -140,7 +140,6 @@ table{
 /* Theme variables. */
 :root{
 	color-scheme: light dark;
-	background: color-mix(in srgb, color percentage, color percentage);
 
 	--primary-color: ActiveText;
 	--background-color: light-dark(white, #333);

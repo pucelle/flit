@@ -35,24 +35,24 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 				color: var(--primary-color);
 				box-shadow: 0 0 0 1px var(--primary-color);
 			}
-		
-			&-icon{
-				position: relative;
-				border-radius: 50%;
-				margin-right: 0.2em;
-			}
-
+			
 			&.checked{
 				color: var(--primary-color);
 			}
-		
-			&-label{
-				flex: 1;
-				white-space: nowrap;
-				overflow: hidden;
-				text-overflow: ellipsis;
-				padding-right: 0.2em;
-			}
+		}
+
+		.radio-icon{
+			position: relative;
+			border-radius: 50%;
+			margin-right: 0.2em;
+		}
+
+		.radio-label{
+			flex: 1;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+			padding-right: 0.2em;
 		}
 	`
 

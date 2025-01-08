@@ -125,7 +125,7 @@ export const DefaultPopupOptions: PopupOptions = {
 	followEvents: false, 
 	trigger: 'hover',
 	showDelay: 0,
-	hideDelay: 200,
+	hideDelay: 0,
 	transition: fade(),
 	showImmediately: false,
 	autoFocus: false,

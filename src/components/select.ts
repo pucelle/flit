@@ -210,6 +210,7 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 			return html`
 				<input type="text" autofocus
 					class="select-input"
+					autocomplete="chrome-off"
 					:ref=${this.inputEl}
 					.value=${this.inputtedText}
 					.placeholder=${this.placeholder}

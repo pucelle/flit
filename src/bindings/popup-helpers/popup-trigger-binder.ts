@@ -5,7 +5,7 @@ import {DOMEvents, EventFirer, MouseLeaveControl} from '@pucelle/ff'
  * Different trigger action types.
  * `none` means can only be triggered manually.
  */
-export type TriggerType = 'hover' | 'click' | 'focus' | 'contextmenu' | 'none'
+export type TriggerType = 'hover' | 'click' | 'mousedown' | 'focus' | 'contextmenu' | 'none'
 
 interface PopupTriggerEvents {
 
@@ -61,7 +61,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 		// If has no mouse, uses click event instead.
 		if (trigger === 'hover' && !DOMEvents.havePointer()) {
-			trigger = 'click'
+			trigger = 'mousedown'
 		}
 
 		return trigger
@@ -69,17 +69,14 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 	/** Bind enter events */
 	bindEnter() {
-		if (this.trigger === 'click') {
-			DOMEvents.on(this.el, this.trigger, this.onClickEl, this)
-		}
-		else if (this.trigger === 'contextmenu') {
-			DOMEvents.on(this.el, this.trigger, this.onContextMenu, this)
+		if (this.trigger === 'click' || this.trigger === 'mousedown' || this.trigger === 'contextmenu') {
+			DOMEvents.on(this.el, 'click', this.triggerWithoutDelay, this)
 		}
 		else if (this.trigger === 'hover') {
-			DOMEvents.on(this.el, 'mouseenter', this.onMouseEnterOrFocusEl, this)
+			DOMEvents.on(this.el, 'mouseenter', this.triggerWithDelay, this)
 		}
 		else if (this.trigger === 'focus') {
-			DOMEvents.on(this.el, 'focus', this.onMouseEnterOrFocusEl, this)
+			DOMEvents.on(this.el, 'focus', this.triggerWithDelay, this)
 
 			if (this.el.contains(document.activeElement)) {
 				this.fire('will-show')
@@ -95,45 +92,35 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 			return
 		}
 
-		if (this.trigger === 'click') {
-			DOMEvents.off(this.el, this.trigger, this.onClickEl, this)
-		}
-		else if (this.trigger === 'contextmenu') {
-			DOMEvents.off(this.el, this.trigger, this.onContextMenu, this)
+		if (this.trigger === 'click' || this.trigger === 'mousedown' || this.trigger === 'contextmenu') {
+			DOMEvents.off(this.el, this.trigger, this.triggerWithoutDelay, this)
 		}
 		else if (this.trigger === 'hover') {
-			DOMEvents.off(this.el, 'mouseenter', this.onMouseEnterOrFocusEl, this)
+			DOMEvents.off(this.el, 'mouseenter', this.triggerWithDelay, this)
 		}
 		else if (this.trigger === 'focus') {
-			DOMEvents.off(this.el, 'focus', this.onMouseEnterOrFocusEl, this)
+			DOMEvents.off(this.el, 'focus', this.triggerWithDelay, this)
 		}
 
 		this.bound &= ~BoundMask.Enter
 	}
 
-	private onClickEl(e: Event) {
+	private triggerWithoutDelay(e: Event) {
 		e.preventDefault()
 		e.stopPropagation()
 		this.latestTriggerEvent = e as MouseEvent
 		this.toggleShowHide()
 	}
 
-	private onContextMenu(e: Event) {
-		e.preventDefault()
+	private triggerWithDelay(e: Event) {
 		e.stopPropagation()
 		this.latestTriggerEvent = e as MouseEvent
-		this.toggleShowHide()
+		this.fire('will-show')
 	}
 
 	/** Toggle opened state and show or hide popup immediately. */
 	private toggleShowHide() {
 		this.fire('toggle-show-hide')
-	}
-
-	private onMouseEnterOrFocusEl(e: Event) {
-		this.latestTriggerEvent = e as MouseEvent
-		e.stopPropagation()
-		this.fire('will-show')
 	}
 
 	/** Bind events to handle canceling show before popup showed. */
