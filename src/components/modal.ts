@@ -1,4 +1,4 @@
-import {css, html, Component} from '@pucelle/lupos.js'
+import {css, html, Component, RenderResult} from '@pucelle/lupos.js'
 import {DOMEvents, AnchorAligner, fade, untilUpdateComplete} from '@pucelle/ff'
 import {Icon} from './icon'
 
@@ -112,9 +112,7 @@ export class Modal<E = {}> extends Component<E> {
 					<div class="modal-title">${this.title}</div>
 
 					<lu:if ${this.slotElements.action}>
-						<div class="modal-actions">
-							<slot name="action" />
-						</div>
+						${this.renderAction()}
 					</lu:if>
 
 					<lu:if ${!this.slotElements.action}>
@@ -124,10 +122,26 @@ export class Modal<E = {}> extends Component<E> {
 					</lu:if>
 				</div>
 
-				<div class="modal-content">
-					<slot />
-				</div>
+				${this.renderContent()}
 			</template>
+		`
+	}
+
+	/** Can be overwritten. */
+	protected renderAction(): RenderResult {
+		return html`
+			<div class="modal-actions">
+				<slot name="action" />
+			</div>
+		`
+	}
+
+	/** Can be overwritten. */
+	protected renderContent(): RenderResult {
+		return html`
+			<div class="modal-content">
+				<slot />
+			</div>
 		`
 	}
 

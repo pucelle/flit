@@ -27,7 +27,7 @@ export class Navigation<T> extends List<T> {
 	/** Navigation title. */
 	title: string = ''
 
-	render() {
+	protected render() {
 		return html`
 		<template class="list navigation">
 			<lu:if ${this.title}>

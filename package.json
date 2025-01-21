@@ -13,8 +13,8 @@
 	"types": "out/index.d.ts",
 	"sideEffects": false,
 	"scripts": {
-		"build": "luc",
-		"watch": "luc -w",
+		"build": "luc -e",
+		"watch": "luc -e -w",
 		"build-docs": "cd docs && luc",
 		"watch-docs": "cd docs && luc -w",
 		"start-docs": "webpack serve",

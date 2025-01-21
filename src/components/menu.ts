@@ -50,13 +50,13 @@ export class Menu<E = {}> extends Popup<E> {
 
 	protected render() {
 		return html`
-		<template class="popup menu size-${this.size}">
-			<lu:if ${this.triangle}>
-				<Triangle class="menu-triangle" .direction=${this.triangleDirection} />
-			</lu:if>
-			${this.renderHead()}
-			<slot />
-		</template>
+			<template class="popup menu size-${this.size}">
+				<lu:if ${this.triangle}>
+					<Triangle class="menu-triangle" .direction=${this.triangleDirection} />
+				</lu:if>
+				${this.renderHead()}
+				<slot />
+			</template>
 		`
 	}
 

@@ -137,7 +137,7 @@ table{
 
 
 
-/* Theme variables. */
+/* Theme variables. see https://css-tricks.com/come-to-the-light-dark-side/ */
 :root{
 	color-scheme: light dark;
 
