@@ -8,13 +8,13 @@ import {Icon} from './icon'
 import {popup} from '../bindings'
 
 
-interface SelectEvents<T> {
+interface SelectEvents<T, M extends boolean> {
 
 	/** 
 	 * Fire after selected value changed.
 	 * Only user interaction can cause `change` event get triggered.
 	 */
-	change: (value: T[]) => void
+	change: (value: M extends true ? T[] : T) => void
 }
 
 
@@ -26,7 +26,7 @@ interface SelectEvents<T> {
  * 
  * `<Select>` doesn't support custom item renderer, you may extend it to a new class to implement.
  */
-export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
+export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown<E & SelectEvents<T, M>> {
 	
 	static style = css`
 		.select{
@@ -117,7 +117,7 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 	 * Whether can select multiple items.
 	 * Default value is `false`.
 	 */
-	multiple: boolean = false
+	multiple: M = false as M
 
 	/** Whether can input to search from all option text. */
 	searchable: boolean = false
@@ -129,7 +129,7 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 	data: ListItem<T>[] = []
 	
 	/** Current selected value or values. */
-	value: T[] = []
+	value: M extends true ? T[] | null : T | null = null
 
 	/** 
 	 * Whether close pop-up content after selected any item.
@@ -257,7 +257,19 @@ export class Select<T = any, E = {}> extends Dropdown<E & SelectEvents<T>> {
 
 	/** Render text display to represent currently selected. */
 	protected renderDisplay(): string | TemplateResult[] | null {
-		let filteredData = this.data.filter(item => this.value.includes(item.value))
+		let filteredData: ListItem<T>[] = []
+
+		if (this.multiple) {
+			if (Array.isArray(this.value)) {
+				filteredData = this.data.filter(item => (this.value as T[]).includes(item.value))
+			}
+		}
+		else {
+			if (this.value !== null) {
+				filteredData = this.data.filter(item => item.value === this.value)
+			}
+		}
+
 		let displays = filteredData.map(item => item.text)
 		if (displays.length === 0) {
 			return null

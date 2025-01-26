@@ -6,7 +6,11 @@ import {Icon} from './icon'
 import {tooltip} from '../bindings'
 
 
-/** Base type of list item. */
+/** 
+ * Base type of list item.
+ * If data struct you have is absolutely different with this,
+ * you may declare a class to implement this.
+ */
 export type ListItem<T = any> = {
 
 	/** Unique value to identify current item. */

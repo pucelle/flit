@@ -11,7 +11,7 @@
 html{
 	height: 100%;
 	tab-size: 4;
-	font-size: 14px;
+	font-size: var(--text-size);
 	line-height: 1.6;
 
 	/** Not adjust character width. */

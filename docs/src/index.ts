@@ -371,7 +371,7 @@ class Preview extends Component {
 						<header>Single Select</header>
 						<Select style="width: 100%; margin: 8px 0;"
 							.data=${[...range(1, 11)].map(value => ({value, text: 'Option ' + value}))}
-							.value=${[1]}
+							.value=${1}
 						/>
 					</Col>
 
@@ -389,7 +389,7 @@ class Preview extends Component {
 						<Select style="width: 100%; margin: 8px 0;"
 							.searchable
 							.data=${[...range(1, 11)].map(value => ({value, text: 'Option ' + value}))}
-							.value=${[1]}
+							.value=${1}
 						/>
 					</Col>
 				</Row>
@@ -1183,11 +1183,11 @@ class MainColorSelect extends Select<string> {
 		{value: '#888888', text: html`<div style="color: #888888;">Grey</div>`},
 	]
 
-	value: string[] = ['ActiveText']
+	value: string = 'ActiveText'
 
 	@watch('value')
-	protected onValueChange(value: string[]) {
-		document.documentElement.style.setProperty('--primary-color', value[0])
+	protected onValueChange(value: string) {
+		document.documentElement.style.setProperty('--primary-color', value)
 	}
 }
 

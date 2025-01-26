@@ -178,9 +178,9 @@ export class Modal<E = {}> extends Component<E> {
 	}
 
 	/**
-	 * To show the modal, you may `renderComponent` and then call `show()` or append to `body`.
-	 * If you want render modal as a child element  and append into document automatically,
-	 * just call `show` in `onConnected`.
+	 * To show the modal immediately.
+	 * You may also instantiate and append to `body` if you want
+	 * to render `<Modal>` as a child content.
 	 */ 
 	show() {
 		if (this.opened) {
