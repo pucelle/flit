@@ -219,7 +219,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 */
 	itemRenderer: ((item: ListItem<T>) => RenderResult | string | number) | null = null
 
-	/** Indicates current select values. */
+	/** Indicates currently selected values. */
 	selected: T[] = []
 
 	/** Currently expanded items. */

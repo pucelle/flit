@@ -77,12 +77,13 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	/** Update after data change. */
 	update() {
 		this.renderer!.update()
+		this.needsUpdate = false
 	}
 
 	/** Update live data by new indices. */
 	protected updateLiveData() {
 
-		// May update rendered data several times of each enqueuing.
+		// May update rendered data several times of each time partial renderer updating.
 		this.needsUpdate = true
 
 		super.update()

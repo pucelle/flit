@@ -246,7 +246,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					.mode="selection"
 					.selectable
 					.data=${data}
-					.selected=${this.value}
+					.selected=${this.multiple ? this.value : this.value === null ? [] : [this.value]}
 					.multipleSelect=${this.multiple}
 					.keyComeFrom=${this.inputEl}
 					@select=${this.onSelected}
@@ -309,7 +309,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	}
 
 	protected onSelected(this: Select, selected: T[]) {
-		this.value = selected
+		this.value = this.multiple ? selected : selected[0] ?? null
 
 		let hideAfterSelected = this.hideAfterSelected ?? !this.multiple
 		if (hideAfterSelected) {

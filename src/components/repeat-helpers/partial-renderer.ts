@@ -213,11 +213,9 @@ export class PartialRenderer {
 		let oldStartIndex = this.startIndex
 		let oldAlignDirection = this.alignDirection
 
-		// Update indices only if exceeded range.
-		if (this.endIndex > this.dataCount) {
-			this.setIndices(this.startIndex)
-		}
-		
+		// Required, may data count increase or decrease.
+		this.setIndices(this.startIndex)
+
 		this.setAlignDirection('start')
 		this.updateRendering()
 		
@@ -300,7 +298,7 @@ export class PartialRenderer {
 	 * No need to update when scrolling up.
 	 */
 	private updatePlaceholderSizeProgressively() {
-		let shouldUpdate = this.measurement.shouldUpdatePlaceholderSize(this.endIndex)
+		let shouldUpdate = this.measurement.shouldUpdatePlaceholderSize(this.endIndex, this.dataCount)
 		if (!shouldUpdate) {
 			return
 		}
@@ -320,15 +318,15 @@ export class PartialRenderer {
 	 * and update if can't, and will also persist content continuous if possible.
 	 */
 	async updateCoverage() {
-		let completeRender = await this.renderQueue.request()
 
-		
 		// Reach both start and end edge.
 		if (this.startIndex === 0 && this.endIndex === this.dataCount) {
 			return
 		}
 
 
+		let completeRender = await this.renderQueue.request()
+		
 		//// Can only read dom properties now.
 
 		let unCoveredDirection = this.measurement.checkUnCoveredDirection(this.startIndex, this.endIndex, this.dataCount)

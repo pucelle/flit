@@ -29,6 +29,9 @@ export class PartialRendererMeasurement {
 	/** Latest average item size when last time measure placeholder. */
 	private latestAverageItemSizeWhenPlaceholderMeasuring: number = -1
 
+	/** Latest data count when last time measure placeholder. */
+	private latestDataCountWhenPlaceholderMeasuring: number = -1
+
 	/** 
 	 * Latest scroller size.
 	 * Readonly outside.
@@ -112,7 +115,11 @@ export class PartialRendererMeasurement {
 	 * When scrolling down, and will render more items in the end, need to update.
 	 * When scrolling up, no need to update.
 	 */
-	shouldUpdatePlaceholderSize(endIndex: number): boolean {
+	shouldUpdatePlaceholderSize(endIndex: number, dataCount: number): boolean {
+		if (dataCount !== this.latestDataCountWhenPlaceholderMeasuring) {
+			return true
+		}
+
 		let expanded = endIndex > this.latestEndIndexWhenPlaceholderMeasuring
 		let sizeChangedMuch = Math.abs(this.getAverageSize() - this.latestAverageItemSizeWhenPlaceholderMeasuring) > 1
 
@@ -137,6 +144,7 @@ export class PartialRendererMeasurement {
 
 		this.latestEndIndexWhenPlaceholderMeasuring = endIndex
 		this.latestAverageItemSizeWhenPlaceholderMeasuring = this.getAverageSize()
+		this.latestDataCountWhenPlaceholderMeasuring = dataCount
 
 		return placeholderSize
 	}

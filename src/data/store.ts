@@ -28,7 +28,7 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 	orderDirection: ListUtils.OrderDirection | null = null
 	data: T[] = []
 
-	constructor(options: Partial<StoreOptions<T>>) {
+	constructor(options: Partial<StoreOptions<T>> = {}) {
 		Object.assign(this, options)
 	}
 
