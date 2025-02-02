@@ -157,8 +157,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			font-size: 0.928em;
 
 			.list-item{
-				padding-top: 0.2em;
-				padding-bottom: 0.2em;
+				padding-top: 0.3em;
+				padding-bottom: 0.3em;
 				border-top: none;
 				line-height: calc(1lh - 2px);
 			}

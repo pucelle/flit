@@ -53,7 +53,12 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 		}
 		
 		if (this.listOrder && this.orderDirection !== null) {
-			this.listOrder.sort(data, this.orderDirection)
+			if (this.filter) {
+				this.listOrder.sort(data, this.orderDirection)
+			}
+			else {
+				data = this.listOrder.toSorted(data, this.orderDirection)
+			}
 		}
 
 		return data

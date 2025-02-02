@@ -529,7 +529,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 			direction = descFirst ? 'desc' : 'asc'
 		}
 
-		this.orderName = columnName
+		this.orderName = direction === null ? null : columnName
 		this.orderDirection = direction
 
 		this.fire('order-change', this.orderName, this.orderDirection)
@@ -541,7 +541,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 	/** Order specified column with specified direction by column name. */
 	@effect
-	protected applyOrderProperties() {
+	protected applyOrderToStore() {
 		let column = this.columns.find((c, index) => this.getColumnName(c, index) === this.orderName)
 
 		if (this.store instanceof RemoteStore) {
