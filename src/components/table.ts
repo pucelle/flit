@@ -1,6 +1,6 @@
 import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {Store} from '../data'
-import {effect, LayoutWatcher, Observed, PerFrameTransitionEasingName, TransitionResult} from '@pucelle/ff'
+import {effect, LayoutWatcher, Observed, PerFrameTransitionEasingName, throttle, TransitionResult} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './live-repeat'
@@ -321,7 +321,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 	protected onCreated() {
 		super.onCreated()
-		this.sizeWatcher = new LayoutWatcher(this.el, 'size', this.onSizeChange, this)
+		this.sizeWatcher = new LayoutWatcher(this.el, 'size', throttle(this.onSizeChange.bind(this), 300))
 	}
 
 	protected onConnected() {
