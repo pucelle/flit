@@ -5,7 +5,7 @@ import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './live-repeat'
 import {Repeat} from './repeat'
-import {AsyncLiveRepeat} from './async-live-repeat'
+import {AsyncLiveRepeat} from './live-repeat-async'
 import {Icon} from './icon'
 
 
@@ -321,7 +321,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 	protected onCreated() {
 		super.onCreated()
-		this.sizeWatcher = new LayoutWatcher(this.el, 'size', throttle(this.onSizeChange.bind(this), 300))
+		this.sizeWatcher = new LayoutWatcher(this.el, 'size', throttle(this.onSizeChange.bind(this), 200))
 	}
 
 	protected onConnected() {
@@ -329,12 +329,12 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		this.sizeWatcher.watch()
 	}
 
-	protected onReady() {
-		this.initColumnResizer()
-	}
-
 	protected onWillDisconnect() {
 		this.sizeWatcher.unwatch()
+	}
+
+	protected onReady() {
+		this.initColumnResizer()
 	}
 
 	/** After element size change, update column widths. */
@@ -476,6 +476,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 		let tds = this.columns.map(column => {
 			let result = column.renderer ? column.renderer.call(this, item, index) : '\xa0'
+
 			return html`
 				<td class="table-cell"
 					:style.text-align=${column.align || ''}
