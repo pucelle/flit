@@ -192,7 +192,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		.table-row{
 			&:hover{
 				background: light-dark(
-					color-mix(in srgb, var(--primary-color) 2.5%, var(--background-color))
+					color-mix(in srgb, var(--primary-color) 2.5%, var(--background-color)),
 					color-mix(in srgb, var(--primary-color) 5%, var(--background-color))
 				);
 			}
@@ -209,7 +209,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		.table-cell{
 			vertical-align: middle;
 			padding: 0.4em 0.6em;
-			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 10%, var(--background-color));;
+			border-bottom: 1px solid color-mix(in srgb, var(--text-color) 5%, var(--background-color));;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;

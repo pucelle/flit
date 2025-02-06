@@ -342,6 +342,11 @@ export class PartialRenderer {
 		
 				this.setIndices(newStartIndex)
 
+				// Must have an already rendered item at start.
+				if (this.startIndex < oldStartIndex) {
+					this.startIndex = oldStartIndex
+				}
+
 				// Locate to the start position of the first element.
 				let elIndex = this.startIndex - oldStartIndex
 				let el = this.repeat.children[elIndex] as HTMLElement
@@ -352,10 +357,19 @@ export class PartialRenderer {
 			// Scrolling up.
 			else {
 				let oldStartIndex = this.startIndex
+				let oldEndIndex = this.endIndex
 				let newEndIndex = visibleIndex
 				let newStartIndex = this.startIndex - this.endIndex + newEndIndex
 
 				this.setIndices(newStartIndex)
+
+				// Must have an already rendered item at start.
+				if (this.endIndex < oldStartIndex + 1) {
+					this.endIndex = oldStartIndex + 1
+				}
+				else if (this.endIndex >= oldEndIndex) {
+					this.endIndex = oldEndIndex
+				}
 
 				// Locate to the end position of the last element.
 				let elIndex = this.endIndex - oldStartIndex - 1
