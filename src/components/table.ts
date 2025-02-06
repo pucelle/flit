@@ -191,7 +191,10 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 		.table-row{
 			&:hover{
-				background: color-mix(in srgb, var(--primary-color) 5%, var(--background-color));
+				background: light-dark(
+					color-mix(in srgb, var(--primary-color) 2.5%, var(--background-color))
+					color-mix(in srgb, var(--primary-color) 5%, var(--background-color))
+				);
 			}
 
 			&.selected{

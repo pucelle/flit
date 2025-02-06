@@ -73,7 +73,7 @@ export class PartialRendererMeasurement {
 
 	/** Get average item size. */
 	getAverageSize(): number {
-		return this.stat.getAverageSize()
+		return this.stat.getItemSize()
 	}
 
 	/** Whether have measured item size. */
