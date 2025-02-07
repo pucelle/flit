@@ -164,20 +164,21 @@ export class PartialRenderer {
 
 	/** Update from applying start index or updating data. */
 	async update() {
-		let completeRender = await this.renderQueue.request()
+		let completeRendering = await this.renderQueue.request()
 
 
 		//// Can only write dom properties now.
 
 		let hasMeasured = this.measurement.hasMeasuredItemSize()
+		let oldRenderedCount = this.endIndex - this.startIndex
 
 		// Adjust scroll position by specified indices.
 		if (this.needToApply) {
-			this.updateWithNewIndices(hasMeasured)
+			this.updateWithNewIndices(this.measurement.hasMeasuredItemSize())
 			this.needToApply = null
 		}
 
-		// Data changed, try persist indices, especially start index and scroll position.
+		// Data changed, try persist start index and scroll position.
 		else {
 			this.updateWithStartIndexPersist()
 		}
@@ -190,12 +191,15 @@ export class PartialRenderer {
 		//// Can only read dom properties now.
 
 		await untilUpdateComplete()
-		this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
-		completeRender()
+
+		let itemSizeChangedMuch = this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
+		completeRendering()
 
 
-		// Update again after known size.
-		if (!hasMeasured && this.measurement.hasMeasuredItemSize()) {
+		// If item size changed much, may cause can't fully cover.
+		// If rendered fewer items, may also cause.
+		let newRenderedCount = this.endIndex - this.startIndex
+		if (itemSizeChangedMuch || newRenderedCount < oldRenderedCount) {
 			this.updateCoverage()
 		}
 	}
@@ -325,7 +329,7 @@ export class PartialRenderer {
 		}
 
 
-		let completeRender = await this.renderQueue.request()
+		let completeRendering = await this.renderQueue.request()
 		
 		//// Can only read dom properties now.
 
@@ -342,16 +346,18 @@ export class PartialRenderer {
 		
 				this.setIndices(newStartIndex)
 
-				// Must have an already rendered item at start.
+				// Rendered item count changed much, not rendering progressively.
 				if (this.startIndex < oldStartIndex) {
-					this.startIndex = oldStartIndex
+					unCoveredDirection = 'reset'
 				}
 
 				// Locate to the start position of the first element.
-				let elIndex = this.startIndex - oldStartIndex
-				let el = this.repeat.children[elIndex] as HTMLElement
+				else {
+					let elIndex = this.startIndex - oldStartIndex
+					let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el)
+					position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el)
+				}
 			}
 
 			// Scrolling up.
@@ -363,19 +369,18 @@ export class PartialRenderer {
 
 				this.setIndices(newStartIndex)
 
-				// Must have an already rendered item at start.
-				if (this.endIndex < oldStartIndex + 1) {
-					this.endIndex = oldStartIndex + 1
-				}
-				else if (this.endIndex >= oldEndIndex) {
-					this.endIndex = oldEndIndex
+				// Rendered item count changed much, not rendering progressively.
+				if (this.endIndex < oldStartIndex + 1 || this.endIndex >= oldEndIndex) {
+					unCoveredDirection = 'break'
 				}
 
 				// Locate to the end position of the last element.
-				let elIndex = this.endIndex - oldStartIndex - 1
-				let el = this.repeat.children[elIndex] as HTMLElement
+				else {
+					let elIndex = this.endIndex - oldStartIndex - 1
+					let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el) + this.doa.getClientSize(el)
+					position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el) + this.doa.getClientSize(el)
+				}
 			}
 		}
 
@@ -394,6 +399,11 @@ export class PartialRenderer {
 			this.updateBySliderPosition(unCoveredDirection === 'end' ? 'start' : 'end', position!)
 		}
 
+		// Totally reset scroll position.
+		else if (unCoveredDirection === 'reset') {
+			this.updateByNewIndices()
+		}
+
 		this.updatePlaceholderSizeProgressively()
 
 
@@ -406,7 +416,7 @@ export class PartialRenderer {
 			this.checkEdgeCases()
 		}
 
-		completeRender()
+		completeRendering()
 	}
 
 	/** Locate start or end index at which the item is visible in viewport. */
@@ -444,6 +454,13 @@ export class PartialRenderer {
 		this.setAlignDirection(direction)
 		this.updateRendering()
 		this.setSliderPosition(position)
+	}
+
+	/** Reset scroll position by current indices. */
+	private updateByNewIndices() {
+		this.setAlignDirection('start')
+		this.updateRendering()
+		this.resetPositions(true)
 	}
 
 	/** After render complete, do more check for edge cases. */

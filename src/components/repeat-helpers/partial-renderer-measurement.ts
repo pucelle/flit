@@ -2,6 +2,9 @@ import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 
 
+type UncoveredDirection = 'start' | 'end' | 'break' | 'reset'
+
+
 /**
  * It help to do measurement for PartialRenderer,
  * and cache latest render result of a partial renderer.
@@ -121,9 +124,16 @@ export class PartialRendererMeasurement {
 		}
 
 		let expanded = endIndex > this.latestEndIndexWhenPlaceholderMeasuring
-		let sizeChangedMuch = Math.abs(this.getAverageSize() - this.latestAverageItemSizeWhenPlaceholderMeasuring) > 1
+		if (expanded) {
+			return true
+		}
 
-		return expanded && sizeChangedMuch
+		let sizeChangedMuch = Math.abs(this.getAverageSize() - this.latestAverageItemSizeWhenPlaceholderMeasuring) > 1
+		if (sizeChangedMuch) {
+			return true
+		}
+
+		return false
 	}
 
 	/** 
@@ -154,8 +164,11 @@ export class PartialRendererMeasurement {
 		this.cachedPlaceholderSize = size
 	}
 
-	/** Every time after render complete, do measurement.  */
-	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
+	/** 
+	 * Every time after render complete, do measurement.
+	 * Returns whether stat item size changed much.
+	 */
+	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end'): boolean {
 		let sliderSize = this.doa.getClientSize(this.slider)
 
 		if (alignDirection === 'start') {
@@ -165,11 +178,14 @@ export class PartialRendererMeasurement {
 			this.cachedSliderStartPosition = this.cachedSliderEndPosition - sliderSize
 		}
 
+		let oldItemSize = this.stat.getItemSize()
 		this.stat.update(endIndex - startIndex, sliderSize)
+
+		return Math.abs(this.stat.getItemSize() - oldItemSize) > 1
 	}
 
 	/** Check cover direction and decide where to render more contents. */
-	checkUnCoveredDirection(startIndex: number, endIndex: number, dataCount: number): 'start' | 'end' | 'break' | null {
+	checkUnCoveredDirection(startIndex: number, endIndex: number, dataCount: number): UncoveredDirection | null {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let scrolled = this.doa.getScrollPosition(this.scroller)
 		let sliderStart = this.cachedSliderStartPosition - scrolled
