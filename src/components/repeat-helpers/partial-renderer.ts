@@ -313,14 +313,15 @@ export class PartialRenderer {
 
 	/** Set placeholder size. */
 	private setPlaceholderSize(size: number, mustApply: boolean) {
+		this.measurement.cachePlaceholderSize(size)
 
 		// Changes few, no need to update.
-		if (!mustApply && Math.abs(size - this.measurement.cachedPlaceholderSize) < 5) {
+		if (!mustApply && Math.abs(size - this.measurement.cachedAppliedPlaceholderSize) < 5) {
 			return
 		}
 
 		this.doa.setSize(this.placeholder, size)
-		this.measurement.cachePlaceholderSize(size)
+		this.measurement.cacheAppliedPlaceholderSize(size)
 	}
 
 	/** 
