@@ -308,11 +308,17 @@ export class PartialRenderer {
 		}
 
 		let placeholderSize = this.measurement.calcPlaceholderSizeByIndices(this.startIndex, this.endIndex, this.dataCount, this.alignDirection)
-		this.setPlaceholderSize(placeholderSize)
+		this.setPlaceholderSize(placeholderSize, false)
 	}
 
 	/** Set placeholder size. */
-	private setPlaceholderSize(size: number) {
+	private setPlaceholderSize(size: number, mustApply: boolean) {
+
+		// Changes few, no need to update.
+		if (!mustApply && Math.abs(size - this.measurement.cachedPlaceholderSize) < 5) {
+			return
+		}
+
 		this.doa.setSize(this.placeholder, size)
 		this.measurement.cachePlaceholderSize(size)
 	}
@@ -488,14 +494,14 @@ export class PartialRenderer {
 			let moreSize = newPosition - this.measurement.cachedSliderStartPosition
 
 			this.scroller.scrollTop += moreSize
-			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize, true)
 			this.setAlignDirection('start')
 			this.setSliderPosition(newPosition)
 		}
 
 		// When reach end index but not scroll end.
 		else if (this.endIndex === this.dataCount) {
-			this.setPlaceholderSize(this.measurement.cachedSliderEndPosition)
+			this.setPlaceholderSize(this.measurement.cachedSliderEndPosition, true)
 		}
 
 		// When reach scroll end but not end index.
@@ -504,7 +510,7 @@ export class PartialRenderer {
 			&& this.scroller.scrollTop + this.scroller.clientHeight >= this.scroller.scrollHeight
 		) {
 			let moreSize = this.measurement.getAverageSize() * (this.dataCount - this.endIndex)
-			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize, true)
 		}
 	}
 }
