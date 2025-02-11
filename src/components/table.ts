@@ -65,6 +65,9 @@ export interface TableColumn<T = any> {
 	 * you must specify `text-align` for cells manually.
 	 */
 	align?: 'left' | 'right' | 'center'
+
+	/** Class name that will apply to table cell. */
+	class?: string
 }
 
 
@@ -392,32 +395,33 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		let flexAlign = column.align === 'right' ? 'flex-end' : column.align === 'center' ? 'center' : ''
 
 		return html`
-		<div class="table-column"
-			:class.table-column-ordered=${hasOrdered}
-			@click=${(e: MouseEvent) => this.doOrdering(e, index)}
-		>
-			<div class="table-column-left"
-				:style.justify-content=${flexAlign}
+			<div class="table-column"
+				:class.table-column-ordered=${hasOrdered}
+				@click=${(e: MouseEvent) => this.doOrdering(e, index)}
 			>
-				<div class="table-column-title">
-					${column.title}
+				<div class="table-column-left"
+					:style.justify-content=${flexAlign}
+				>
+					<div class="table-column-title">
+						${column.title}
+					</div>
+
+					<lu:if ${column.orderBy}>
+						<div class="table-order"
+							:class.current=${hasOrdered && this.orderDirection !== null}
+						>
+							<Icon .type=${this.renderOrderDirectionIcon(orderName!)} .size="inherit" />
+						</div>
+					</lu:if>
 				</div>
 
-				<lu:if ${column.orderBy}>
-					<div class="table-order"
-						:class.current=${hasOrdered && this.orderDirection !== null}
-					>
-						<Icon .type=${this.renderOrderDirectionIcon(orderName!)} .size="inherit" />
-					</div>
+				<lu:if ${this.resizable && index < this.columns.length - 1}>
+					<div class="table-resizer"
+						@mousedown=${(e: MouseEvent) => this.columnResizer!.onStartResize(e, index)}
+					/>
 				</lu:if>
 			</div>
-
-			<lu:if ${this.resizable && index < this.columns.length - 1}>
-				<div class="table-resizer"
-					@mousedown=${(e: MouseEvent) => this.columnResizer!.onStartResize(e, index)}
-				/>
-			</lu:if>
-		</div>`
+		`
 	}
 
 	/** Render order icon to indicate order direction. */
@@ -482,6 +486,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 			return html`
 				<td class="table-cell"
+					:class=${column.class}
 					:style.text-align=${column.align || ''}
 				>
 					${result}

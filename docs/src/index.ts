@@ -997,6 +997,7 @@ class Preview extends Component {
 					.columns=${[
 						{
 							title: 'Index',
+							flex: 1,
 							renderer: (_item: {id: number, value: number}, index: number) => {
 								return index
 							},
@@ -1004,16 +1005,19 @@ class Preview extends Component {
 						{
 							title: 'ID',
 							orderBy: 'id',
+							flex: 1,
 							renderer: (item) => item.id,
 						},
 						{
 							title: 'Name',
 							orderBy: 'id',
+							flex: 1,
 							renderer: (item) => `Name ${item.id}`,
 						},
 						{
 							title: 'Random Value',
 							orderBy: 'value',
+							flex: 1,
 							renderer: (item) => item.value,
 							align: 'right',
 						}
@@ -1035,6 +1039,7 @@ class Preview extends Component {
 					.columns=${[
 						{
 							title: 'Index',
+							flex: 1,
 							renderer: (_item: {id: number, value: number}, index: number) => {
 								return index
 							},
@@ -1042,16 +1047,19 @@ class Preview extends Component {
 						{
 							title: 'ID',
 							orderBy: 'id',
+							flex: 1,
 							renderer: (item) => item.id,
 						},
 						{
 							title: 'Name',
 							orderBy: 'id',
+							flex: 1,
 							renderer: (item) => `Name ${item.id}`,
 						},
 						{
 							title: 'Random Value',
 							orderBy: 'value',
+							flex: 1,
 							renderer: (item) => item.value,
 							align: 'right',
 						}

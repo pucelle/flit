@@ -166,22 +166,36 @@ export class ColumnWidthResizer {
 			}
 		}
 
+		let diff = 0
+		
+		for (let i = 0; i < widths.length - 1; i++) {
+			let width = widths[i]
+			let roundedWidth = Math.round(width)
+
+			widths[i] = roundedWidth
+			diff += roundedWidth - width
+		}
+
+		widths[widths.length - 1] -= diff
+
 		return widths
 	}
 
 	private setColumnWidths(widths: number[]) {
 		let totalWidth = ValueListUtils.sum(widths)
 		
-		for (let index = 0; index < widths.length; index++) {
-			let isLastColumn = index === widths.length - 1
-			let percent = widths[index] / totalWidth
-			let col = this.colgroup.children[index] as HTMLElement
+		// Leave last column not set width.
+		for (let i = 0; i < widths.length - 1; i++) {
+			let width = widths[i]
+			let percent = width / totalWidth
+			let col = this.colgroup.children[i] as HTMLElement
+			let headCol = this.columnContainer.children[i] as HTMLElement
 
-			col.style.width = percent * 100 + '%'
-
-			if (!isLastColumn) {
-				let col = this.columnContainer.children[index] as HTMLElement
-				col.style.width = percent * 100 + '%'
+			if (this.columns[i].flex) {
+				headCol.style.width = col.style.width = percent * 100 + '%'
+			}
+			else {
+				headCol.style.width = col.style.width = width + 'px'
 			}
 		}
 	}

@@ -2,7 +2,7 @@
 
 
 module.exports = {
-	entry: 'docs/out/index.js',
+	entry: './docs/out/index.js',
 	mode: 'development',
 	output: {
 		path: __dirname,

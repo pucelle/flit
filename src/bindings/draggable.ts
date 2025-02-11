@@ -63,7 +63,7 @@ export class draggable<T = any> implements Binding, Part {
 	}
 
 	beforeDisconnectCallback(param: PartCallbackParameterMask | 0) {
-		if ((param & PartCallbackParameterMask.IsolateFromContext) === 0) {
+		if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) === 0) {
 			return
 		}
 

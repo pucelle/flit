@@ -101,7 +101,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		super.beforeDisconnectCallback(param)
 
 		// If remove current component from parent, remove placeholder also.
-		if ((param & PartCallbackParameterMask.IsolateFromContext) > 0) {
+		if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) > 0) {
 			this.placeholder!.remove()
 			this.placeholder = null
 			this.renderer = null
