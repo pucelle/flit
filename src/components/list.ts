@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, Observed, fold, effect} from '@pucelle/ff'
+import {DOMEvents, EventKeys, Observed, fold, effect, DOMScroll, PerFrameTransitionEasingName} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip} from '../bindings'
@@ -301,7 +301,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			</div>
 
 			<lu:if ${item.children && expanded}>
-				<div class="list-subsection" :transition.immediate=${fold()}>
+				<div class="list-subsection" :transition=${fold()}>
 					${this.renderItems(item.children!)}
 				</div>
 			</>
@@ -382,7 +382,39 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		this.fire('click', item.value)
 	}
 
-	/** Expand item, and all of it's ancestors recursively. */
+	/** 
+	 * If get contained in a scroller, scroll first selected item to topmost or leftmost of scroll viewport.
+	 * Returns a promise which will be resolved after scrolling end,
+	 * and resolve by whether scrolled.
+	 */
+	async scrollSelectedToStart(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
+		let el = this.el.querySelector('.list-item.navigated, .list-item.selected') as HTMLElement | null
+		if (!el) {
+			return false
+		}
+
+		return DOMScroll.scrollToStart(el, null, gap, duration, easing)
+	}
+
+	/** 
+	 * If get contained in a scroller, scroll to view first selected item.
+	 * Returns a promise which will be resolved after scrolling end,
+	 * and resolve by whether scrolled.
+	 */
+	async scrollSelectedToView(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
+		let el = this.el.querySelector('.list-item.navigated, .list-item.selected') as HTMLElement | null
+		if (!el) {
+			return false
+		}
+
+		return DOMScroll.scrollToView(el, null, gap, duration, easing)
+	}
+
+	/** 
+	 * Expand item, and all of it's ancestors recursively.
+	 * No need to wait for render complete.
+	 * Note this method will walk all data items recursively.
+	 */
 	expandDeeply(value: T) {
 		this.applyExpandedRecursively(this.data, value)
 	}
