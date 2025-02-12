@@ -16,8 +16,8 @@ const DefaultContextMenuOptions: Partial<PopupOptions> = {
  * `:contextmenu` binding pops-up a context menu when right click bound element,
  * the context menu will be aligned to the position where you clicked.
  * 
- * `:contextmenu=${() => html`<ContextMenu>`}`
  * `:contextmenu=${html`<ContextMenu>`}`
+ * `:contextmenu=${() => html`<ContextMenu>`}, ?{...}`
  */
 export class contextmenu extends popup {
 

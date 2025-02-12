@@ -70,7 +70,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	/** Bind enter events */
 	bindEnter() {
 		if (this.trigger === 'click' || this.trigger === 'mousedown' || this.trigger === 'contextmenu') {
-			DOMEvents.on(this.el, 'click', this.triggerWithoutDelay, this)
+			DOMEvents.on(this.el, this.trigger, this.triggerWithoutDelay, this)
 		}
 		else if (this.trigger === 'hover') {
 			DOMEvents.on(this.el, 'mouseenter', this.triggerWithDelay, this)

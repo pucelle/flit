@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AlignerOptions, EventFirer, TransitionResult, fade, Transition, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -8,7 +8,7 @@ export {TriggerType}
 
 
 /** Options for `:popup` */
-export interface PopupOptions extends AlignerOptions {
+export interface PopupOptions extends AnchorAlignerOptions {
 
 	/** Whether popup content will be aligned to follow trigger events.
 	 * Default value is `false`.
@@ -539,7 +539,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Get options for Aligner. */
-	protected getAlignerOptions(): AlignerOptions {
+	protected getAlignerOptions(): AnchorAlignerOptions {
 		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
 
 		return {
