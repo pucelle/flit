@@ -160,6 +160,20 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.updateCoverage()
 	}
 
+	/** 
+	 * Set start visible index of rendered items.
+	 * The data item of this index will be renderer at the topmost or leftmost of the viewport.
+	 * You can safely call this before render complete, no additional rendering will cost.
+	 */
+	async setStartVisibleIndex(startIndex: number) {
+		this.renderer!.setRenderPart(startIndex)
+		await untilUpdateComplete()
+
+		if (startIndex > this.startIndex && startIndex < this.endIndex) {
+			super.scrollIndexToStart(startIndex - this.startIndex)
+		}
+	}
+
 	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		// No need to worry about coverage, set scroll position cause scroll event emitted.
 

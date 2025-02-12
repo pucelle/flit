@@ -146,7 +146,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 			flex: none;
 			display: flex;
 			visibility: hidden;
-			margin-right: -0.5em;
+			margin-right: -1.2em;
 
 			&.current{
 				visibility: visible;
@@ -156,7 +156,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		.table-resizer{
 			position: relative;
 			z-index: 1;
-			width: 17px;
+			width: 1.2em;
 			margin-left: auto;
 			margin-right: -1.2em;
 			cursor: e-resize;
@@ -566,6 +566,19 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	/** Locate start or end index at which the item is visible in viewport. */
 	locateVisibleIndex(direction: 'start' | 'end'): number {
 		return this.repeatComponent.locateVisibleIndex(direction)
+	}
+
+	/** 
+	 * Set start visible index of rendered items.
+	 * The data item of this index will be renderer at the topmost or leftmost of the viewport.
+	 * You can safely call this before render complete, no additional rendering will cost.
+	 */
+	setStartVisibleIndex(startIndex: number) {
+		if (!this.live) {
+			throw new Error(`"setStartIndex(...)" only works in "live" mode.`)
+		}
+
+		(this.repeatComponent as LiveRepeat).setStartVisibleIndex(startIndex)
 	}
 
 	/** 

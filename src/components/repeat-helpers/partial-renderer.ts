@@ -134,7 +134,7 @@ export class PartialRenderer {
 	 * Set `alignDirection` to `end` will cause item at `endIndex`
 	 * been located at the end edge of scroll viewport.
 	 */
-	setRenderPart(startIndex: number, endIndex: number | null, alignDirection: 'start' | 'end' | null = null) {
+	setRenderPart(startIndex: number, endIndex: number | null = null, alignDirection: 'start' | 'end' | null = null) {
 		this.needToApply = {
 			startIndex,
 			endIndex: endIndex,

@@ -14,7 +14,7 @@ import {tooltip} from '../bindings'
 export type ListItem<T = any> = {
 
 	/** Unique value to identify current item. */
-	value: any
+	value: T
 
 	/** List item content, can be a pre-generated template result. */
 	text?: string | TemplateResult
@@ -379,7 +379,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			this.fire('select', this.selected)
 		}
 
-		this.fire('click', item)
+		this.fire('click', item.value)
 	}
 
 	/** Expand item, and all of it's ancestors recursively. */
