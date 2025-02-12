@@ -1,4 +1,4 @@
-import {DOMScroll, PerFrameTransitionEasingName, computed, untilUpdateComplete} from '@pucelle/ff'
+import {DOMScroll, PerFrameTransitionEasingName, computed} from '@pucelle/ff'
 import {Component, html, RenderResult} from '@pucelle/lupos.js'
 import {locateVisibleIndex} from './repeat-helpers/visible-index-locator'
 import {DirectionalOverflowAccessor} from './repeat-helpers/directional-overflow-accessor'
@@ -86,8 +86,6 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 * and `renderFn` must render an unique element.
 	 */
 	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		await untilUpdateComplete()
-
 		let scroller = this.el.parentElement!
 		if (!scroller) {
 			return false
@@ -115,8 +113,6 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 * and `renderFn` must render an unique element.
 	 */
 	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		await untilUpdateComplete()
-
 		let scroller = this.el.parentElement!
 		if (!scroller) {
 			return false
