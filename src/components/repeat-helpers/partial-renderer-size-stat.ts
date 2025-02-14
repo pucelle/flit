@@ -1,11 +1,19 @@
+import {RecursiveAverage} from '@pucelle/ff'
+
+
 export class PartialRendererSizeStat {
 
+
 	/** Latest rendered item size. */
-	private itemSize: number = 0
+	private latestSize: number = 0
+
+	/** To do average stat. */
+	private averageStat: RecursiveAverage = new RecursiveAverage()
 
 	/** Clear all stat data. */
 	reset() {
-		this.itemSize = 0
+		this.averageStat = new RecursiveAverage()
+		this.latestSize = 0
 	}
 
 	/** After every time rendered, update indices and sizes. */
@@ -15,28 +23,17 @@ export class PartialRendererSizeStat {
 		}
 
 		let size = renderedSize / count
-		this.itemSize = size
+		this.latestSize = size
+		this.averageStat.update(size)
+	}
+
+	/** Get latest item size. */
+	getLatestSize(): number {
+		return this.latestSize
 	}
 
 	/** Get average item size. */
-	getItemSize(): number {
-		return this.itemSize
-	}
-
-	/** Get a safe count of items to render. */
-	getSafeRenderCount(coverageRate: number, scrollerSize: number): number {
-		if (scrollerSize === 0) {
-			return 1
-		}
-
-		if (this.itemSize === 0) {
-			return 1
-		}
-
-		// At least render additional 200px.
-		// Because normally can scroll twice per frame.
-		let totalSize = Math.max(scrollerSize * coverageRate, scrollerSize + 200)
-
-		return Math.ceil(totalSize / this.itemSize)
+	getAverageSize(): number {
+		return this.averageStat.average
 	}
 }

@@ -2,7 +2,13 @@ import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 
 
-type UncoveredDirection = 'start' | 'end' | 'break' | 'reset'
+export type UnCoveredSituation =
+	'start'				// Not fully covered at start
+	| 'end'				// Not fully covered at end
+	| 'quarterly-start'	// Has less than 1/4 rest at start
+	| 'quarterly-end'	// Has less than 1/4 rest at end
+	| 'break'			// Have no intersection, ust re-render totally by current scroll position.
+	| 'reset'			// Failed to do continuous updating, must re-render totally by current indices.
 
 
 /**
@@ -35,11 +41,14 @@ export class PartialRendererMeasurement {
 	/** Latest data count when last time measure placeholder. */
 	private latestDataCountWhenPlaceholderMeasuring: number = -1
 
+	/** Whether item size should be balanced. */
+	private itemSizeBalanced: boolean = true
+
 	/** 
 	 * Latest scroller size.
 	 * Readonly outside.
 	 */
-	scrollerSize: number = 0
+	cachedScrollerSize: number = 0
 
 	/** 
 	 * Latest placeholder size.
@@ -77,35 +86,50 @@ export class PartialRendererMeasurement {
 
 	/** Read new scroller size. */
 	readScrollerSize() {
-		this.scrollerSize = this.doa.getClientSize(this.scroller)
+		this.cachedScrollerSize = this.doa.getClientSize(this.scroller)
 	}
 
-	/** Get average item size. */
-	getAverageSize(): number {
-		return this.stat.getItemSize()
+	/** Set `itemSizeBalanced` property. */
+	setItemSizeBalanced(itemSizeBalanced: boolean) {
+		this.itemSizeBalanced = itemSizeBalanced
+	}
+
+	/** Get item size. */
+	getItemSize(): number {
+		return this.itemSizeBalanced ? this.stat.getLatestSize() : this.stat.getAverageSize()
 	}
 
 	/** Whether have measured item size. */
 	hasMeasuredItemSize(): boolean {
-		return this.getAverageSize() > 0
+		return this.getItemSize() > 0
 	}
 
-	/** Get safe render count of items to render. */
-	getSafeRenderCount(coverageRate: number): number {
+	/** 
+	 * Get safe render count of items to render.
+	 * `itemSize` can either be latest size or average size.
+	 */
+	getSafeRenderCount(itemSize: number, reservedPixels: number): number {
+		if (this.cachedScrollerSize === 0) {
+			return 1
+		}
 
-		// Will at least render additional 200px.
-		let renderCount = this.stat.getSafeRenderCount(coverageRate, this.scrollerSize)
+		if (itemSize === 0) {
+			return 1
+		}
 
-		return renderCount
+		// Because normally can scroll twice per frame.
+		let totalSize = this.cachedScrollerSize + reservedPixels
+
+		return Math.ceil(totalSize / itemSize)
 	}
 
 	/** Calc new slider position by start and end indices. */
 	calcSliderPositionByIndices(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
 		if (alignDirection === 'start') {
-			return this.getAverageSize() * startIndex
+			return this.getItemSize() * startIndex
 		}
 		else {
-			return this.getAverageSize() * endIndex + this.scrollerSize
+			return this.getItemSize() * endIndex + this.cachedScrollerSize
 		}
 	}
 
@@ -121,8 +145,8 @@ export class PartialRendererMeasurement {
 
 	/** 
 	 * Whether should update placeholder size.
-	 * When scrolling down, and will render more items in the end, need to update.
-	 * When scrolling up, no need to update.
+	 * When scrolling down, need to update.
+	 * When item size changed much, need to update.
 	 */
 	shouldUpdatePlaceholderSize(endIndex: number, dataCount: number): boolean {
 		if (dataCount !== this.latestDataCountWhenPlaceholderMeasuring) {
@@ -134,7 +158,7 @@ export class PartialRendererMeasurement {
 			return true
 		}
 
-		let sizeChangedMuch = Math.abs(this.getAverageSize() - this.latestAverageItemSizeWhenPlaceholderMeasuring) > 1
+		let sizeChangedMuch = Math.abs(this.getItemSize() - this.latestAverageItemSizeWhenPlaceholderMeasuring) > 1
 		if (sizeChangedMuch) {
 			return true
 		}
@@ -148,7 +172,7 @@ export class PartialRendererMeasurement {
 	 * No need to update when scrolling up.
 	 */
 	calcPlaceholderSizeByIndices(startIndex: number, endIndex: number, dataCount: number, alignDirection: 'start' | 'end') {
-		let averageSize = this.getAverageSize()
+		let averageSize = this.getItemSize()
 		let placeholderSize: number
 		
 		if (alignDirection === 'start') {
@@ -159,7 +183,7 @@ export class PartialRendererMeasurement {
 		}
 
 		this.latestEndIndexWhenPlaceholderMeasuring = endIndex
-		this.latestAverageItemSizeWhenPlaceholderMeasuring = this.getAverageSize()
+		this.latestAverageItemSizeWhenPlaceholderMeasuring = this.getItemSize()
 		this.latestDataCountWhenPlaceholderMeasuring = dataCount
 
 		return placeholderSize
@@ -175,11 +199,8 @@ export class PartialRendererMeasurement {
 		this.cachedAppliedPlaceholderSize = size
 	}
 
-	/** 
-	 * Every time after render complete, do measurement.
-	 * Returns whether stat item size changed much.
-	 */
-	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end'): boolean {
+	/** Every time after render complete, do measurement. */
+	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
 		let sliderSize = this.doa.getClientSize(this.slider)
 
 		if (alignDirection === 'start') {
@@ -189,18 +210,16 @@ export class PartialRendererMeasurement {
 			this.cachedSliderStartPosition = this.cachedSliderEndPosition - sliderSize
 		}
 
-		let oldItemSize = this.stat.getItemSize()
 		this.stat.update(endIndex - startIndex, sliderSize)
-
-		return Math.abs(this.stat.getItemSize() - oldItemSize) > 1
 	}
 
-	/** Check cover direction and decide where to render more contents. */
-	checkUnCoveredDirection(startIndex: number, endIndex: number, dataCount: number): UncoveredDirection | null {
+	/** Check cover situation and decide where to render more contents. */
+	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number): UnCoveredSituation | null {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
+		let sliderSize = this.doa.getClientSize(this.slider)
 		let scrolled = this.doa.getScrollPosition(this.scroller)
 		let sliderStart = this.cachedSliderStartPosition - scrolled
-		let sliderEnd = sliderStart + this.doa.getClientSize(this.slider)
+		let sliderEnd = sliderStart + sliderSize
 		let unexpectedScrollStart = scrolled === 0 && startIndex > 0
 
 		let unexpectedScrollEnd = scrolled + this.doa.getClientSize(this.scroller) === this.doa.getScrollSize(this.scroller)
@@ -212,14 +231,24 @@ export class PartialRendererMeasurement {
 			return 'break'
 		}
 
+		// Can't cover and need to render more items at top/left.
+		else if (sliderStart > 0 || unexpectedScrollStart) {
+			return 'start'
+		}
+
 		// Can't cover and need to render more items at bottom/right.
 		else if (sliderEnd < scrollerSize || unexpectedScrollEnd) {
 			return 'end'
 		}
 
-		// Can't cover and need to render more items at top/left.
-		else if (sliderStart > 0 || unexpectedScrollStart) {
-			return 'start'
+		// Has less than 1/4 rest at start
+		else if (-sliderStart * 4 < sliderSize - scrollerSize) {
+			return 'quarterly-start'
+		}
+
+		// Has less than 1/4 rest at end
+		else if ((sliderEnd - scrollerSize) * 4 < sliderSize - scrollerSize) {
+			return 'quarterly-end'
 		}
 
 		// No need to render more.

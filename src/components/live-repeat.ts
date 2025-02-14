@@ -18,17 +18,21 @@ import {html} from '@pucelle/lupos.js'
 export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/**
-	* Rate of how many items to render compare with the minimum items that can cover scroll viewport.
-	* - Set it small like `1.5` can render fewer contents each time, but update more frequently when scrolling.
-    * - Set it large like `2` cause render more contents each time, but update less frequently when scrolling.
-	* 
-	* Note even set this value small, renderer will also render at least
-	* additional `200px` to ensure scrolling smooth enough.
-	* 
-	* Must larger than `1`.
+	* How many pixels to reserve to reduce update frequency when scrolling.
+	* On Windows, scroll for 100px each time.
+	* So `200px` is a reasonable value.
+	* For larger area scrolling, you may set this value to `500~600`.
 	*/
-	coverageRate: number = 1.5
+	reservedPixels: number = 200
 
+	/** 
+	 * Whether item size should be balanced.
+	 * If is `true`, means all items should have same size,
+	 * if one get changed, all get changed, so we will choose latest size to do rendering.
+	 * If is `false`, means item sizes are not balanced,
+	 * different item have different size, so we will choose average size to do rendering.
+	 */
+	itemSizeBalanced: boolean = true
 
 	/** 
 	 * Placeholder element, sibling of slider.
@@ -61,10 +65,16 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.data.slice(this.startIndex, this.endIndex)
 	}
 
-	/** Apply `coverageRate` property to renderer. */
+	/** Apply `reservedPixels` property to renderer. */
 	@effect
-	protected applyCoverageRate() {
-		this.renderer!.setCoverageRate(this.coverageRate)
+	protected applyReservedPixels() {
+		this.renderer!.setReservedPixels(this.reservedPixels)
+	}
+
+	/** Apply `itemSizeBalanced` property to renderer. */
+	@effect
+	applyItemSizeBalanced() {
+		this.renderer!.setItemSizeBalanced(this.itemSizeBalanced)
 	}
 
 	/** Apply `data` count to renderer. */
@@ -80,7 +90,10 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.needsUpdate = false
 	}
 
-	/** Update live data by new indices. */
+	/** 
+	 * Update live data by new indices.
+	 * May be called for several times for each time updating.
+	 */
 	protected updateLiveData() {
 
 		// May update rendered data several times of each time partial renderer updating.
@@ -185,7 +198,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			if (scrollingDown) {
 				let transitionCount = 0
 				if (duration) {
-					transitionCount = Math.max(Math.floor((this.coverageRate - 1) / this.coverageRate * renderCount), 1)
+					transitionCount = Math.floor(this.reservedPixels / this.renderer!.measurement.getItemSize())
 				}
 
 				startIndex = Math.max(index - transitionCount, 0)

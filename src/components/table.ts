@@ -9,13 +9,13 @@ import {AsyncLiveRepeat} from './live-repeat-async'
 import {Icon} from './icon'
 
 
-export interface TableEvents<T> {
+export interface TableEvents {
 
 	/** After column order get changed. */
 	'order-change': (columnName: string | null, orderDirection: 'asc' | 'desc' | null) => void
 
 	/** Triggers after live data get updated on live mode. */
-	'live-updated': (data: T[], scrollDirection: 'start' | 'end' | null) => void
+	'live-updated': () => void
 }
 
 
@@ -78,7 +78,7 @@ export interface TableColumn<T = any> {
  * - `columns` provides data column mode for table view.
  * - `store` provides data service and also data filtering and data ordering.
  */
-export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
+export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
 	static style = css`
 		.table{
@@ -239,11 +239,21 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 	live: boolean = false
 
 	/**
-	* Rate of how many items to render compare with the minimum items that can cover scroll viewport.
-	* Works only when `live` is `true`.
-	* See `LiveRepeat.coverageRate` for more info.
+	* How many pixels to reserve to reduce update frequency when scrolling.
+	* On Windows, scroll for 100px each time.
+	* So `200px` is a reasonable value.
+	* For larger area scrolling, you may set this value to `500~600`.
 	*/
-	coverageRate: number = 1.5
+	reservedPixels: number = 200
+
+	/** 
+	 * Whether item size should be balanced.
+	 * If is `true`, means all items should have same size,
+	 * if one get changed, all get changed, so we will choose latest size to do rendering.
+	 * If is `false`, means item sizes are not balanced,
+	 * different item have different size, so we will choose average size to do rendering.
+	 */
+	itemSizeBalanced: boolean = true
 
 	/** 
 	 * Whether each column width can be resized.
@@ -313,6 +323,15 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		}
 
 		return (this.repeatComponent as LiveRepeat<T>).liveData
+	}
+
+	/** Get latest scroll direction. */
+	get scrollDirection(): 'start' | 'end' | null {
+		if (!this.live) {
+			return null
+		}
+
+		return (this.repeatComponent as LiveRepeat<T>).scrollDirection
 	}
 
 	/** 
@@ -442,7 +461,8 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		if (this.store instanceof RemoteStore) {
 			return html`
 				<AsyncLiveRepeat tagName="tbody" :ref=${this.repeatComponent}
-					.coverageRate=${this.coverageRate}
+					.reservedPixels=${this.reservedPixels}
+					.itemSizeBalanced=${this.itemSizeBalanced}
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
 					.dataLoader=${(this.store as RemoteStore).dataLoader}
@@ -453,7 +473,8 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 		else if (this.live) {
 			return html`
 				<LiveRepeat tagName="tbody" :ref=${this.repeatComponent}
-					.coverageRate=${this.coverageRate}
+					.reservedPixels=${this.reservedPixels}
+					.itemSizeBalanced=${this.itemSizeBalanced}
 					.renderFn=${this.renderRow.bind(this)}
 					.data=${this.store.currentData}
 					.scrollerSelector=".table-body"
@@ -499,10 +520,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents<T> & E> {
 
 	/** Triggers `liveDataUpdated` event. */
 	protected onLiveDataUpdated(this: Table) {
-		let repeat = this.repeatComponent as LiveRepeat | AsyncLiveRepeat
-		let data = repeat.liveData as T[]
-		let scrollDirection = repeat.scrollDirection
-		this.fire('live-updated', data, scrollDirection)
+		this.fire('live-updated')
 	}
 
 	/** Do column ordering for column with specified index. */

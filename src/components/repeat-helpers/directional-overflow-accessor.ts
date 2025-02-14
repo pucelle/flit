@@ -41,7 +41,7 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
-	setScrollOffset(el: Element, position: number) {
+	setScrollPosition(el: Element, position: number) {
 		if (this.direction === 'vertical') {
 			el.scrollTop = position
 		}
