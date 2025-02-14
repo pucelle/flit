@@ -95,6 +95,7 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
+	/** Offset value is not affected by scroll position. */
 	getOffset(el: HTMLElement): number {
 		if (this.direction === 'vertical') {
 			return el.offsetTop
