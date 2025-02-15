@@ -109,8 +109,8 @@ export class PartialRenderer {
 
 		this.measurement = new PartialRendererMeasurement(scroller, slider, doa)
 
-		// Wait for 2 frames.
-		this.quarterlyUpdateTimeout = new Timeout(this.updateQuarterly.bind(this), 33)
+		// Wait for 1 frames.
+		this.quarterlyUpdateTimeout = new Timeout(this.updateQuarterly.bind(this), 17)
 	}
 
 	/** 

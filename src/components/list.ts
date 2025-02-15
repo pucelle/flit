@@ -301,7 +301,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			</div>
 
 			<lu:if ${item.children && expanded}>
-				<div class="list-subsection" :transition=${fold()}>
+				<div class="list-subsection" :transition.immediate=${fold()}>
 					${this.renderItems(item.children!)}
 				</div>
 			</>
