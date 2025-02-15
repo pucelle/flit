@@ -55,8 +55,8 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.renderer!.endIndex
 	}
 
-	/** Latest scroll direction. */
-	get scrollDirection(): 'start' | 'end' | null {
+	/** Latest align direction. */
+	get alignDirection(): 'start' | 'end' | null {
 		return this.renderer!.alignDirection
 	}
 

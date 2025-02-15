@@ -325,13 +325,13 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		return (this.repeatComponent as LiveRepeat<T>).liveData
 	}
 
-	/** Get latest scroll direction. */
-	get scrollDirection(): 'start' | 'end' | null {
+	/** Get latest align direction. */
+	get alignDirection(): 'start' | 'end' | null {
 		if (!this.live) {
 			return null
 		}
 
-		return (this.repeatComponent as LiveRepeat<T>).scrollDirection
+		return (this.repeatComponent as LiveRepeat<T>).alignDirection
 	}
 
 	/** 
