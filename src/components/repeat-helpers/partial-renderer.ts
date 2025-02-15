@@ -473,6 +473,8 @@ export class PartialRenderer {
 		let alignDirection: 'start' | 'end' = unCoveredSituation === 'end' || unCoveredSituation === 'quarterly-end' ? 'start' : 'end'
 		let isQuarterly = unCoveredSituation === 'quarterly-start' || unCoveredSituation === 'quarterly-end'
 		let visibleIndex = this.locateVisibleIndex(alignDirection)
+
+		// If edge index has not changed, no need to reset position, then its `null`.
 		let position: number | null = null
 	
 		// Scrolling down, render more at end.
@@ -480,10 +482,6 @@ export class PartialRenderer {
 			let oldStartIndex = this.startIndex
 			let newStartIndex = isQuarterly ? Math.floor((oldStartIndex  + visibleIndex * 2) / 3) : visibleIndex
 
-			if (isQuarterly && newStartIndex === oldStartIndex) {
-				return
-			}
-	
 			this.setIndices(newStartIndex)
 
 			// Rendered item count changed much, not rendering progressively.
@@ -492,7 +490,7 @@ export class PartialRenderer {
 			}
 
 			// Locate to the start position of the first element.
-			else {
+			else if (this.startIndex !== oldStartIndex) {
 				let elIndex = this.startIndex - oldStartIndex
 				let el = this.repeat.children[elIndex] as HTMLElement
 
@@ -507,10 +505,6 @@ export class PartialRenderer {
 			let newEndIndex = isQuarterly ? Math.floor((oldEndIndex  + visibleIndex * 2) / 3) : visibleIndex
 			let newStartIndex = this.startIndex - this.endIndex + newEndIndex
 
-			if (isQuarterly && newStartIndex === oldStartIndex) {
-				return
-			}
-
 			this.setIndices(newStartIndex)
 
 			// Rendered item count changed much, not rendering progressively.
@@ -519,7 +513,7 @@ export class PartialRenderer {
 			}
 
 			// Locate to the end position of the last element.
-			else {
+			else if (this.endIndex !== oldEndIndex) {
 				let elIndex = this.endIndex - oldStartIndex - 1
 				let el = this.repeat.children[elIndex] as HTMLElement
 
@@ -598,10 +592,13 @@ export class PartialRenderer {
 	}
 
 	/** Update by specified slider position. */
-	private updateBySliderPosition(direction: 'start' | 'end', position: number) {
+	private updateBySliderPosition(direction: 'start' | 'end', position: number | null) {
 		this.setAlignDirection(direction)
 		this.updateRendering()
-		this.setSliderPosition(position)
+
+		if (position !== null) {
+			this.setSliderPosition(position)
+		}
 	}
 
 	/** Reset scroll position by current indices. */
