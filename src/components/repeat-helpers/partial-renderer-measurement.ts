@@ -57,12 +57,6 @@ export class PartialRendererMeasurement {
 	cachedPlaceholderSize: number = 0
 
 	/** 
-	 * Latest applied placeholder size.
-	 * Readonly outside.
-	 */
-	cachedAppliedPlaceholderSize: number = 0
-
-	/** 
 	 * Latest top/left position of slider, update it before or after every time rendered.
 	 * Readonly outside.
 	 */
@@ -192,11 +186,6 @@ export class PartialRendererMeasurement {
 	/** Set placeholder size. */
 	cachePlaceholderSize(size: number) {
 		this.cachedPlaceholderSize = size
-	}
-
-	/** Set latest applied placeholder size. */
-	cacheAppliedPlaceholderSize(size: number) {
-		this.cachedAppliedPlaceholderSize = size
 	}
 
 	/** Every time after render complete, do measurement. */

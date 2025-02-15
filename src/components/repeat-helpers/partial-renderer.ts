@@ -228,7 +228,7 @@ export class PartialRenderer {
 		await untilUpdateComplete()
 
 		this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
-		this.checkEdgeCases()
+		this.checkEdgeCasesAfterMeasured()
 		completeRendering()
 
 
@@ -353,24 +353,23 @@ export class PartialRenderer {
 		}
 
 		let placeholderSize = this.measurement.calcPlaceholderSizeByIndices(this.startIndex, this.endIndex, this.dataCount, this.alignDirection)
-		this.setPlaceholderSize(placeholderSize, false)
+		
+		// Changes few, no need to update.
+		if (Math.abs(placeholderSize - this.measurement.cachedPlaceholderSize) < 10) {
+			return
+		}
+		
+		this.setPlaceholderSize(placeholderSize)
 	}
 
 	/** Set placeholder size. */
-	private setPlaceholderSize(size: number, mustApply: boolean) {
-		this.measurement.cachePlaceholderSize(size)
-
-		// Changes few, no need to update.
-		if (!mustApply && Math.abs(size - this.measurement.cachedAppliedPlaceholderSize) < 5) {
-			return
-		}
-
+	private setPlaceholderSize(size: number) {
 		this.doa.setSize(this.placeholder, size)
-		this.measurement.cacheAppliedPlaceholderSize(size)
+		this.measurement.cachePlaceholderSize(size)
 	}
 
 	/** After render complete, and after `measureAfterRendered`, do more check for edge cases. */
-	private checkEdgeCases() {
+	private checkEdgeCasesAfterMeasured() {
 
 		// When reach start index but may not reach scroll start.
 		if (this.startIndex === 0) {
@@ -390,7 +389,7 @@ export class PartialRenderer {
 
 		// When reach end index but not scroll end.
 		else if (this.endIndex === this.dataCount) {
-			this.setPlaceholderSize(this.measurement.cachedSliderEndPosition, true)
+			this.setPlaceholderSize(this.measurement.cachedSliderEndPosition)
 		}
 
 		// When reach scroll index but not start index.
@@ -399,7 +398,7 @@ export class PartialRenderer {
 			let moreSize = newPosition - this.measurement.cachedSliderStartPosition
 
 			this.scroller.scrollTop += moreSize
-			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize, true)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
 			this.setAlignDirection('start')
 			this.setSliderPosition(newPosition)
 		}
@@ -410,7 +409,7 @@ export class PartialRenderer {
 			&& this.scroller.scrollTop + this.scroller.clientHeight >= this.scroller.scrollHeight
 		) {
 			let moreSize = this.measurement.getItemSize() * (this.dataCount - this.endIndex)
-			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize, true)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
 		}
 	}
 
@@ -463,7 +462,7 @@ export class PartialRenderer {
 			await untilUpdateComplete()
 
 			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
-			this.checkEdgeCases()
+			this.checkEdgeCasesAfterMeasured()
 		}
 
 		completeRendering()
@@ -537,7 +536,7 @@ export class PartialRenderer {
 		if (unCoveredSituation === 'reset') {
 			this.updateByNewIndices()
 		}
-
+		
 		// Update continuously.
 		else {
 			this.updateBySliderPosition(alignDirection, position!)
@@ -550,7 +549,7 @@ export class PartialRenderer {
 		await untilUpdateComplete()
 
 		this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
-		this.checkEdgeCases()
+		this.checkEdgeCasesAfterMeasured()
 	}
 
 	/** Update only a little after scrolling. */
