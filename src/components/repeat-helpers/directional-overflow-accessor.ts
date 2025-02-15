@@ -1,3 +1,6 @@
+import {DOMUtils} from '@pucelle/ff'
+
+
 /** It get and set overflow value by current overflow direction. */
 export class DirectionalOverflowAccessor {
 
@@ -59,18 +62,7 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
-	getOffsetSize(el: HTMLElement): number {
-		if (this.direction === 'vertical') {
-			return el.offsetHeight
-		}
-		else if (this.direction === 'horizontal') {
-			return el.offsetWidth
-		}
-		else {
-			return 0
-		}
-	}
-
+	/** Client size not include border, scroll bar size. */
 	getClientSize(el: Element): number {
 		if (this.direction === 'vertical') {
 			return el.clientHeight
@@ -83,6 +75,20 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
+	/** Client size include border, scroll bar size. */
+	getOffsetSize(el: HTMLElement): number {
+		if (this.direction === 'vertical') {
+			return el.offsetHeight
+		}
+		else if (this.direction === 'horizontal') {
+			return el.offsetWidth
+		}
+		else {
+			return 0
+		}
+	}
+
+	/** Include container padding, and content margin. */
 	getScrollSize(el: Element): number {
 		if (this.direction === 'vertical') {
 			return el.scrollHeight
@@ -95,13 +101,58 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
+	/** Get size consider margin. */
+	getOuterSize(el: Element): number {
+		if (this.direction === 'vertical') {
+			return el.clientHeight
+		}
+		else if (this.direction === 'horizontal') {
+			return el.clientWidth
+		}
+		else {
+			return 0
+		}
+	}
+
 	/** Offset value is not affected by scroll position. */
-	getOffset(el: HTMLElement): number {
+	getOffsetPosition(el: HTMLElement): number {
 		if (this.direction === 'vertical') {
 			return el.offsetTop
 		}
 		else if (this.direction === 'horizontal') {
 			return el.offsetLeft
+		}
+		else {
+			return 0
+		}
+	}
+
+	/** 
+	 * Get offset position consider margin value.
+	 * Offset value is not affected by scroll position.
+	 */
+	getOuterOffsetPosition(el: HTMLElement): number {
+		if (this.direction === 'vertical') {
+			return el.offsetTop - DOMUtils.getNumericStyleValue(el, 'marginTop')
+		}
+		else if (this.direction === 'horizontal') {
+			return el.offsetLeft - DOMUtils.getNumericStyleValue(el, 'marginLeft')
+		}
+		else {
+			return 0
+		}
+	}
+
+	/** 
+	 * Get end offset position consider margin value.
+	 * Offset value is not affected by scroll position.
+	 */
+	getEndOuterOffsetPosition(el: HTMLElement): number {
+		if (this.direction === 'vertical') {
+			return el.offsetTop + el.offsetHeight + DOMUtils.getNumericStyleValue(el, 'marginBottom')
+		}
+		else if (this.direction === 'horizontal') {
+			return el.offsetLeft + el.offsetWidth + DOMUtils.getNumericStyleValue(el, 'marginRight')
 		}
 		else {
 			return 0

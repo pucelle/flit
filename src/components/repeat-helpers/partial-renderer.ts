@@ -494,7 +494,7 @@ export class PartialRenderer {
 				let elIndex = this.startIndex - oldStartIndex
 				let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el)
+				position = this.measurement.cachedSliderStartPosition + this.doa.getOuterOffsetPosition(el)
 			}
 		}
 
@@ -508,7 +508,7 @@ export class PartialRenderer {
 			this.setIndices(newStartIndex)
 
 			// Rendered item count changed much, not rendering progressively.
-			if (this.endIndex < oldStartIndex + 1 || this.endIndex >= oldEndIndex) {
+			if (this.endIndex < oldStartIndex + 1 || this.endIndex > oldEndIndex) {
 				unCoveredSituation = 'reset'
 			}
 
@@ -517,7 +517,7 @@ export class PartialRenderer {
 				let elIndex = this.endIndex - oldStartIndex - 1
 				let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.measurement.cachedSliderStartPosition + this.doa.getOffset(el) + this.doa.getClientSize(el)
+				position = this.measurement.cachedSliderStartPosition + this.doa.getEndOuterOffsetPosition(el)
 			}
 		}
 

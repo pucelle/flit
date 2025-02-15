@@ -211,7 +211,7 @@ export class PartialRendererMeasurement {
 		let sliderEnd = sliderStart + sliderSize
 		let unexpectedScrollStart = scrolled === 0 && startIndex > 0
 
-		let unexpectedScrollEnd = scrolled + this.doa.getClientSize(this.scroller) === this.doa.getScrollSize(this.scroller)
+		let unexpectedScrollEnd = scrolled + scrollerSize === this.doa.getScrollSize(this.scroller)
 			&& endIndex < dataCount
 
 		// No intersection, reset indices by current scroll position.
