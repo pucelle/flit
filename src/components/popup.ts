@@ -30,13 +30,6 @@ export class Popup<E = {}> extends Component<E> {
 		}
 	`
 
-	/** 
-	 * Options to overwrite default `:popup` binding options,
-	 * normally use this to control default alignment for extended classes.
-	 * Will be overwritten by binding options passed to `:popup=${{...}}`.
-	 */
-	//static readonly DefaultPopupOptions: Partial<PopupOptions> = {}
-
 
 	/** Whether shows triangle element. */
 	triangle: boolean = true
