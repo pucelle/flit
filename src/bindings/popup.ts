@@ -370,14 +370,13 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		// Play leave transition if need.
 		if (this.options.transition && this.transition) {
-			let finish = await this.transition.leave(this.options.transition)
-			if (finish) {
-				this.popup?.remove()
-			}
-		
+			await this.transition.leave(this.options.transition)
+	
 			if (this.state.opened) {
 				return
 			}
+			
+			this.popup?.remove()
 		}
 
 		this.binder.unbindLeave()
@@ -442,10 +441,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			this.popup = popup
 			this.transition?.cancel()
 			this.transition = new Transition(popup.el)
-		
+
 			if (this.options.key) {
 				SharedPopups.setCache(this.options.key, {popup, rendered})
 			}
+			
 			SharedPopups.setUser(popup, this)
 		}
 	}
@@ -483,7 +483,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** After trigger element position changed. */
 	protected onTriggerRectChanged() {
-
 		if (this.options.stickToEdges && !DOMUtils.isRectIntersectWithViewport(this.el.getBoundingClientRect())) {
 			this.hidePopup()
 		}
