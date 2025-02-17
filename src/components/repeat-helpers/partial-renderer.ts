@@ -15,13 +15,13 @@ interface NeedToApply {
 	 * Soon need to re-render according to the new start index.
 	 * Note it was initialized as `0`.
 	 */
-	startIndex: number | null
+	startIndex: number | undefined
 
 	/** Latest `endIndex` property has changed and need to be applied. */
-	endIndex: number | null
+	endIndex: number | undefined
 
 	/** Latest `alignDirection` property has changed and need to be applied. */
-	alignDirection: 'start' | 'end' | null
+	alignDirection: 'start' | 'end'
 }
 
 
@@ -61,7 +61,7 @@ export class PartialRenderer {
 	private renderQueue: AsyncTaskQueue = new AsyncTaskQueue()
 
 	/** Indices and align direction that need to apply. */
-	private needToApply: NeedToApply | null = {startIndex: 0, endIndex: null, alignDirection: null}
+	private needToApply: NeedToApply | null = {startIndex: 0, endIndex: undefined, alignDirection: 'start'}
 
 	/** Cache latest scroll position. */
 	private latestScrollPosition: number = 0
@@ -152,7 +152,7 @@ export class PartialRenderer {
 	 * Set `alignDirection` to `end` will cause item at `endIndex`
 	 * been located at the end edge of scroll viewport.
 	 */
-	setRenderPart(startIndex: number, endIndex: number | null = null, alignDirection: 'start' | 'end' | null = null) {
+	setRenderIndices(startIndex: number, endIndex: number | undefined = undefined, alignDirection: 'start' | 'end' = 'start') {
 		this.needToApply = {
 			startIndex,
 			endIndex: endIndex,
@@ -163,7 +163,6 @@ export class PartialRenderer {
 	/** After component use this partial renderer get connected. */
 	async connect() {
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
-
 		await untilUpdateComplete()
 		this.readScrollerSize()
 		ResizeEvents.on(this.scroller, this.readScrollerSize, this)
@@ -171,6 +170,10 @@ export class PartialRenderer {
 
 	/** After component use this partial renderer will get disconnected. */
 	disconnect() {
+
+		// For restoring scroll position.
+		this.setRenderIndices(this.locateVisibleIndex('start'))
+
 		this.quarterlyUpdateTimeout.cancel()
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
 		ResizeEvents.off(this.scroller, this.readScrollerSize, this)
@@ -251,7 +254,7 @@ export class PartialRenderer {
 		this.setIndices(this.needToApply!.startIndex!, this.needToApply!.endIndex)
 		this.setAlignDirection(this.needToApply!.alignDirection ?? 'start')
 		this.updateRendering()
-		this.resetPositions(hasMeasured)
+		this.resetPositions(hasMeasured, this.needToApply!.startIndex!, this.needToApply!.endIndex)
 	}
 
 	/** Update data normally, and try to keep indices and scroll position. */
@@ -282,7 +285,7 @@ export class PartialRenderer {
 	}
 
 	/** Update start and end indices before rendering. */
-	private setIndices(newStartIndex: number, newEndIndex: number | null = null) {
+	private setIndices(newStartIndex: number, newEndIndex: number | undefined = undefined) {
 		let itemSize = this.measurement.getItemSize()
 		let renderCount = this.measurement.getSafeRenderCount(itemSize, this.reservedPixels)
 
@@ -302,15 +305,19 @@ export class PartialRenderer {
 	 * 
 	 * `needRestScrollOffset`: specifies as `false` if current indices is calculated from current scroll offset,
 	 * 	  or for the first time rendering.
+	 * 
+	 * If `startIndex` and `endIndex` specified, will adjust scroll position to align them.
 	 */
-	private resetPositions(needRestScrollOffset: boolean) {
-		let newPosition = this.measurement.calcSliderPositionByIndices(this.startIndex, this.endIndex, this.alignDirection)
-		this.setSliderPosition(newPosition)
+	private resetPositions(needRestScrollOffset: boolean, startIndex: number = this.startIndex, endIndex: number = this.endIndex) {
+		let newSliderPosition = this.measurement.calcSliderPositionByIndices(this.startIndex, this.endIndex, this.alignDirection)
+		this.setSliderPosition(newSliderPosition)
 
 		if (needRestScrollOffset) {
-
+			startIndex = Math.max(startIndex, this.startIndex)
+			endIndex = Math.min(endIndex, this.endIndex)
+	
 			// Align scroller start with slider start.
-			let scrollPosition = newPosition
+			let scrollPosition = this.measurement.calcSliderPositionByIndices(startIndex, endIndex, this.alignDirection)
 
 			// Align scroller end with slider end.
 			if (this.alignDirection === 'end') {
