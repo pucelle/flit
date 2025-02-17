@@ -58,7 +58,10 @@ export interface PopupOptions extends AnchorAlignerOptions {
 	 */
 	hideDelay: number
 
-	/** Transition options to play transition when popup hiding and showing. */
+	/** 
+	 * Transition options to play transition when popup hiding and showing.
+	 * Default value is `fade()`.
+	 */
 	transition: TransitionResult
 
 	/** 
@@ -116,7 +119,8 @@ interface PopupBindingEvents {
 export const DefaultPopupOptions: PopupOptions = {
 
 	position: 'b',
-	gap: 0,
+	gaps: 0,
+	edgeGaps: 0,
 	stickToEdges: true,
 	canFlip: true,
 	canShrinkOnY: true,
@@ -543,7 +547,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		return {
 			position: this.options?.position as AnchorPosition,
-			gap: this.options?.gap,
+			gaps: this.options?.gaps,
+			edgeGaps: this.options?.edgeGaps,
 			stickToEdges: this.options?.stickToEdges,
 			canFlip: this.options?.canFlip,
 			canShrinkOnY: this.options?.canShrinkOnY,

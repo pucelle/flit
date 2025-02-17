@@ -157,7 +157,7 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 		let tooltipOptions: Partial<TooltipOptions> = {
 			position: this.vertical ? 'r' : 't',
 			alignTo: '.slider-ball',
-			gap: 4,
+			gaps: 4,
 			keepVisible: this.dragging,
 		}
 

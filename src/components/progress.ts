@@ -50,7 +50,7 @@ export class Progress<E = {}> extends Component<E> {
 		let tooltipOptions: Partial<TooltipOptions> = {
 			position: 'bc-tr',
 			alignTo: '.progress-progress',
-			gap: 8,
+			gaps: 8,
 		}
 
 		return html`
