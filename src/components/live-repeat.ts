@@ -13,7 +13,7 @@ import {html} from '@pucelle/lupos.js'
  * - `<LiveRepeat>` must be contained in a scroller element with `overflow: auto / scroll`.
  * - `<LiveRepeat>` must be the only child of the scroller element.
  * - `<LiveRepeat>` must in `absolute` position.
- * - `<LiveRepeat>` element must have no margin or padding set.
+ * - `<LiveRepeat>` must have no margin, but can have padding set.
  * - The scroller element must not in `static` position.
  */
 export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {

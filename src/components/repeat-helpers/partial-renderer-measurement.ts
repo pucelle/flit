@@ -137,6 +137,21 @@ export class PartialRendererMeasurement {
 		}
 	}
 
+	/** Every time after render complete, do measurement. */
+	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
+		let sliderInnerSize = this.doa.getInnerSize(this.slider)
+		let sliderClientSize = this.doa.getClientSize(this.slider)
+
+		if (alignDirection === 'start') {
+			this.cachedSliderEndPosition = this.cachedSliderStartPosition + sliderClientSize
+		}
+		else {
+			this.cachedSliderStartPosition = this.cachedSliderEndPosition - sliderClientSize
+		}
+
+		this.stat.update(endIndex - startIndex, sliderInnerSize)
+	}
+
 	/** 
 	 * Whether should update placeholder size.
 	 * When scrolling down, need to update.
@@ -186,20 +201,6 @@ export class PartialRendererMeasurement {
 	/** Set placeholder size. */
 	cachePlaceholderSize(size: number) {
 		this.cachedPlaceholderSize = size
-	}
-
-	/** Every time after render complete, do measurement. */
-	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
-		let sliderSize = this.doa.getClientSize(this.slider)
-
-		if (alignDirection === 'start') {
-			this.cachedSliderEndPosition = this.cachedSliderStartPosition + sliderSize
-		}
-		else {
-			this.cachedSliderStartPosition = this.cachedSliderEndPosition - sliderSize
-		}
-
-		this.stat.update(endIndex - startIndex, sliderSize)
 	}
 
 	/** Check cover situation and decide where to render more contents. */

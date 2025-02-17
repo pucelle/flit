@@ -394,6 +394,8 @@ export class PartialRenderer {
 
 		// When reach scroll index but not start index.
 		else if (this.startIndex > 0 && this.measurement.cachedSliderStartPosition <= 0) {
+
+			// Guess size of items before, and add missing size of current rendering.
 			let newPosition = this.measurement.getItemSize() * this.startIndex
 			let moreSize = newPosition - this.measurement.cachedSliderStartPosition
 
@@ -432,21 +434,24 @@ export class PartialRenderer {
 
 		// Which direction is un-covered.
 		let unCoveredSituation = this.measurement.checkUnCoveredSituation(this.startIndex, this.endIndex, this.dataCount)
-	
-	
+
 		// Update and try to keep same element with same position.
 		if (unCoveredSituation === 'end' || unCoveredSituation === 'start') {
 			await this.updateContinuously(unCoveredSituation)
 		}
 
 		// Rerender to get closer to next un-covered after idle.
-		else if (unCoveredSituation === 'quarterly-start' || unCoveredSituation === 'quarterly-end') {
-			if (unCoveredSituation === 'quarterly-start' && this.latestScrollDirection === 'start'
-				|| unCoveredSituation === 'quarterly-end' && this.latestScrollDirection === 'end'
-			) {
-				this.quarterlyUpdateTimeout.reset()
-			}
-		}
+		// else if (unCoveredSituation === 'quarterly-start' || unCoveredSituation === 'quarterly-end') {
+		// 	if (unCoveredSituation === 'quarterly-start'
+		// 			&& this.latestScrollDirection === 'start'
+		// 			&& this.startIndex > 0
+		// 		|| unCoveredSituation === 'quarterly-end'
+		// 			&& this.latestScrollDirection === 'end'
+		// 			&& this.endIndex < this.dataCount
+		// 	) {
+		// 		this.quarterlyUpdateTimeout.reset()
+		// 	}
+		// }
 
 		// No intersection, reset indices by current scroll position.
 		else if (unCoveredSituation === 'break') {
@@ -474,6 +479,9 @@ export class PartialRenderer {
 		let isQuarterly = unCoveredSituation === 'quarterly-start' || unCoveredSituation === 'quarterly-end'
 		let visibleIndex = this.locateVisibleIndex(alignDirection)
 
+
+		//// Can only read dom properties below.
+
 		// If edge index has not changed, no need to reset position, then its `null`.
 		let position: number | null = null
 	
@@ -494,7 +502,11 @@ export class PartialRenderer {
 				let elIndex = this.startIndex - oldStartIndex
 				let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.measurement.cachedSliderStartPosition + this.doa.getOuterOffsetPosition(el)
+				// If el located at start, it will move by slider padding top,
+				// to keep it's position, should remove slider padding.
+				position = this.measurement.cachedSliderStartPosition
+					+ this.doa.getOuterOffsetPosition(el)
+					- this.doa.getStartPadding(this.slider)
 			}
 		}
 
@@ -517,7 +529,11 @@ export class PartialRenderer {
 				let elIndex = this.endIndex - oldStartIndex - 1
 				let el = this.repeat.children[elIndex] as HTMLElement
 
-				position = this.measurement.cachedSliderStartPosition + this.doa.getEndOuterOffsetPosition(el)
+				// If el located at end, it will move up by slider padding bottom,
+				// to keep it's position, should add slider bottom padding.
+				position = this.measurement.cachedSliderStartPosition
+					+ this.doa.getEndOuterOffsetPosition(el)
+					+ this.doa.getEndPadding(this.slider)
 			}
 		}
 

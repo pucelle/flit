@@ -14,6 +14,30 @@ export class DirectionalOverflowAccessor {
 		this.direction = d
 	}
 
+	getStartPadding(el: HTMLElement) {
+		if (this.direction === 'vertical') {
+			return DOMUtils.getNumericStyleValue(el, 'paddingTop')
+		}
+		else if (this.direction === 'horizontal') {
+			return DOMUtils.getNumericStyleValue(el, 'paddingLeft')
+		}
+		else {
+			return 0
+		}
+	}
+
+	getEndPadding(el: HTMLElement) {
+		if (this.direction === 'vertical') {
+			return DOMUtils.getNumericStyleValue(el, 'paddingBottom')
+		}
+		else if (this.direction === 'horizontal') {
+			return DOMUtils.getNumericStyleValue(el, 'paddingRight')
+		}
+		else {
+			return 0
+		}
+	}
+
 	setStartPosition(el: HTMLElement, value: string) {
 		if (this.direction === 'vertical') {
 			el.style.top = value
@@ -62,6 +86,11 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
+	/** Inner size not include padding, border, scroll bar size. */
+	getInnerSize(el: HTMLElement): number {
+		return this.getClientSize(el) - this.getStartPadding(el) - this.getEndPadding(el)
+	}
+
 	/** Client size not include border, scroll bar size. */
 	getClientSize(el: Element): number {
 		if (this.direction === 'vertical') {
@@ -75,7 +104,7 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
-	/** Client size include border, scroll bar size. */
+	/** Client size include padding, border, scroll bar size. */
 	getOffsetSize(el: HTMLElement): number {
 		if (this.direction === 'vertical') {
 			return el.offsetHeight
