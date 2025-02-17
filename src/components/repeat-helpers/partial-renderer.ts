@@ -441,17 +441,17 @@ export class PartialRenderer {
 		}
 
 		// Rerender to get closer to next un-covered after idle.
-		// else if (unCoveredSituation === 'quarterly-start' || unCoveredSituation === 'quarterly-end') {
-		// 	if (unCoveredSituation === 'quarterly-start'
-		// 			&& this.latestScrollDirection === 'start'
-		// 			&& this.startIndex > 0
-		// 		|| unCoveredSituation === 'quarterly-end'
-		// 			&& this.latestScrollDirection === 'end'
-		// 			&& this.endIndex < this.dataCount
-		// 	) {
-		// 		this.quarterlyUpdateTimeout.reset()
-		// 	}
-		// }
+		else if (unCoveredSituation === 'quarterly-start' || unCoveredSituation === 'quarterly-end') {
+			if (unCoveredSituation === 'quarterly-start'
+					&& this.latestScrollDirection === 'start'
+					&& this.startIndex > 0
+				|| unCoveredSituation === 'quarterly-end'
+					&& this.latestScrollDirection === 'end'
+					&& this.endIndex < this.dataCount
+			) {
+				this.quarterlyUpdateTimeout.reset()
+			}
+		}
 
 		// No intersection, reset indices by current scroll position.
 		else if (unCoveredSituation === 'break') {

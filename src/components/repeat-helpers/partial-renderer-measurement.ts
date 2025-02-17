@@ -149,7 +149,10 @@ export class PartialRendererMeasurement {
 			this.cachedSliderStartPosition = this.cachedSliderEndPosition - sliderClientSize
 		}
 
-		this.stat.update(endIndex - startIndex, sliderInnerSize)
+		// Avoid force render when hidden caused issues.
+		if (sliderInnerSize > 0) {
+			this.stat.update(endIndex - startIndex, sliderInnerSize)
+		}
 	}
 
 	/** 
