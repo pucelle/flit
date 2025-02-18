@@ -53,7 +53,7 @@ export class droppable<T = any> implements Binding, Part {
 		this.el = el as HTMLElement
 	}
 
-	afterConnectCallback(_param: PartCallbackParameterMask | 0) {
+	afterConnectCallback() {
 		if (this.connected) {
 			return
 		}

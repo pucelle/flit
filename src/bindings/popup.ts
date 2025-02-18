@@ -1,4 +1,4 @@
-import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
+import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
 import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
@@ -190,7 +190,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		return this.state.opened
 	}
 
-	afterConnectCallback(_param: PartCallbackParameterMask | 0) {
+	afterConnectCallback() {
 		this.binder.setTriggerType(this.options.trigger)
 		this.binder.bindEnter()
 
@@ -205,7 +205,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 	}
 
-    beforeDisconnectCallback(_param: PartCallbackParameterMask | 0) {
+    beforeDisconnectCallback() {
 		if (this.state.opened && this.popup) {
 			this.popup.remove()
 		}

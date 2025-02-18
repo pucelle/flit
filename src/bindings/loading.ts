@@ -14,7 +14,10 @@ export interface LoadingOptions {
 	/** How many round per second. */
 	speed: number
 
-	/** Transition for loader element. */
+	/** 
+	 * Transition for loader element.
+	 * Default value is `fade()`.
+	 */
 	transition: TransitionResult | undefined
 }
 
@@ -45,7 +48,7 @@ export class loading implements Binding, Part {
 		this.el = el
 	}
 
-	afterConnectCallback(_param: PartCallbackParameterMask | 0) {
+	afterConnectCallback() {
 		if (this.value && !this.loader) {
 			this.loader = this.renderLoader()
 			this.loader.appendTo(this.el)

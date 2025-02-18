@@ -29,14 +29,14 @@ export class Navigation<T> extends List<T> {
 
 	protected render() {
 		return html`
-		<template class="list navigation">
-			<lu:if ${this.title}>
-				<div class="navigation-title">
-					${this.title}
-				</div>
-			</lu:if>
-			${this.renderItems(this.data)}
-		</template>
+			<template class="list navigation">
+				<lu:if ${this.title}>
+					<div class="navigation-title">
+						${this.title}
+					</div>
+				</lu:if>
+				${this.renderItems(this.data)}
+			</template>
 		`
 	}
 }

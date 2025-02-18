@@ -1,4 +1,4 @@
-export * from './src'
+export * from './scroll-persist'
 export * from './loading'
 export * from './popup'
 export * from './tooltip'
