@@ -1,4 +1,4 @@
-import {AsyncTaskQueue, DOMEvents, ResizeEvents, Timeout, untilReadComplete, untilUpdateComplete} from '@pucelle/ff'
+import {AsyncTaskQueue, DOMEvents, ResizeWatcher, Timeout, untilReadComplete, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialRendererMeasurement, UnCoveredSituation} from './partial-renderer-measurement'
@@ -165,7 +165,7 @@ export class PartialRenderer {
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
 		await untilUpdateComplete()
 		this.readScrollerSize()
-		ResizeEvents.on(this.scroller, this.readScrollerSize, this)
+		ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
 	}
 
 	/** After component use this partial renderer will get disconnected. */
@@ -176,7 +176,7 @@ export class PartialRenderer {
 
 		this.quarterlyUpdateTimeout.cancel()
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
-		ResizeEvents.off(this.scroller, this.readScrollerSize, this)
+		ResizeWatcher.unwatch(this.scroller)
 	}
 
 	/** On scroller scroll event. */
@@ -375,7 +375,7 @@ export class PartialRenderer {
 		this.measurement.cachePlaceholderSize(size)
 	}
 
-	/** After render complete, and after `measureAfterRendered`, do more check for edge cases. */
+	/** After update complete, and after `measureAfterRendered`, do more check for edge cases. */
 	private checkEdgeCasesAfterMeasured() {
 
 		// When reach start index but may not reach scroll start.
@@ -584,7 +584,10 @@ export class PartialRenderer {
 		completeRendering()
 	}
 
-	/** Locate start or end index at which the item is visible in viewport. */
+	/** 
+	 * Locate start or end index at which the item is visible in viewport.
+	 * Must after update complete.
+	 */
 	locateVisibleIndex(direction: 'start' | 'end'): number {
 		let visibleIndex = locateVisibleIndex(
 			this.scroller,

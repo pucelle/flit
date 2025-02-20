@@ -25,7 +25,7 @@ export class Progress<E = {}> extends Component<E> {
 		}
 
 		.progress-tooltip{
-			font-family: consolas;
+			font-family: "Roboto Mono";
 		}
 	`
 

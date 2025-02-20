@@ -54,7 +54,7 @@ export class ColumnWidthResizer {
 
 	/** 
 	 * Update column widths from column configuration.
-	 * Will check available column width and may cause page reflow.
+	 * Will check available column width and may cause page re-layout.
 	 */
 	async updateColumnWidths() {
 

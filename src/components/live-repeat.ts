@@ -181,7 +181,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	/** 
 	 * Set start visible index of rendered items.
 	 * The data item of this index will be renderer at the topmost or leftmost of the viewport.
-	 * You can safely call this before render complete, no additional rendering will cost.
+	 * You can safely call this before update complete, no additional rendering will cost.
 	 */
 	setStartVisibleIndex(startIndex: number) {
 		this.renderer!.setRenderIndices(startIndex)

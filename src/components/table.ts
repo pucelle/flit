@@ -1,6 +1,6 @@
 import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {Store} from '../data'
-import {effect, LayoutWatcher, Observed, PerFrameTransitionEasingName, TransitionResult} from '@pucelle/ff'
+import {effect, Observed, PerFrameTransitionEasingName, ResizeWatcher, TransitionResult} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './live-repeat'
@@ -285,12 +285,9 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	/** 
 	 * Help to resize column widths when `resizable` is `true`.
 	 * Get updated of columns config get changed.
-	 * Must get it after render completed.
+	 * Must get it after update completed.
 	 */
 	protected columnResizer: ColumnWidthResizer | null = null
-
-	/** Help to watch size of current element. */
-	protected sizeWatcher!: LayoutWatcher<"size">
 
 	/** Repeat component used. */
 	protected repeatComponent!: Repeat<T> | LiveRepeat<T> | AsyncLiveRepeat<T>
@@ -346,16 +343,15 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
 	protected onCreated() {
 		super.onCreated()
-		this.sizeWatcher = new LayoutWatcher(this.el, 'size', this.onSizeChange, this)
 	}
 
 	protected onConnected() {
 		super.onConnected()
-		this.sizeWatcher.watch()
+		ResizeWatcher.watch(this.el, this.onSizeChange, this)
 	}
 
 	protected onWillDisconnect() {
-		this.sizeWatcher.unwatch()
+		ResizeWatcher.unwatch(this.el)
 	}
 
 	protected onReady() {
@@ -589,7 +585,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	/** 
 	 * Set start visible index of rendered items.
 	 * The data item of this index will be renderer at the topmost or leftmost of the viewport.
-	 * You can safely call this before render complete, no additional rendering will cost.
+	 * You can safely call this before update complete, no additional rendering will cost.
 	 */
 	setStartVisibleIndex(startIndex: number) {
 		if (!this.live) {

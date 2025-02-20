@@ -115,7 +115,7 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 		}
 
 		.slider-tooltip{
-			font-family: consolas;
+			font-family: "Roboto Mono";
 		}
 	`
 

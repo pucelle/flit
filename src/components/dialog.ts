@@ -298,7 +298,7 @@ export class Dialog<E = {}> extends Component<E> {
 	}
 
 	protected toCenter() {
-		new AnchorAligner(this.el, document.documentElement).align({position: 'c'})
+		new AnchorAligner(this.el, {position: 'c'}).align(document.documentElement)
 	}
 
 	/** Apply options as current options. */

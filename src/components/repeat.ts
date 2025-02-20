@@ -58,7 +58,10 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
 	}
 
-	/** Locate start or end index at which the item is visible in viewport. */
+	/** 
+	 * Locate start or end index at which the item is visible in viewport.
+	 * Will read dom properties, must after update complete.
+	 */
 	locateVisibleIndex(direction: 'start' | 'end'): number {
 		let visibleIndex = locateVisibleIndex(
 			this.scroller,
@@ -75,15 +78,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 * Scroll the closest viewport, make the element at this index to be scrolled to the topmost
 	 * or leftmost of the whole scroll viewport.
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
-	 * 
-	 * @param gap Reserve little distance from the element's edge away from scroll viewport edge,
-	 *     default value is `0`.
-	 * @param duration Transition duration, default value is `0`.
-	 * @param easing Transition easing, default value is `0`.
-	 * 
-	 * To use this, you should ensure this component is wrapped by a scroll
-	 * container, which has set `overflow: scroll / auto`,
-	 * and `renderFn` must render an unique element.
+	 * Will read dom properties, must after update complete.
 	 */
 	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		let scroller = this.el.parentElement!
@@ -102,15 +97,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	/** 
 	 * Scroll the closest viewport for minimum, make the element at this index to be scrolled into viewport.
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
-	 * 
-	 * @param gap Reserve little distance from the element's edge away from scroll viewport edge,
-	 *     default value is `0`.
-	 * @param duration Transition duration, default value is `0`.
-	 * @param easing Transition easing, default value is `0`.
-	 * 
-	 * To use this, you should ensure this component is wrapped by a scroll
-	 * container, which has set `overflow: scroll / auto`,
-	 * and `renderFn` must render an unique element.
+	 * Will read dom properties, must after update complete.
 	 */
 	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		let scroller = this.el.parentElement!

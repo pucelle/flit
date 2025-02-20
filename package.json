@@ -1,13 +1,13 @@
 {
-	"name": "@pucelle/flit.ui",
+	"name": "@pucelle/flit",
 	"version": "1.0.0",
 	"description": "A light weight Web UI Framework, based on lupos.js",
 	"author": "pucelle",
 	"license": "MIT",
-	"homepage": "https://github.com/pucelle/flit.ui",
+	"homepage": "https://github.com/pucelle/flit",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/pucelle/flit.ui.git"
+		"url": "https://github.com/pucelle/flit.git"
 	},
 	"main": "out/index.js",
 	"types": "out/index.d.ts",

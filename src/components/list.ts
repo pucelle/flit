@@ -386,6 +386,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * If get contained in a scroller, scroll first selected item to topmost or leftmost of scroll viewport.
 	 * Returns a promise which will be resolved after scrolling end,
 	 * and resolve by whether scrolled.
+	 * Must after update complete.
 	 */
 	async scrollSelectedToStart(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		let el = this.el.querySelector('.list-item.navigated, .list-item.selected') as HTMLElement | null
@@ -400,6 +401,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * If get contained in a scroller, scroll to view first selected item.
 	 * Returns a promise which will be resolved after scrolling end,
 	 * and resolve by whether scrolled.
+	 * Must after update complete.
 	 */
 	async scrollSelectedToView(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		let el = this.el.querySelector('.list-item.navigated, .list-item.selected') as HTMLElement | null
@@ -412,7 +414,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	/** 
 	 * Expand item, and all of it's ancestors recursively.
-	 * No need to wait for render complete.
+	 * This method will not visit dom properties, so no need update complete.
 	 * Note this method will walk all data items recursively.
 	 */
 	expandDeeply(value: T) {

@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, LayoutWatcher, DOMUtils, DOMEvents, sleep} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, DOMEvents, sleep, IntersectionWatcher} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -122,9 +122,8 @@ export const DefaultPopupOptions: PopupOptions = {
 	gaps: 0,
 	edgeGaps: 0,
 	stickToEdges: true,
-	canFlip: true,
-	canShrinkOnY: true,
-	fixTriangle: false,
+	flipDirection: 'auto',
+	fixedTriangle: false,
 
 	followEvents: false, 
 	trigger: 'hover',
@@ -158,9 +157,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected options: PopupOptions = DefaultPopupOptions
 	protected renderer: RenderResultRenderer = null as any
 
-	/** Used to watch rect change after popup opened. */
-	protected rectWatcher: LayoutWatcher<'rect'>
-
 	/** Help to update popup content by newly rendered result. */
 	protected rendered: RenderedComponentLike | null = null
 
@@ -180,7 +176,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.context = context
 		this.binder = new PopupTriggerBinder(this.el)
 		this.state = new PopupState()
-		this.rectWatcher = new LayoutWatcher(this.el, 'rect', this.onTriggerRectChanged, this)
 
 		this.initEvents()
 	}
@@ -210,9 +205,9 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			this.popup.remove()
 		}
 
+		IntersectionWatcher.watch(this.el, this.onElIntersectionChanged, this)
 		this.state.clear()
 		this.binder.unbindLeave()
-		this.rectWatcher.unwatch()
 		this.preventedHiding = false
 	}
 
@@ -287,14 +282,32 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Do show popup action. */
 	protected doShowPopup() {
-		this.doingShowPopup()
 		this.fire('opened-change', true)
+
+		this.updatePopup()
+		this.alignPopup()
+		this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
 	}
 	
 	/** Do hide popup action. */
-	protected doHidePopup() {
-		this.doingHidePopup()
+	protected async doHidePopup() {
 		this.fire('opened-change', false)
+
+		// Play leave transition if need.
+		if (this.options.transition && this.transition) {
+			await this.transition.leave(this.options.transition)
+	
+			if (this.state.opened) {
+				return
+			}
+			
+			this.popup?.remove()
+		}
+
+		IntersectionWatcher.unwatch(this.el)
+		this.aligner?.stop()
+		this.binder.unbindLeave()
+		this.preventedHiding = false
 	}
 
 
@@ -343,7 +356,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.state.hide()
 	}
 
-
 	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
 		this.renderer = renderer
 		this.options = {...DefaultPopupOptions, ...options} as PopupOptions
@@ -359,41 +371,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 	}
 
-	/** Show popup immediately, currently in opened. */
-	protected async doingShowPopup() {
-		this.updatePopup()
-
-		let aligned = await this.alignPopup()
-		if (aligned && this.popup) {
-			this.binder.bindLeave(this.options.hideDelay, this.popup.el)
-		}
-	}
-
-	/** Hide popup immediately, currently not in opened. */
-	protected async doingHidePopup() {
-
-		// Play leave transition if need.
-		if (this.options.transition && this.transition) {
-			await this.transition.leave(this.options.transition)
-	
-			if (this.state.opened) {
-				return
-			}
-			
-			this.popup?.remove()
-		}
-
-		this.binder.unbindLeave()
-		this.rectWatcher.unwatch()
-		this.preventedHiding = false
-	}
-
 	/** Update popup content, if haven't rendered, render it firstly. */
 	protected updatePopup() {
 		this.updateRendering()
 
 		// Update popup properties.
-		this.popup!.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toBoxEdgeKey()!
+		this.popup!.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toInsetKey()!
 		this.popup!.el.style.pointerEvents = this.options.pointable ? '' : 'none'
 
 		/** Append popup element into document. */
@@ -456,8 +439,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** After popup content get updated. */
 	protected async onRenderedUpdated() {
-		if (this.state.opened && this.popup) {
-			this.alignPopup()
+		if (this.state.opened && this.popup && this.aligner) {
+			this.aligner.updateOptions(this.getAlignerOptions())
 		}
 	}
 
@@ -480,14 +463,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		else {
 			this.transition!.cancel()
 		}
-
-		// Watch it's rect changing.
-		this.rectWatcher.watch()
 	}
 
 	/** After trigger element position changed. */
-	protected onTriggerRectChanged() {
-		if (this.options.stickToEdges && !DOMUtils.isRectIntersectWithViewport(this.el.getBoundingClientRect())) {
+	protected onElIntersectionChanged(entry: IntersectionObserverEntry) {
+		if (entry.intersectionRatio === 0) {
 			this.hidePopup()
 		}
 		else {
@@ -496,36 +476,29 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Align popup content, returns whether align successfully. */
-	protected async alignPopup(): Promise<boolean> {
+	protected alignPopup() {
 		if (!this.state.opened) {
-			return false
+			return
 		}
 
 		this.fire('will-align', this.popup!)
 
 		let anchor = this.getAlignAnchorElement()
-		let aligned = false
-
+	
 		// Update aligner if required.
-		if (!this.aligner || this.aligner.anchor !== anchor || this.aligner.content !== this.popup!.el) {
-			this.aligner = new AnchorAligner(this.popup!.el, anchor)
+		if (!this.aligner || this.aligner.anchor !== anchor || this.aligner.target !== this.popup!.el) {
+			this.aligner = new AnchorAligner(this.popup!.el, this.getAlignerOptions())
 		}
 
 		if (this.options.followEvents) {
 			let event = this.binder.getLatestTriggerEvent()
 			if (event) {
-				aligned = await this.aligner.alignToEvent(event, this.getAlignerOptions())
+				this.aligner.alignToEvent(event)
 			}
 		}
 		else {
-			aligned = await this.aligner.align(this.getAlignerOptions())
+			this.aligner.align(anchor)
 		}
-
-		if (!aligned) {
-			this.hidePopup()
-		}
-
-		return aligned
 }
 
 	/** Get element popup will align to. */
@@ -550,9 +523,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			gaps: this.options?.gaps,
 			edgeGaps: this.options?.edgeGaps,
 			stickToEdges: this.options?.stickToEdges,
-			canFlip: this.options?.canFlip,
-			canShrinkOnY: this.options?.canShrinkOnY,
-			fixTriangle: this.options?.fixTriangle,
+			flipDirection: this.options?.flipDirection,
+			fixedTriangle: this.options?.fixedTriangle,
 			triangle: triangle ?? undefined,
 		}
 	}
@@ -593,14 +565,15 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			SharedPopups.clearUser(this.popup)
 		}
 
+		IntersectionWatcher.unwatch(this.el)
 		this.binder.unbindLeave()
 		this.state.clear()
-		this.rectWatcher.unwatch()
 		this.rendered?.off('updated', this.onRenderedUpdated, this)
 		this.rendered = null
 		this.popup = null
 		this.transition?.cancel()
 		this.transition = null
+		this.aligner?.stop()
 		this.aligner = null
 		this.preventedHiding = false
 	}

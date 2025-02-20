@@ -137,7 +137,7 @@ export class PartialRendererMeasurement {
 		}
 	}
 
-	/** Every time after render complete, do measurement. */
+	/** Every time after update complete, do measurement. */
 	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
