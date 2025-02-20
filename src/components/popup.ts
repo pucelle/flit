@@ -11,7 +11,10 @@ export class Popup<E = {}> extends Component<E> {
 
 	static style = css`
 		.popup{
+
+			/* Recently, until chrome 133, fixed layout with anchor positioning is not work. */
 			position: absolute;
+
 			left: 0;
 			top: 0;
 			background: var(--popup-background-color);
