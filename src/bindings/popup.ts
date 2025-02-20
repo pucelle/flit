@@ -408,11 +408,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			rendered.renderer = this.renderer!
 		}
 
-		// Do alignment after rendered updated.
-		if (rendered !== this.rendered) {
-			rendered.on('updated', this.onRenderedUpdated, this)
-			this.rendered = rendered
-		}
+		this.rendered = rendered
 
 		// Pick rendered popup.
 		let firstElement = rendered!.el.firstElementChild!
@@ -434,13 +430,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			}
 			
 			SharedPopups.setUser(popup, this)
-		}
-	}
-
-	/** After popup content get updated. */
-	protected async onRenderedUpdated() {
-		if (this.state.opened && this.popup && this.aligner) {
-			this.aligner.updateOptions(this.getAlignerOptions())
 		}
 	}
 
@@ -497,7 +486,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			}
 		}
 		else {
-			this.aligner.align(anchor)
+			this.aligner.alignTo(anchor)
 		}
 }
 
@@ -568,7 +557,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		IntersectionWatcher.unwatch(this.el)
 		this.binder.unbindLeave()
 		this.state.clear()
-		this.rendered?.off('updated', this.onRenderedUpdated, this)
 		this.rendered = null
 		this.popup = null
 		this.transition?.cancel()
