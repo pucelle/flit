@@ -11,6 +11,31 @@ export type UnCoveredSituation =
 	| 'reset'			// Failed to do continuous updating, must re-render totally by current indices.
 
 
+interface LatestPlaceholderProperties {
+
+	/** Latest end index when last time measure placeholder. */
+	endIndex: number
+
+	/** Latest average item size when last time measure placeholder. */
+	itemSize: number
+
+	/** Latest data count when last time measure placeholder. */
+	dataCount: number
+
+	/** Latest placeholder size. */
+	placeholderSize: number
+}
+
+
+/** Indicates a continuous render range. */
+interface ContinuousRenderRange {
+	startIndex: number
+	endIndex: number
+	startPosition: number
+	endPosition: number
+}
+
+
 /**
  * It help to do measurement for PartialRenderer,
  * and cache latest render result of a partial renderer.
@@ -28,33 +53,26 @@ export class PartialRendererMeasurement {
 
 	/** Help to get and set based on overflow direction. */
 	private readonly doa: DirectionalOverflowAccessor
+
+	/** Indicates a continuous render range to make it more precisely to compute item size. */
+	private continuousRenderRange: ContinuousRenderRange | null = null
 	
 	/** 
-	 * Latest end index when last time measure placeholder,
+	 * Latest properties use when last time measure placeholder,
 	 * thus, can avoid update placeholder when scrolling up.
 	 */
-	private latestEndIndexWhenPlaceholderMeasuring: number = 0
-
-	/** Latest average item size when last time measure placeholder. */
-	private latestAverageItemSizeWhenPlaceholderMeasuring: number = -1
-
-	/** Latest data count when last time measure placeholder. */
-	private latestDataCountWhenPlaceholderMeasuring: number = -1
-
-	/** Whether item size should be balanced. */
-	private itemSizeBalanced: boolean = true
+	cachedPlaceholderProperties: LatestPlaceholderProperties = {
+		endIndex: 0,
+		itemSize: 0,
+		dataCount: 0,
+		placeholderSize: 0,
+	}
 
 	/** 
 	 * Latest scroller size.
 	 * Readonly outside.
 	 */
 	cachedScrollerSize: number = 0
-
-	/** 
-	 * Latest placeholder size.
-	 * Readonly outside.
-	 */
-	cachedPlaceholderSize: number = 0
 
 	/** 
 	 * Latest top/left position of slider, update it before or after every time rendered.
@@ -83,19 +101,9 @@ export class PartialRendererMeasurement {
 		this.cachedScrollerSize = this.doa.getClientSize(this.scroller)
 	}
 
-	/** Set `itemSizeBalanced` property. */
-	setItemSizeBalanced(itemSizeBalanced: boolean) {
-		this.itemSizeBalanced = itemSizeBalanced
-	}
-
 	/** Get item size. */
 	getItemSize(): number {
-		return this.itemSizeBalanced ? this.stat.getLatestSize() : this.stat.getAverageSize()
-	}
-
-	/** Whether have measured item size. */
-	hasMeasuredItemSize(): boolean {
-		return this.getItemSize() > 0
+		return this.stat.getLatestSize()
 	}
 
 	/** 
@@ -137,10 +145,16 @@ export class PartialRendererMeasurement {
 		}
 	}
 
+	/** If re-render from a new index, call this. */
+	breakContinuousRenderRange() {
+		this.continuousRenderRange = null
+	}
+
 	/** Every time after update complete, do measurement. */
 	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
+		let paddingSize = sliderClientSize - sliderInnerSize
 
 		if (alignDirection === 'start') {
 			this.cachedSliderEndPosition = this.cachedSliderStartPosition + sliderClientSize
@@ -149,61 +163,87 @@ export class PartialRendererMeasurement {
 			this.cachedSliderStartPosition = this.cachedSliderEndPosition - sliderClientSize
 		}
 
-		// Avoid force render when hidden caused issues.
-		if (sliderInnerSize > 0) {
-			this.stat.update(endIndex - startIndex, sliderInnerSize)
+		if (this.continuousRenderRange) {
+			if (startIndex <= this.continuousRenderRange.startIndex) {
+				this.continuousRenderRange.startIndex = startIndex
+				this.continuousRenderRange.startPosition = this.cachedSliderStartPosition
+			}
+
+			if (endIndex >= this.continuousRenderRange.endIndex) {
+				this.continuousRenderRange.endIndex = endIndex
+				this.continuousRenderRange.endPosition = this.cachedSliderEndPosition
+			}
+		}
+		else {
+			this.continuousRenderRange = {
+				startIndex,
+				endIndex,
+				startPosition: this.cachedSliderStartPosition,
+				endPosition: this.cachedSliderEndPosition
+			}
+		}
+
+		let renderCount = this.continuousRenderRange.endIndex - this.continuousRenderRange.startIndex
+		let renderSize = this.continuousRenderRange.endPosition - this.continuousRenderRange.startPosition - paddingSize
+
+		// Avoid force render when hidden.
+		if (renderCount > 0 && renderSize > 0) {
+			this.stat.update(renderCount, renderSize)
 		}
 	}
 
 	/** 
 	 * Whether should update placeholder size.
-	 * When scrolling down, need to update.
-	 * When item size changed much, need to update.
+	 * When scrolling down and item size changed much, need to update.
 	 */
-	shouldUpdatePlaceholderSize(endIndex: number, dataCount: number): boolean {
-		if (dataCount !== this.latestDataCountWhenPlaceholderMeasuring) {
+	shouldUpdatePlaceholderSize(startIndex: number, endIndex: number, dataCount: number): boolean {
+
+		// Data count get changed.
+		if (dataCount !== this.cachedPlaceholderProperties.dataCount) {
 			return true
 		}
 
-		let expanded = endIndex > this.latestEndIndexWhenPlaceholderMeasuring
-		if (expanded) {
-			return true
+		// When scrolling up, not update.
+		let scrollingDown = endIndex > this.cachedPlaceholderProperties.endIndex
+		if (!scrollingDown) {
+			return false
 		}
 
-		let sizeChangedMuch = Math.abs(this.getItemSize() - this.latestAverageItemSizeWhenPlaceholderMeasuring) > 1
-		if (sizeChangedMuch) {
-			return true
-		}
+		let newPlaceholderSize = this.calcPlaceholderSize(startIndex, endIndex, dataCount, 'start')
+		let guessSizeAfterEnd = newPlaceholderSize - this.cachedSliderEndPosition
+		let currentSizeAfterEnd = this.cachedPlaceholderProperties.placeholderSize - this.cachedSliderEndPosition
+		let sizeChangedMuch = Math.abs(guessSizeAfterEnd - currentSizeAfterEnd) / Math.max(guessSizeAfterEnd, currentSizeAfterEnd) > 0.333
 
-		return false
+		return sizeChangedMuch
 	}
 
 	/** 
-	 * Update height/width of placeholder progressive.
+	 * Calculate height/width of placeholder progressively.
 	 * When scrolling down, and will render more items in the end, update size.
 	 * No need to update when scrolling up.
 	 */
-	calcPlaceholderSizeByIndices(startIndex: number, endIndex: number, dataCount: number, alignDirection: 'start' | 'end') {
-		let averageSize = this.getItemSize()
+	calcPlaceholderSize(startIndex: number, endIndex: number, dataCount: number, alignDirection: 'start' | 'end') {
+		let itemSize = this.getItemSize()
 		let placeholderSize: number
 		
 		if (alignDirection === 'start') {
-			placeholderSize = averageSize * (dataCount - startIndex) + this.cachedSliderStartPosition
+			placeholderSize = itemSize * (dataCount - startIndex) + this.cachedSliderStartPosition
 		}
 		else {
-			placeholderSize = averageSize * (dataCount - endIndex) + this.cachedSliderEndPosition
+			placeholderSize = itemSize * (dataCount - endIndex) + this.cachedSliderEndPosition
 		}
-
-		this.latestEndIndexWhenPlaceholderMeasuring = endIndex
-		this.latestAverageItemSizeWhenPlaceholderMeasuring = this.getItemSize()
-		this.latestDataCountWhenPlaceholderMeasuring = dataCount
 
 		return placeholderSize
 	}
 
-	/** Set placeholder size. */
-	cachePlaceholderSize(size: number) {
-		this.cachedPlaceholderSize = size
+	/** Cache placeholder size and other properties. */
+	cachePlaceholderProperties(endIndex: number, dataCount: number, placeholderSize: number) {
+		this.cachedPlaceholderProperties = {
+			endIndex,
+			itemSize: this.stat.getLatestSize(),
+			dataCount,
+			placeholderSize,
+		}
 	}
 
 	/** Check cover situation and decide where to render more contents. */

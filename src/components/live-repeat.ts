@@ -27,15 +27,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	reservedPixels: number = 200
 
 	/** 
-	 * Whether item size should be balanced.
-	 * If is `true`, means all items should have same size,
-	 * if one get changed, all get changed, so we will choose latest size to do rendering.
-	 * If is `false`, means item sizes are not balanced,
-	 * different item have different size, so we will choose average size to do rendering.
-	 */
-	itemSizeBalanced: boolean = true
-
-	/** 
 	 * Placeholder element, sibling of slider.
 	 * Since here it renders only partial content,
 	 * slider element has no enough size to expand scrolling area,
@@ -70,12 +61,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	@effect
 	protected applyReservedPixels() {
 		this.renderer!.setReservedPixels(this.reservedPixels)
-	}
-
-	/** Apply `itemSizeBalanced` property to renderer. */
-	@effect
-	applyItemSizeBalanced() {
-		this.renderer!.setItemSizeBalanced(this.itemSizeBalanced)
 	}
 
 	/** Apply `data` count to renderer. */

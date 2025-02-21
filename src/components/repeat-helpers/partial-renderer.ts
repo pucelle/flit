@@ -126,11 +126,6 @@ export class PartialRenderer {
 		this.reservedPixels = reservedPixels
 	}
 
-	/** Set measurement `itemSizeBalanced` property. */
-	setItemSizeBalanced(itemSizeBalanced: boolean) {
-		this.measurement.setItemSizeBalanced(itemSizeBalanced)
-	}
-
 	/** 
 	 * Set total data count before updating.
 	 * Not set data count will not update or enqueue update.
@@ -160,15 +155,16 @@ export class PartialRenderer {
 		}
 	}
 
-	/** After component use this partial renderer get connected. */
+	/** After component that use this partial renderer get connected. */
 	async connect() {
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
+		
 		await untilUpdateComplete()
 		this.readScrollerSize()
 		ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
 	}
 
-	/** After component use this partial renderer will get disconnected. */
+	/** After component that use this partial renderer will get disconnected. */
 	disconnect() {
 
 		// For restoring scroll position.
@@ -206,13 +202,13 @@ export class PartialRenderer {
 
 		//// Can only write dom properties now.
 
-		let hasMeasured = this.measurement.hasMeasuredItemSize()
 		let oldItemSize = this.measurement.getItemSize()
+		let oldHasMeasured = oldItemSize > 0
 		let oldRenderedCount = this.endIndex - this.startIndex
 
 		// Adjust scroll position by specified indices.
 		if (this.needToApply) {
-			this.updateWithNewIndices(hasMeasured)
+			this.updateWithNewIndices(oldHasMeasured)
 			this.needToApply = null
 		}
 
@@ -221,7 +217,7 @@ export class PartialRenderer {
 			this.updateWithStartIndexPersist()
 		}
 
-		if (hasMeasured) {
+		if (oldHasMeasured) {
 			this.updatePlaceholderSizeProgressively()
 		}
 
@@ -240,10 +236,11 @@ export class PartialRenderer {
 		// If newly measured item size, should update coverage.
 		let newRenderedCount = this.endIndex - this.startIndex
 		let newItemSize = this.measurement.getItemSize()
+		let newHasMeasured = newItemSize > 0
 
 		if (newItemSize + 5 < oldItemSize
 			|| newRenderedCount < oldRenderedCount
-			|| !hasMeasured && this.measurement.hasMeasuredItemSize()
+			|| !oldHasMeasured && newHasMeasured
 		) {
 			await this.updateCoverage()
 		}
@@ -311,6 +308,7 @@ export class PartialRenderer {
 	private resetPositions(needRestScrollOffset: boolean, startIndex: number = this.startIndex, endIndex: number = this.endIndex) {
 		let newSliderPosition = this.measurement.calcSliderPositionByIndices(this.startIndex, this.endIndex, this.alignDirection)
 		this.setSliderPosition(newSliderPosition)
+		this.measurement.breakContinuousRenderRange()
 
 		if (needRestScrollOffset) {
 			startIndex = Math.max(startIndex, this.startIndex)
@@ -349,30 +347,24 @@ export class PartialRenderer {
 	}
 
 	/** 
-	 * Update height/width of placeholder progressive.
+	 * Update height/width of placeholder progressive before next time rendering.
 	 * When scrolling down, and will render more items in the end, update size.
 	 * No need to update when scrolling up.
 	 */
 	private updatePlaceholderSizeProgressively() {
-		let shouldUpdate = this.measurement.shouldUpdatePlaceholderSize(this.endIndex, this.dataCount)
+		let shouldUpdate = this.measurement.shouldUpdatePlaceholderSize(this.startIndex, this.endIndex, this.dataCount)
 		if (!shouldUpdate) {
 			return
 		}
 
-		let placeholderSize = this.measurement.calcPlaceholderSizeByIndices(this.startIndex, this.endIndex, this.dataCount, this.alignDirection)
-		
-		// Changes few, no need to update.
-		if (Math.abs(placeholderSize - this.measurement.cachedPlaceholderSize) < 10) {
-			return
-		}
-		
+		let placeholderSize = this.measurement.calcPlaceholderSize(this.startIndex, this.endIndex, this.dataCount, this.alignDirection)
 		this.setPlaceholderSize(placeholderSize)
 	}
 
 	/** Set placeholder size. */
 	private setPlaceholderSize(size: number) {
 		this.doa.setSize(this.placeholder, size)
-		this.measurement.cachePlaceholderSize(size)
+		this.measurement.cachePlaceholderProperties(this.endIndex, this.dataCount, size)
 	}
 
 	/** After update complete, and after `measureAfterRendered`, do more check for edge cases. */
@@ -407,7 +399,7 @@ export class PartialRenderer {
 			let moreSize = newPosition - this.measurement.cachedSliderStartPosition
 
 			this.scroller.scrollTop += moreSize
-			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderProperties.placeholderSize + moreSize)
 			this.setAlignDirection('start')
 			this.setSliderPosition(newPosition)
 		}
@@ -418,7 +410,7 @@ export class PartialRenderer {
 			&& this.scroller.scrollTop + this.scroller.clientHeight >= this.scroller.scrollHeight
 		) {
 			let moreSize = this.measurement.getItemSize() * (this.dataCount - this.endIndex)
-			this.setPlaceholderSize(this.measurement.cachedPlaceholderSize + moreSize)
+			this.setPlaceholderSize(this.measurement.cachedPlaceholderProperties.placeholderSize + moreSize)
 		}
 	}
 

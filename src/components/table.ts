@@ -247,15 +247,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	reservedPixels: number = 200
 
 	/** 
-	 * Whether item size should be balanced.
-	 * If is `true`, means all items should have same size,
-	 * if one get changed, all get changed, so we will choose latest size to do rendering.
-	 * If is `false`, means item sizes are not balanced,
-	 * different item have different size, so we will choose average size to do rendering.
-	 */
-	itemSizeBalanced: boolean = true
-
-	/** 
 	 * Whether each column width can be resized.
 	 * Default value is `false`.
 	 */
@@ -458,7 +449,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			return html`
 				<AsyncLiveRepeat tagName="tbody" :ref=${this.repeatComponent}
 					.reservedPixels=${this.reservedPixels}
-					.itemSizeBalanced=${this.itemSizeBalanced}
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
 					.dataLoader=${(this.store as RemoteStore).dataLoader}
@@ -470,7 +460,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			return html`
 				<LiveRepeat tagName="tbody" :ref=${this.repeatComponent}
 					.reservedPixels=${this.reservedPixels}
-					.itemSizeBalanced=${this.itemSizeBalanced}
 					.renderFn=${this.renderRow.bind(this)}
 					.data=${this.store.currentData}
 					.scrollerSelector=".table-body"
