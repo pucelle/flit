@@ -158,11 +158,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.disconnect()
 	}
 
-	/** Check whether current rendering can cover scroll viewport. */
-	protected checkCoverage() {
-		this.renderer!.updateCoverage()
-	}
-
 	/** 
 	 * Set start visible index of rendered items.
 	 * The data item of this index will be renderer at the topmost or leftmost of the viewport.
