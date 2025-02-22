@@ -485,9 +485,14 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * if want to do more customized rendering.
 	 */
 	protected renderRow(item: T, index: number) {
+		return html`<tr class="table-row">${this.renderCells(item, index)}</tr>`
+	}
+
+	/** Render all cells within a row. */
+	protected renderCells(item: T, index: number) {
 		index += this.startIndex
 
-		let tds = this.columns.map(column => {
+		let cells = this.columns.map(column => {
 			let result = column.renderer ? column.renderer.call(this, item, index) : '\xa0'
 
 			return html`
@@ -500,7 +505,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			`
 		})
 
-		return html`<tr class="table-row">${tds}</tr>`
+		return cells
 	}
 
 	/** Triggers `liveDataUpdated` event. */
