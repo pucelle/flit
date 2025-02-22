@@ -85,7 +85,7 @@ export class droppable<T = any> implements Binding, Part {
 
 	private onMouseEnter() {
 		GlobalDragDropRelationship.enterDrop(this)
-		DOMEvents.once(this.el, 'mouseleave', this.onMouseLeave as any, this)
+		DOMEvents.once(this.el, 'mouseleave', this.onMouseLeave, this)
 	}
 
 	/** After draggable enter current droppable. */

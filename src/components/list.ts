@@ -455,12 +455,12 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 
 		if (this.lastKeyComeFrom) {
-			DOMEvents.off(this.lastKeyComeFrom, 'keydown', this.keyNavigateByEvent as any, this)
+			DOMEvents.off(this.lastKeyComeFrom, 'keydown', this.keyNavigateByEvent, this)
 			DOMEvents.off(this.lastKeyComeFrom, 'blur', this.onKeyComeFromBlur, this)
 		}
 
 		if (this.keyComeFrom) {
-			DOMEvents.on(this.keyComeFrom, 'keydown', this.keyNavigateByEvent as any, this)
+			DOMEvents.on(this.keyComeFrom, 'keydown', this.keyNavigateByEvent, this)
 			DOMEvents.on(this.keyComeFrom, 'blur', this.onKeyComeFromBlur, this)
 		}
 

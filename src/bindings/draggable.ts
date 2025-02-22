@@ -53,7 +53,7 @@ export class draggable<T = any> implements Binding, Part {
 			return
 		}
 
-		DOMEvents.on(this.el, 'mousedown', this.onMouseDown as any, this)
+		DOMEvents.on(this.el, 'mousedown', this.onMouseDown, this)
 		DOMEvents.on(this.el, 'mouseenter', this.onMouseEnter, this)
 		
 		// To avoid image dragging handled be HTML5 drag & drop
@@ -67,7 +67,7 @@ export class draggable<T = any> implements Binding, Part {
 			return
 		}
 
-		DOMEvents.off(this.el, 'mousedown', this.onMouseDown as any, this)
+		DOMEvents.off(this.el, 'mousedown', this.onMouseDown, this)
 		DOMEvents.off(this.el, 'mouseenter', this.onMouseEnter, this)
 		this.el.removeAttribute('draggable')
 		this.connected = false
