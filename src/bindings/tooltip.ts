@@ -22,7 +22,7 @@ const DefaultTooltipOptions: Partial<TooltipOptions> = {
 	gaps: 1,
 
 	/** Make it can be shown even out-of viewport. */
-	stickToEdges: false,
+	stickToEdges: true,
 
 	showDelay: 0,
 	hideDelay: 200,
