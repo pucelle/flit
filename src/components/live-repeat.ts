@@ -72,11 +72,13 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/** Update after data change. */
 	update() {
-		if (!this.connected || !this.needsUpdate) {
+		if (!this.connected) {
 			return
 		}
 
 		this.renderer!.update()
+
+		// `updateLiveData` may not call `updateLiveData()` below.
 		this.needsUpdate = false
 	}
 
@@ -85,10 +87,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * May be called for several times for each time updating.
 	 */
 	protected updateLiveData() {
-
-		// May update rendered data several times of each time partial renderer updating.
-		this.needsUpdate = true
-
 		super.update()
 	}
 

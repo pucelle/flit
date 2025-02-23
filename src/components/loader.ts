@@ -78,7 +78,6 @@ export class Loader<E = {}> extends Component<E> {
 				:class.as-cover=${this.asCover}
 				:style.width=${this.asCover ? '' : size + 'px'}
 				:style.height=${this.asCover ? '' : size + 'px'}
-				:style.animation="loader-snake-${this.size} 2s linear infinite"
 			>
 				<svg viewBox="0 0 ${size} ${size}" width=${size} height=${size}>
 					<path class="loader-bg" d=${d} style="stroke-width: ${strokeWidth}" />
