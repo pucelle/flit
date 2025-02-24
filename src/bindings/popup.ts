@@ -281,10 +281,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Do show popup action. */
-	protected doShowPopup() {
+	protected async doShowPopup() {
 		this.fire('opened-change', true)
 
-		this.updatePopup()
+		await this.updatePopup()
 		this.alignPopup()
 		this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
 	}
@@ -372,8 +372,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Update popup content, if haven't rendered, render it firstly. */
-	protected updatePopup() {
-		this.updateRendering()
+	protected async updatePopup() {
+		await this.updateRendering()
 
 		// Update popup properties.
 		this.popup!.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toInsetKey()!
@@ -384,7 +384,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
 	/** Update rendered and popup property, and may use and add cache. */
-	protected updateRendering() {
+	protected async updateRendering() {
 		let rendered = this.rendered
 		let popup = this.popup
 
@@ -400,7 +400,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		// Make rendered.
 		if (!rendered) {
 			rendered = render(this.renderer!, this.context)
-			rendered.connectManually()
+			await rendered.connectManually()
 		}
 
 		// Reset renderer.

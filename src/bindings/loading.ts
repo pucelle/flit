@@ -48,9 +48,9 @@ export class loading implements Binding, Part {
 		this.el = el
 	}
 
-	afterConnectCallback() {
+	async afterConnectCallback() {
 		if (this.value && !this.loader) {
-			this.loader = this.renderLoader()
+			this.loader = await this.renderLoader()
 			this.loader.appendTo(this.el)
 		}
 	}
@@ -81,7 +81,7 @@ export class loading implements Binding, Part {
 
 		if (this.value) {
 			if (!this.loader) {
-				this.loader = this.renderLoader()
+				this.loader = await this.renderLoader()
 				this.loader.appendTo(this.el)
 			}
 		}
@@ -93,7 +93,7 @@ export class loading implements Binding, Part {
 		}
 	}
 
-	private renderLoader(): Loader {
+	private async renderLoader(): Promise<Loader> {
 		let loaderRendered = render(html`
 			<Loader
 				.size=${this.options.size}
@@ -104,7 +104,7 @@ export class loading implements Binding, Part {
 			/>
 		`)
 
-		loaderRendered.connectManually()
+		await loaderRendered.connectManually()
 		return Loader.from(loaderRendered.el.firstElementChild!)!
 	}
 }

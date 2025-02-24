@@ -79,7 +79,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.update()
 
 		// `updateLiveData` may not call `updateLiveData()` below.
-		this.needsUpdate = false
+		this.$needsUpdate = false
 	}
 
 	/** 
