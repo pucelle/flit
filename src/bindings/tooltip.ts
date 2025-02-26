@@ -44,9 +44,9 @@ export class tooltip extends popup {
 
 	declare options: TooltipOptions
 
-	update(renderer: string | RenderResultRenderer, options: Partial<TooltipOptions> = {}) {
+	update(renderer: string | RenderResultRenderer | null, options: Partial<TooltipOptions> = {}) {
 		options = {...DefaultTooltipOptions, ...options}
-		super.update(this.popupRenderer.bind(this, renderer), options)
+		super.update(renderer ? this.popupRenderer.bind(this, renderer) : null, options)
 	}
 
 	protected popupRenderer(renderer: string | RenderResultRenderer) {

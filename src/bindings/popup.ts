@@ -144,6 +144,7 @@ export const DefaultPopupOptions: PopupOptions = {
  * 
  * `:popup=${html`<Popup />`, ?{...}}`
  * `:popup=${() => html`<Popup />`, ?{...}}`
+ * `:popup=${null}` can prevent popup.
  */
 export class popup extends EventFirer<PopupBindingEvents> implements Binding, Part {
 
@@ -155,7 +156,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	protected transition: Transition | null = null
 	protected options: PopupOptions = DefaultPopupOptions
-	protected renderer: RenderResultRenderer = null as any
+	protected renderer: RenderResultRenderer | null = null
 
 	/** Help to update popup content by newly rendered result. */
 	protected rendered: RenderedComponentLike | null = null
@@ -282,6 +283,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Do show popup action. */
 	protected async doShowPopup() {
+		if (!this.renderer) {
+			return
+		}
+
 		this.fire('opened-change', true)
 
 		await this.updatePopup()
@@ -291,6 +296,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	
 	/** Do hide popup action. */
 	protected async doHidePopup() {
+		if (!this.renderer) {
+			return
+		}
+
 		this.fire('opened-change', false)
 
 		// Play leave transition if need.
@@ -313,10 +322,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Show popup content after a short time out. */
 	showPopupLater() {
-		if (!this.renderer) {
-			return
-		}
-
 		let showDelay = this.options.showDelay
 		let key = this.options.key
 
@@ -338,10 +343,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Send a request to show popup content, can be called repeatedly. */
 	showPopup() {
-		if (!this.renderer) {
-			return
-		}
-
 		this.state.show()
 	}
 
@@ -356,18 +357,18 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.state.hide()
 	}
 
-	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
+	update(renderer: RenderResultRenderer | null, options: Partial<PopupOptions> = {}) {
 		this.renderer = renderer
 		this.options = {...DefaultPopupOptions, ...options} as PopupOptions
 
 		// If popup has popped-up, should also update it.
-		if (this.state.opened) {
+		if (this.state.opened && renderer) {
 			this.updatePopup()
 		}
 
-		// Options changed and no need to persist visible.
-		if (this.preventedHiding && !this.shouldKeepVisible()) {
-			this.hidePopupLater()
+		// Options changes and no need to persist visible, or renderer becomes null.
+		if (this.preventedHiding && !this.shouldKeepVisible() || this.state.opened && !renderer) {
+			this.hidePopup()
 		}
 	}
 
