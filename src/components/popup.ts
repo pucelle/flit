@@ -12,13 +12,17 @@ export class Popup<E = {}> extends Component<E> {
 	static style = css`
 		.popup{
 
-			/* Recently, until chrome 133, fixed layout with anchor positioning is not work. */
+			/* Recently, until chrome 133, fixed layout with anchor positioning is not work when page can scroll. */
 			position: absolute;
 
 			left: 0;
 			top: 0;
 			background: var(--popup-background-color);
 			border-radius: var(--popup-border-radius);
+
+			/** Avoid become narrower after alignment when touches page edges. */
+			width: max-content;
+
 			max-width: 100vw;
 			max-height: 100vh;
 
