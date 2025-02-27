@@ -78,6 +78,9 @@ export class Switch<E = {}> extends Component<E & SwitchEvents> {
 
 	protected onClick() {
 		this.toggleValue()
+
+		// Should not keep focus when click to toggle.
+		this.el.blur()
 	}
 
 	protected toggleValue(this: Switch) {
