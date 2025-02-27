@@ -237,6 +237,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 */
 	protected readonly keyNavigator: ListDataNavigator<T> = new ListDataNavigator()
 
+	/** For only latest expanded or collapsed can play transition. */
+	private latestExpandedOrCollapsed: T | null = null
+
 	/** Whether watching keyboard navigation events. */
 	private inKeyNavigating: boolean = false
 
@@ -277,11 +280,11 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 					>
 						<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} .size="inherit" />
 					</div>
-				</>
+				</lu:if>
 
 				<lu:elseif ${anySiblingHaveChildren}>
 					<div class='list-toggle-placeholder' />
-				</>
+				</lu:elseif>
 
 				<lu:if ${item.icon !== undefined}>
 					<div class='list-icon'>
@@ -289,7 +292,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 							<Icon .type=${item.icon} .size="inherit" />
 						</>
 					</div>
-				</>
+				</lu:if>
 
 				<div class="list-content">
 					${this.renderItemContent(item)}
@@ -297,14 +300,16 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 				<lu:if ${this.mode === 'selection' && this.isSelected(item)}>
 					<Icon class="list-selected-icon" .type="checked" .size="inherit" />
-				</>
+				</lu:if>
 			</div>
 
 			<lu:if ${item.children && expanded}>
-				<div class="list-subsection" :transition.immediate=${fold()}>
+				<div class="list-subsection"
+					:transition.immediate=${() => item.value === this.latestExpandedOrCollapsed ? fold() : null}
+				>
 					${this.renderItems(item.children!)}
 				</div>
-			</>
+			</lu:if>
 		`
 	}
 
@@ -359,6 +364,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else {
 			this.expanded.push(item.value)
 		}
+
+		this.latestExpandedOrCollapsed = item.value
 	}
 
 	/** Do selection or navigation. */
