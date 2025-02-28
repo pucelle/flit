@@ -57,12 +57,12 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
 	}
 
-	/** Check whether item at specified index is at least partial visible. */
+	/** Check whether item at specified index is visible. */
 	isIndexVisible(index: number, fullyVisible: boolean = false): boolean {
 		return index >= this.getStartVisibleIndex(fullyVisible) && index <= this.getEndVisibleIndex(fullyVisible)
 	}
 	
-	/** Get the index of the first at least partial visible item. */
+	/** Get the index of the first visible item. */
 	getStartVisibleIndex(fullyVisible: boolean = false): number {
 		return locateVisibleIndex(
 			this.scroller,
@@ -74,7 +74,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		)
 	}
 
-	/** Get the index of the last at least partial visible item. */
+	/** Get the index after the last visible item. */
 	getEndVisibleIndex(fullyVisible: boolean = false): number {
 		return locateVisibleIndex(
 			this.scroller,

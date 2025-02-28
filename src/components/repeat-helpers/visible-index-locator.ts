@@ -40,10 +40,5 @@ export function locateVisibleIndex(
 		}
 	})
 
-	// If locate to `els.length`, minus.
-	if (index > 0 && index === els.length) {
-		index--
-	}
-
 	return index
 }

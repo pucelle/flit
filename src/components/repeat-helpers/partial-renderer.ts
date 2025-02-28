@@ -559,7 +559,7 @@ export class PartialRenderer {
 	}
 
 	/** 
-	 * Locate start or end index at which the item is visible in viewport.
+	 * Locate start or after end index at which the item is visible in viewport.
 	 * Must after update complete.
 	 */
 	locateVisibleIndex(direction: 'start' | 'end'): number {
