@@ -298,8 +298,8 @@ export class Notification<E = {}> extends Component<E> {
 		this.hide(item.id)
 	}
 
-	protected onLeaveTransitionEnded(type: string) {
-		if (type === 'leave' && this.items.length === 0) {
+	protected onLeaveTransitionEnded() {
+		if (this.items.length === 0) {
 			this.remove()
 			this.el.style.minWidth = ''
 		}
@@ -313,9 +313,15 @@ export class Notification<E = {}> extends Component<E> {
 
 		// Overwrite existing.
 		if (options.id) {
-			let item = this.items.find(v => v.id === options.id)
-			if (item) {
-				Object.assign(item, options)
+			let itemIndex = this.items.findIndex(v => v.id === options.id)
+			if (itemIndex > -1) {
+				let item: NotificationItem = {
+					...options,
+					hovering: false,
+					timeout: null,
+				} as NotificationItem
+
+				this.items[itemIndex] = item
 				this.hideLater(item)
 				
 				return options.id
