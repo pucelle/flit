@@ -158,11 +158,11 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	getStartVisibleIndex(fullyVisible: boolean = false): number {
-		return this.startIndex + super.getStartVisibleIndex(fullyVisible)
+		return this.renderer!.locateVisibleIndex('start', fullyVisible)
 	}
 
 	getEndVisibleIndex(fullyVisible: boolean = false): number {
-		return this.startIndex + super.getEndVisibleIndex(fullyVisible)
+		return this.renderer!.locateVisibleIndex('end', fullyVisible)
 	}
 
 	/** 

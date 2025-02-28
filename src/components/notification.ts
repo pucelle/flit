@@ -1,4 +1,4 @@
-import {css, html, Component, TemplateResult} from '@pucelle/lupos.js'
+import {css, html, Component, RenderResultRenderer} from '@pucelle/lupos.js'
 import {Timeout, fold, fade} from '@pucelle/ff'
 import {Icon} from './icon'
 import {Button} from './button'
@@ -16,7 +16,7 @@ export interface NotificationOptions {
 	title?: string
 
 	/** Notification message. */
-	message?: string | TemplateResult
+	message?: RenderResultRenderer
 
 	/** A data list to show below message. */
 	list?: string[]
@@ -220,7 +220,7 @@ export class Notification<E = {}> extends Component<E> {
 							<div class="notification-title">${item.title}</div>
 						</lu:if>
 
-						<div class="notification-message">${item.message}</div>
+						<div class="notification-message">${this.renderMessage(item.message)}</div>
 						
 						<lu:if ${item.list && item.list.length > 0}>
 							<ul class="notification-list">
@@ -238,6 +238,15 @@ export class Notification<E = {}> extends Component<E> {
 			}</lu:for>
 		</template>
 		`
+	}
+
+	protected renderMessage(message: RenderResultRenderer | undefined) {
+		if (typeof message === 'function') {
+			return message()
+		}
+		else {
+			return message
+		}
 	}
 
 	protected onUpdated() {
@@ -394,7 +403,7 @@ export class TypedNotification {
 	}
 
 	/** Shows info type notification, returns it's id. */
-	info(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	info(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'info'
 		options.message = message
 
@@ -402,7 +411,7 @@ export class TypedNotification {
 	}
 
 	/** Shows warn type notification, returns it's id. */
-	warn(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	warn(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'warning'
 		options.message = message
 
@@ -410,7 +419,7 @@ export class TypedNotification {
 	}
 
 	/** Shows error type notification, returns it's id. */
-	error(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	error(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'error'
 		options.message = message
 
@@ -418,7 +427,7 @@ export class TypedNotification {
 	}
 
 	/** Shows success type notification, returns it's id. */
-	success(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	success(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'success'
 		options.message = message
 
@@ -454,25 +463,25 @@ class UniqueNotification {
 	}
 	
 	/** Shows info type notification, returns it's id. */
-	info(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	info(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		this.overwriteId(options)
 		return this.id = this.raw.info(message, options)
 	}
 
 	/** Shows warn type notification, returns it's id. */
-	warn(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	warn(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		this.overwriteId(options)
 		return this.id = this.raw.warn(message, options)
 	}
 
 	/** Shows error type notification, returns it's id. */
-	error(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	error(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		this.overwriteId(options)
 		return this.id = this.raw.error(message, options)
 	}
 
 	/** Shows success type notification, returns it's id. */
-	success(message: string | TemplateResult, options: NotificationOptions = {}): number {
+	success(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		this.overwriteId(options)
 		return this.id = this.raw.success(message, options)
 	}
