@@ -1,4 +1,4 @@
-import {css, html, Component, TemplateResult} from '@pucelle/lupos.js'
+import {css, html, Component, RenderResultRenderer} from '@pucelle/lupos.js'
 import {AnchorAligner, DOMEvents, fade, translations, promiseWithResolves, untilUpdateComplete} from '@pucelle/ff'
 import {Input} from './input'
 import {Textarea} from './textarea'
@@ -15,7 +15,7 @@ export interface DialogOptions {
 	title?: string
 
 	/** Dialog message. */
-	message?: string | TemplateResult
+	message?: RenderResultRenderer
 
 	/** Dialog actions. */
 	actions?: DialogAction[]
@@ -214,7 +214,7 @@ export class Dialog<E = {}> extends Component<E> {
 					</lu:if>
 
 					<div class="dialog-message">
-						${options.message}
+						${this.renderMessage()}
 					</div>
 
 					<lu:if ${options.list && options.list.length > 0}>
@@ -227,6 +227,17 @@ export class Dialog<E = {}> extends Component<E> {
 				${this.renderActions(options.actions)}
 			</template>
 		`
+	}
+
+	protected renderMessage() {
+		let message = this.options!.message
+
+		if (typeof message === 'function') {
+			return message()
+		}
+		else {
+			return message
+		}
 	}
 
 	protected renderActions(actions: DialogAction[] | undefined) {
@@ -372,7 +383,7 @@ export class TypedDialog {
 	}
 
 	/** Show default type dialog or add it to dialog stack. */
-	show(message: string | TemplateResult, options: DialogOptions = {}): Promise<string | undefined> {
+	show(message: RenderResultRenderer, options: DialogOptions = {}): Promise<string | undefined> {
 		return this.addOptions({
 			message,
 			actions: [{value: 'ok', text: translations.get('ok')}],
@@ -381,7 +392,7 @@ export class TypedDialog {
 	}
 
 	/** Show confirm type dialog or add it to dialog stack. */
-	confirm(message: string | TemplateResult, options: DialogOptions = {}): Promise<string | undefined> {
+	confirm(message: RenderResultRenderer, options: DialogOptions = {}): Promise<string | undefined> {
 		return this.addOptions({
 			icon: 'confirm',
 			message,
@@ -394,12 +405,12 @@ export class TypedDialog {
 	}
 
 	/** Show prompt type dialog or add it to dialog stack. */
-	async prompt(message: string | TemplateResult, options: PromptDialogOptions = {}): Promise<string | undefined> {
+	async prompt(message: RenderResultRenderer, options: PromptDialogOptions = {}): Promise<string | undefined> {
 		let value = options.defaultValue ? String(options.defaultValue) : ''
 		let input: Input | Textarea
 
-		let messageOverwritten = html`
-			${message}
+		let messageOverwritten = () => html`
+			${typeof message === 'function' ? message() : message}
 
 			<lu:if ${options.inputType === 'textarea'}>
 				<Textarea class="dialog-input" 
