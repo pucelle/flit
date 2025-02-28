@@ -568,7 +568,8 @@ export class PartialRenderer {
 			this.repeat.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
 			this.measurement.cachedSliderStartPosition,
-			direction
+			direction,
+			false
 		)
 
 		return visibleIndex + this.startIndex

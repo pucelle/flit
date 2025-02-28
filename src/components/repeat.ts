@@ -32,7 +32,6 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 */
 	scrollerSelector: string | null = null
 
-	
 	/** 
 	 * Help to read and write element's scrolling properties.
 	 * Use it only when required.
@@ -58,20 +57,33 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
 	}
 
-	/** 
-	 * Locate start or end index at which the item is visible in viewport.
-	 * Will read dom properties, must after update complete.
-	 */
-	locateVisibleIndex(direction: 'start' | 'end'): number {
-		let visibleIndex = locateVisibleIndex(
+	/** Check whether item at specified index is at least partial visible. */
+	isIndexVisible(index: number, fullyVisible: boolean = false): boolean {
+		return index >= this.getStartVisibleIndex(fullyVisible) && index <= this.getEndVisibleIndex(fullyVisible)
+	}
+	
+	/** Get the index of the first at least partial visible item. */
+	getStartVisibleIndex(fullyVisible: boolean = false): number {
+		return locateVisibleIndex(
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
 			0,
-			direction
+			'start',
+			fullyVisible
 		)
+	}
 
-		return visibleIndex
+	/** Get the index of the last at least partial visible item. */
+	getEndVisibleIndex(fullyVisible: boolean = false): number {
+		return locateVisibleIndex(
+			this.scroller,
+			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
+			this.doa,
+			0,
+			'end',
+			fullyVisible
+		)
 	}
 
 	/** 

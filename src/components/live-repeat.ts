@@ -94,10 +94,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return html`<lu:for ${this.liveData}>${this.renderFn}</lu:for>`
 	}
 
-	locateVisibleIndex(direction: 'start' | 'end') {
-		return this.renderer!.locateVisibleIndex(direction)
-	}
-
 	beforeDisconnectCallback(param: PartCallbackParameterMask): void {
 		super.beforeDisconnectCallback(param)
 
@@ -154,6 +150,19 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	protected onWillDisconnect() {
 		super.onWillDisconnect()
 		this.renderer!.disconnect()
+	}
+
+	/** Check whether item at specified index is rendered. */
+	isIndexRendered(index: number): boolean {
+		return index >= this.startIndex && index < this.endIndex
+	}
+
+	getStartVisibleIndex(fullyVisible: boolean = false): number {
+		return this.startIndex + super.getStartVisibleIndex(fullyVisible)
+	}
+
+	getEndVisibleIndex(fullyVisible: boolean = false): number {
+		return this.startIndex + super.getEndVisibleIndex(fullyVisible)
 	}
 
 	/** 
@@ -218,10 +227,5 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		}
 
 		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)
-	}
-
-	/** Get if item with specified index is rendered. */
-	protected isIndexRendered(index: number) {
-		return index >= this.startIndex && index < this.endIndex
 	}
 }

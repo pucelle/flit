@@ -3,15 +3,16 @@ import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 
 
 /** 
- * Locate the first or last element in els that is visible.
- * Returned range is `0 ~ list.length - 1`, and at least 0.
+ * Locate the first or after the last element in els that is at least partial visible.
+ * Returned range is `0 ~ list.length`.
  */
 export function locateVisibleIndex(
 	scroller: HTMLElement,
 	els: ArrayLike<HTMLElement>,
 	doa: DirectionalOverflowAccessor,
 	sliderStartPosition: number,
-	direction: 'start' | 'end'
+	direction: 'start' | 'end',
+	fullyVisible: boolean
 ): number {
 	let scrollerSize = doa.getClientSize(scroller)
 	let scrolled = doa.getScrollPosition(scroller)
@@ -24,12 +25,12 @@ export function locateVisibleIndex(
 		let end = start + size
 
 		// Above, move right.
-		if (end < 0) {
+		if (fullyVisible ? start < 0 : end < 0) {
 			return -1
 		}
 
 		// Below, move left.
-		else if (start > scrollerSize) {
+		else if (fullyVisible ? end > scrollerSize : start > scrollerSize) {
 			return 1
 		}
 

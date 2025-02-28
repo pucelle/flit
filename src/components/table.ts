@@ -571,9 +571,25 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		this.store.orderDirection = this.orderDirection
 	}
 
-	/** Locate start or end index at which the item is visible in viewport. */
-	locateVisibleIndex(direction: 'start' | 'end'): number {
-		return this.repeatComponent.locateVisibleIndex(direction)
+	/** Check whether item at specified index is rendered. */
+	isIndexRendered(index: number): boolean {
+		return index >= this.startIndex && index < this.endIndex
+	}
+
+	/** Check whether item at specified index is at least partial visible. */
+	isIndexVisible(index: number, fullyVisible: boolean = false): boolean {
+		return index >= this.getStartVisibleIndex(fullyVisible)
+			&& index <= this.getEndVisibleIndex(fullyVisible)
+	}
+	
+	/** Get the index of the first at least partial visible item. */
+	getStartVisibleIndex(fullyVisible: boolean = false): number {
+		return this.repeatComponent.getStartVisibleIndex(fullyVisible)
+	}
+
+	/** Get the index of the last at least partial visible item. */
+	getEndVisibleIndex(fullyVisible: boolean = false): number {
+		return this.repeatComponent.getEndVisibleIndex(fullyVisible)
 	}
 
 	/** 
