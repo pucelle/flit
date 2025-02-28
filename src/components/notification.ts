@@ -86,7 +86,7 @@ export class Notification<E = {}> extends Component<E> {
 		}
 
 		.notification-left{
-			padding: 1em 1em 1.2em 1.2em;
+			padding: 1em 1em 1em 1.2em;
 		}
 
 		.notification-type-icon{
@@ -268,7 +268,7 @@ export class Notification<E = {}> extends Component<E> {
 			actions.map(action => html`
 				<Button class="notification-action"
 					.primary=${action.primary}
-					@click=${() => this.onClickActionButton(action, item)}
+					@click=${() => this.onClickActionButton(action)}
 				>
 					${action.text}
 				</Button>
@@ -276,12 +276,10 @@ export class Notification<E = {}> extends Component<E> {
 		}</div>`
 	}
 	
-	protected onClickActionButton(action: NotificationAction, item: NotificationItem) {
+	protected onClickActionButton(action: NotificationAction) {
 		if (action.handler) {
 			action.handler()
 		}
-
-		this.hide(item.id)
 	}
 
 	protected onMouseEnter(item: NotificationItem) {
@@ -447,7 +445,7 @@ export class TypedNotification {
 
 
 /** All notification calls will share a unique notification item. */
-class UniqueNotification {
+export class UniqueNotification {
 
 	protected readonly raw: TypedNotification
 	protected id: number | null = null
