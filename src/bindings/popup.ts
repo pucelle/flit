@@ -312,7 +312,11 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 				return
 			}
 			
+			// Only remove popup is not enough.
+			// Rendered content to be referenced as a slot content by popup,
+			// it's as part of `rendered`, not `popup`.
 			this.popup?.remove()
+			this.rendered?.remove()
 		}
 
 		IntersectionWatcher.unwatch(this.el)
@@ -436,23 +440,27 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		// Make rendered.
 		if (!rendered) {
 			rendered = render(this.renderer!, this.context)
-			await rendered.connectManually()
 		}
 
 		// Reset renderer.
 		else if (rendered.renderer !== this.renderer!) {
 			rendered.renderer = this.renderer!
-			await untilUpdateComplete()
 		}
 
 		this.rendered = rendered
 
+		// Connect rendered without appending it to document.
+		await rendered.connectManually()
 
-		// Pick rendered popup.
+		// Wait for child Popup component get initialized.
+		await untilUpdateComplete()
+
+		// Pick newly rendered element after rendered result can't match.
 		let firstElement = rendered!.el.firstElementChild!
+		if (firstElement) {
+			popup = Popup.from(firstElement)
+		}
 
-		// May re-render popup component, or reuse old which have been moved out.
-		popup = firstElement ? Popup.from(firstElement) : popup
 		if (!popup) {
 			throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
 		}
@@ -480,7 +488,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 
 		// Although in document, need append too.
-		// This can ensure it overleaps all other tooltips.
+		// This can ensure it re-connect.
 		this.popup!.appendTo(document.body)
 
 		// Get focus if needed.
