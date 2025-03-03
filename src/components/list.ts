@@ -294,9 +294,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 					</div>
 				</lu:if>
 
-				<div class="list-content">
-					${this.renderItemContent(item)}
-				</div>
+				${this.renderItemContent(item)}
 
 				<lu:if ${this.mode === 'selection' && this.isSelected(item)}>
 					<Icon class="list-selected-icon" .type="checked" .size="inherit" />
