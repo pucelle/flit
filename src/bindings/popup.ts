@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, DOMEvents, sleep, IntersectionWatcher} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, DOMEvents, sleep, IntersectionWatcher, untilUpdateComplete, promiseWithResolves} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -157,6 +157,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected transition: Transition | null = null
 	protected options: PopupOptions = DefaultPopupOptions
 	protected renderer: RenderResultRenderer | null = null
+	protected updateComplete: Promise<boolean> | null = null
 
 	/** Help to update popup content by newly rendered result. */
 	protected rendered: RenderedComponentLike | null = null
@@ -202,7 +203,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 
     beforeDisconnectCallback() {
-		if (this.state.opened && this.popup) {
+		if (this.opened && this.popup) {
 			this.popup.remove()
 		}
 
@@ -253,7 +254,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	 * May still be in opened state right now.
 	 */
 	protected onCancelShow() {
-		if (this.state.opened) {
+		if (this.opened) {
 			this.hidePopup()
 		}
 		else {
@@ -273,7 +274,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Toggle opened state and show or hide popup content immediately. */
 	protected onToggleShowHide() {
-		if (this.state.opened) {
+		if (this.opened) {
 			this.state.hide()
 		}
 		else {
@@ -289,7 +290,8 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		this.fire('opened-change', true)
 
-		await this.updatePopup()
+		let inDOMBefore = await this.willUpdatePopupAndUntil()
+		this.appendPopup(inDOMBefore)
 		this.alignPopup()
 		this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
 	}
@@ -306,7 +308,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		if (this.options.transition && this.transition) {
 			await this.transition.leave(this.options.transition)
 	
-			if (this.state.opened) {
+			if (this.opened) {
 				return
 			}
 			
@@ -361,31 +363,60 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.renderer = renderer
 		this.options = {...DefaultPopupOptions, ...options} as PopupOptions
 
-		// If popup has popped-up, should also update it.
-		if (this.state.opened && renderer) {
-			this.updatePopup()
-		}
-
 		// Options changes and no need to persist visible, or renderer becomes null.
-		if (this.preventedHiding && !this.shouldKeepVisible() || this.state.opened && !renderer) {
+		if (this.preventedHiding && !this.shouldKeepVisible() || this.opened && !renderer) {
 			this.hidePopup()
+		}
+		
+		// If popup has popped-up, should update it.
+		else if (this.opened && renderer) {
+			this.willUpdatePopupAndUntil()
 		}
 	}
 
-	/** Update popup content, if haven't rendered, render it firstly. */
-	protected async updatePopup() {
-		await this.updateRendering()
+	/** 
+	 * Merge several update request, e.g., from enter event and renderer update.
+	 * Returned promise to be resolved after updated, by whether reusing popup is in document before.
+	 */
+	protected async willUpdatePopupAndUntil(): Promise<boolean> {
+		if (this.updateComplete) {
+			return this.updateComplete
+		}
+
+		let {promise, resolve} = promiseWithResolves<boolean>()
+		this.updateComplete = promise
+
+		// Not wait for update complete,
+		// or for outer context it will can't capture the time point
+		// that current popup get update complete.
+		await Promise.resolve()
+
+		let inDOMBefore = await this.updatePopup()
+		this.updateComplete = null
+		resolve(inDOMBefore)
+
+		return promise
+	}
+
+	/** 
+	 * Update popup content, if haven't rendered, render it firstly.
+	 * Returned promise to be resolved by whether reusing popup is in document before.
+	 */
+	protected async updatePopup(): Promise<boolean> {
+		let inDOMBefore = await this.updatePopupRendering()
 
 		// Update popup properties.
 		this.popup!.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toInsetKey()!
 		this.popup!.el.style.pointerEvents = this.options.pointable ? '' : 'none'
 
-		/** Append popup element into document. */
-		this.appendPopup()
+		return inDOMBefore
 	}
 
-	/** Update rendered and popup property, and may use and add cache. */
-	protected async updateRendering() {
+	/** 
+	 * Update rendered and popup property, and may use and add cache.
+	 * Returned promise to be resolved by whether reusing popup is in document before.
+	 */
+	protected async updatePopupRendering(): Promise<boolean> {
 		let rendered = this.rendered
 		let popup = this.popup
 
@@ -398,6 +429,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			}
 		}
 
+		// Whether in document already, if yes, will not play enter transition.
+		let inDOMAlready = !!popup && document.contains(popup.el)
+
+
 		// Make rendered.
 		if (!rendered) {
 			rendered = render(this.renderer!, this.context)
@@ -407,14 +442,16 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		// Reset renderer.
 		else if (rendered.renderer !== this.renderer!) {
 			rendered.renderer = this.renderer!
+			await untilUpdateComplete()
 		}
 
 		this.rendered = rendered
 
+
 		// Pick rendered popup.
 		let firstElement = rendered!.el.firstElementChild!
 
-		// May rendered didn't re-render popup after renderer updated.
+		// May re-render popup component, or reuse old which have been moved out.
 		popup = firstElement ? Popup.from(firstElement) : popup
 		if (!popup) {
 			throw new Error(`The "renderer" of ":popup(renderer)" must render a "<Popup>" type of component!`)
@@ -432,20 +469,25 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			
 			SharedPopups.setUser(popup, this)
 		}
+
+		return inDOMAlready
 	}
 
 	/** Append popup element into document. */
-	protected appendPopup() {
-		let inDomAlready = document.contains(this.popup!.el)
+	protected appendPopup(inDOMBefore: boolean) {
+		if (!this.opened) {
+			return
+		}
 
 		// Although in document, need append too.
+		// This can ensure it overleaps all other tooltips.
 		this.popup!.appendTo(document.body)
 
 		// Get focus if needed.
 		this.mayGetFocus()
 
 		// Play enter transition.
-		if (!inDomAlready && this.options.transition) {
+		if (!inDOMBefore && this.options.transition) {
 			this.transition!.enter(this.options.transition)
 		}
 
@@ -467,7 +509,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Align popup content, returns whether align successfully. */
 	protected alignPopup() {
-		if (!this.state.opened) {
+		if (!this.opened) {
 			return
 		}
 
@@ -539,18 +581,14 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		}
 		
 		if (this.shouldKeepVisible()) {
-			return !this.state.opened
+			return !this.opened
 		}
 
 		return true
 	}
 
 	/** Clears popup content, reset to initial state. */
-	clearContent(forReuse: boolean = false) {
-		if (!forReuse && this.state.opened && this.popup) {
-			this.popup.remove()
-		}
-
+	clearContent() {
 		if (this.popup) {
 			SharedPopups.clearUser(this.popup)
 		}

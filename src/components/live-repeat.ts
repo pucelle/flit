@@ -72,7 +72,10 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/** Update after data change. */
 	update() {
-		if (!this.connected) {
+
+		// `this.$needsUpdate` here is required.
+		// component map disconnect and connect soon, so will be enqueued for multiple times.
+		if (!this.connected || !this.$needsUpdate) {
 			return
 		}
 
@@ -87,6 +90,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * May be called for several times for each time updating.
 	 */
 	protected updateLiveData() {
+		this.$needsUpdate = true
 		super.update()
 	}
 

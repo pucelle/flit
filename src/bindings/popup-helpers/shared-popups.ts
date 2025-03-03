@@ -27,7 +27,7 @@ export function getCache(key: string): SharedPopupContentCache | null {
 
 	let binding = PopupContentUsedBy.get(cache.popup)
 	if (binding) {
-		binding.clearContent(true)
+		binding.clearContent()
 	}
 
 	return cache
