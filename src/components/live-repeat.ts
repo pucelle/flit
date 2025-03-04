@@ -1,5 +1,5 @@
 import {PartCallbackParameterMask} from '@pucelle/lupos.js'
-import {Repeat} from './repeat'
+import {Repeat, RepeatRenderFn} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
 import {PerFrameTransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
 import {html} from '@pucelle/lupos.js'
@@ -17,6 +17,12 @@ import {html} from '@pucelle/lupos.js'
  * - The scroller element must not in `static` position.
  */
 export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
+
+	/** 
+	 * Render function to generate render result by each item.
+	 * The second `index` will accept live index.
+	 */
+	declare renderFn: RepeatRenderFn<T>
 
 	/**
 	* How many pixels to reserve to reduce update frequency when scrolling.
@@ -95,7 +101,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	protected render() {
-		return html`<lu:for ${this.liveData}>${this.renderFn}</lu:for>`
+		return html`<lu:for ${this.liveData}>${this.renderLiveFn.bind(this)}</lu:for>`
+	}
+
+	/** Replace local index to live index. */
+	protected renderLiveFn(item: T, index: number) {
+		return this.renderFn(item, this.startIndex + index)
 	}
 
 	beforeDisconnectCallback(param: PartCallbackParameterMask): void {
