@@ -247,7 +247,7 @@ export class Dialog<E = {}> extends Component<E> {
 
 		return html`<div class="dialog-actions">${actions.map(action => html`
 			<Button class="action"
-				.primary=${action.primary}
+				.primary=${!!action.primary}
 				:class.dialog-third=${action.third}
 				@click=${() => this.onClickActionButton(action)}
 			>
@@ -406,7 +406,7 @@ export class TypedDialog {
 
 	/** Show prompt type dialog or add it to dialog stack. */
 	async prompt(message: RenderResultRenderer, options: PromptDialogOptions = {}): Promise<string | undefined> {
-		let value = options.defaultValue ? String(options.defaultValue) : ''
+		let value: string = options.defaultValue ? String(options.defaultValue) : ''
 		let input: Input | Textarea
 
 		let messageOverwritten = () => html`
@@ -414,18 +414,18 @@ export class TypedDialog {
 
 			<lu:if ${options.inputType === 'textarea'}>
 				<Textarea class="dialog-input" 
-					.placeholder=${options.placeholder}
-					.validator=${options.validator}
+					.placeholder=${options.placeholder ?? ''}
+					.validator=${options.validator ?? null}
 					.value=${value}
 					:ref=${input!}
-					@input=${(v: string) => value = v}
+					@input=${(v: string) => {value = v}}
 				/>
 			</lu:if>
 			<lu:else>
 				<Input class="dialog-input" 
-					.placeholder=${options.placeholder}
-					.validator=${options.validator}
-					.type=${options.inputType || 'text'}
+					.placeholder=${options.placeholder ?? ''}
+					.validator=${options.validator ?? null}
+					.type=${options.inputType as "text" | "password" || 'text'}
 					.value=${value}
 					:ref=${input!}
 					@input=${(v: string) => value = v}

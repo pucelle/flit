@@ -1,5 +1,5 @@
 import {Component, css, html} from '@pucelle/lupos.js'
-import {tooltip} from '../bindings'
+import {tooltip, TooltipOptions} from '../bindings'
 import {Icon} from './icon'
 import {ThemeSize} from '../style'
 import {DOMModifiableEvents, watch} from '@pucelle/ff'
@@ -8,10 +8,10 @@ import {DOMModifiableEvents, watch} from '@pucelle/ff'
 interface InputEvents {
 
 	/** Triggers after input every character. */
-	input: (value: string | number) => void
+	input: (value: string) => void
 
 	/** Triggers after input value changed. */
-	change: (value: string | number, valid: boolean | null) => void
+	change: (value: string, valid: boolean | null) => void
 }
 
 
@@ -108,10 +108,10 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	 * To validate current value, returns error message or `null` if valid.
 	 * Can also returns `null` and later set `error` asynchronously.
 	 */
-	validator: ((value: string) => string) | null = null
+	validator: ((value: string) => string | null) | null = null
 
 	/** Show custom error message. */
-	error: string = ''
+	error: string | null = ''
 
 	/** Whether show error on a tooltip, so it doesn't need to leave a space for error message. */
 	errorOnTooltip: boolean = false
@@ -150,7 +150,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			.placeholder=${this.placeholder || ''}
 			.value=${this.value}
 			:ref=${this.field}
-			?:tooltip=${this.touched && this.error && this.errorOnTooltip, this.error, {type: 'error'}}
+			?:tooltip=${this.touched && this.error && this.errorOnTooltip, this.error, {type: 'error'} as Partial<TooltipOptions>}
 			@focus=${this.onFocus}
 			@blur=${this.onBlur}
 			@input=${this.onInput}

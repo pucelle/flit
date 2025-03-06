@@ -245,11 +245,11 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					:ref.el=${this.listEl}
 					.mode="selection"
 					.selectable
-					.data=${data}
-					.selected=${this.multiple ? this.value : this.value === null ? [] : [this.value]}
+					.data=${data as ListItem<any>[]}
+					.selected=${(this.multiple ? this.value : this.value === null ? [] : [this.value]) as any[]}
 					.multipleSelect=${this.multiple}
 					.keyComeFrom=${this.inputEl}
-					@select=${this.onSelected}
+					@select=${this.onSelected as (selected: readonly any[]) => void}
 				/>
 			</Popup>
 		`

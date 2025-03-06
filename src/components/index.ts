@@ -1,6 +1,6 @@
 export * from './repeat'
-export * from './live-repeat'
-export * from './live-repeat-async'
+export * from './repeat-live'
+export * from './repeat-live-async'
 
 export * from './button'
 export * from './button-group'
@@ -50,3 +50,5 @@ export * from './table'
 export * from './resizer'
 
 export * from './router'
+
+export * from './rect-selection'

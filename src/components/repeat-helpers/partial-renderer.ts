@@ -183,9 +183,9 @@ export class PartialRenderer {
 
 	/** Update and cache latest scroll position and direction. */
 	private updateLatestScrollProperties() {
-		let scrollPosition = this.doa.getScrollPosition(this.scroller)
-		let scrollDirection = scrollPosition >= this.latestScrollPosition ? 'end' : 'start'
-		this.latestScrollPosition = scrollPosition
+		let scrolled = this.doa.getScrolled(this.scroller)
+		let scrollDirection = scrolled >= this.latestScrollPosition ? 'end' : 'start'
+		this.latestScrollPosition = scrolled
 		this.latestScrollDirection = scrollDirection as 'start' | 'end'
 	}
 
@@ -309,7 +309,7 @@ export class PartialRenderer {
 				scrollPosition -= this.measurement.cachedScrollerSize
 			}
 
-			this.doa.setScrollPosition(this.scroller, scrollPosition)
+			this.doa.setScrolled(this.scroller, scrollPosition)
 			this.latestScrollPosition = scrollPosition
 			this.latestScrollDirection = null
 		}
@@ -486,7 +486,7 @@ export class PartialRenderer {
 				// If el located at start, it will move by slider padding top,
 				// to keep it's position, should remove slider padding.
 				position = this.measurement.cachedSliderStartPosition
-					+ this.doa.getOuterOffsetPosition(el)
+					+ this.doa.getOuterOffset(el)
 					- this.doa.getStartPadding(this.slider)
 			}
 		}
@@ -513,7 +513,7 @@ export class PartialRenderer {
 				// If el located at end, it will move up by slider padding bottom,
 				// to keep it's position, should add slider bottom padding.
 				position = this.measurement.cachedSliderStartPosition
-					+ this.doa.getEndOuterOffsetPosition(el)
+					+ this.doa.getEndOuterOffset(el)
 					+ this.doa.getEndPadding(this.slider)
 			}
 		}
@@ -586,8 +586,8 @@ export class PartialRenderer {
 	/** Reset indices by current scroll position. */
 	private resetIndicesByCurrentPosition() {
 		let itemSize = this.measurement.getItemSize()
-		let scrollPosition = this.doa.getScrollPosition(this.scroller)
-		let newStartIndex = itemSize > 0 ? Math.floor(scrollPosition / itemSize) : 0
+		let scrolled = this.doa.getScrolled(this.scroller)
+		let newStartIndex = itemSize > 0 ? Math.floor(scrolled / itemSize) : 0
 
 		this.setIndices(newStartIndex)
 	}

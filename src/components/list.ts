@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, Observed, fold, effect, DOMScroll, PerFrameTransitionEasingName} from '@pucelle/ff'
+import {DOMEvents, EventKeys, Observed, fold, effect, DOMScroll, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip} from '../bindings'
@@ -289,7 +289,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				<lu:if ${item.icon !== undefined}>
 					<div class='list-icon'>
 						<lu:if ${item.icon}>
-							<Icon .type=${item.icon} .size="inherit" />
+							<Icon .type=${item.icon!} .size="inherit" />
 						</>
 					</div>
 				</lu:if>
@@ -303,7 +303,11 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 			<lu:if ${item.children && expanded}>
 				<div class="list-subsection"
-					:transition.immediate=${() => item.value === this.latestExpandedOrCollapsed ? fold() : null}
+					:transition.immediate=${
+						() => item.value === this.latestExpandedOrCollapsed
+							? fold() as TransitionResult<Element, FoldTransitionOptions>
+							: null
+					}
 				>
 					${this.renderItems(item.children!)}
 				</div>
@@ -341,7 +345,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else {
 			return html`
 				<div class="list-content"
-					?:tooltip=${item.tip, item.tip}
+					?:tooltip=${item.tip, item.tip!}
 				>
 					${item.text}
 				</div>

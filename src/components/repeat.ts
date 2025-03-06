@@ -1,6 +1,6 @@
 import {DOMScroll, PerFrameTransitionEasingName, computed} from '@pucelle/ff'
 import {Component, html, RenderResult} from '@pucelle/lupos.js'
-import {locateVisibleIndex} from './repeat-helpers/visible-index-locator'
+import {locateVisibleIndex, locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
 import {DirectionalOverflowAccessor} from './repeat-helpers/directional-overflow-accessor'
 
 
@@ -52,9 +52,25 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 			: this.el.parentElement!
 	}
 
-
 	protected render() {
 		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
+	}
+
+	/** 
+	 * Get the element index at specified offset.
+	 * The offset value is the offset position relative to scroller,
+	 * it's not affected by scroll position.
+	 */
+	getIndexAtOffset(offset: number): number {
+		let index = locateVisibleIndexAtOffset(
+			this.scroller,
+			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
+			this.doa,
+			0,
+			offset
+		)
+
+		return index
 	}
 
 	/** Check whether item at specified index is visible. */

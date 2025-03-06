@@ -250,7 +250,7 @@ export class PartialRendererMeasurement {
 	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number, scrollDirection: 'start' | 'end' | null): UnCoveredSituation | null {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)
-		let scrolled = this.doa.getScrollPosition(this.scroller)
+		let scrolled = this.doa.getScrolled(this.scroller)
 		let sliderStart = this.cachedSliderStartPosition - scrolled
 		let sliderEnd = sliderStart + sliderSize
 		let unexpectedScrollStart = scrolled === 0 && startIndex > 0

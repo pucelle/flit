@@ -56,7 +56,7 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
-	getScrollPosition(el: Element) {
+	getScrolled(el: Element) {
 		if (this.direction === 'vertical') {
 			return el.scrollTop
 		}
@@ -68,7 +68,7 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
-	setScrollPosition(el: Element, position: number) {
+	setScrolled(el: Element, position: number) {
 		if (this.direction === 'vertical') {
 			el.scrollTop = position
 		}
@@ -143,8 +143,8 @@ export class DirectionalOverflowAccessor {
 		}
 	}
 
-	/** Offset value is not affected by scroll position. */
-	getOffsetPosition(el: HTMLElement): number {
+	/** Offset value is not affected by scroll value. */
+	getOffset(el: HTMLElement): number {
 		if (this.direction === 'vertical') {
 			return el.offsetTop
 		}
@@ -157,10 +157,10 @@ export class DirectionalOverflowAccessor {
 	}
 
 	/** 
-	 * Get offset position consider margin value.
-	 * Offset value is not affected by scroll position.
+	 * Get offset consider margin value.
+	 * Offset value is not affected by scroll value.
 	 */
-	getOuterOffsetPosition(el: HTMLElement): number {
+	getOuterOffset(el: HTMLElement): number {
 		if (this.direction === 'vertical') {
 			return el.offsetTop - DOMUtils.getNumericStyleValue(el, 'marginTop')
 		}
@@ -173,10 +173,10 @@ export class DirectionalOverflowAccessor {
 	}
 
 	/** 
-	 * Get end offset position consider margin value.
-	 * Offset value is not affected by scroll position.
+	 * Get end offset consider margin value.
+	 * Offset value is not affected by scroll value.
 	 */
-	getEndOuterOffsetPosition(el: HTMLElement): number {
+	getEndOuterOffset(el: HTMLElement): number {
 		if (this.direction === 'vertical') {
 			return el.offsetTop + el.offsetHeight + DOMUtils.getNumericStyleValue(el, 'marginBottom')
 		}

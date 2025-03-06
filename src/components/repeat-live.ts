@@ -3,6 +3,7 @@ import {Repeat, RepeatRenderFn} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
 import {PerFrameTransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
 import {html} from '@pucelle/lupos.js'
+import {locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
 
 
 /** 
@@ -170,6 +171,27 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	/** Check whether item at specified index is rendered. */
 	isIndexRendered(index: number): boolean {
 		return index >= this.startIndex && index < this.endIndex
+	}
+
+	/** 
+	 * Get the element index at specified offset.
+	 * The offset value is the offset position relative to scroller,
+	 * it's not affected by scroll position.
+	 * 
+	 * Note if content in target offset has not been rendered,
+	 * e.g. it out of partial rendering range because of away from viewport much.
+	 * Would can't get right index result.
+	 */
+	getIndexAtOffset(offset: number): number {
+		let index = locateVisibleIndexAtOffset(
+			this.scroller,
+			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
+			this.doa,
+			this.renderer!.measurement.cachedSliderStartPosition,
+			offset
+		)
+		
+		return this.startIndex + index
 	}
 
 	getStartVisibleIndex(fullyVisible: boolean = false): number {
