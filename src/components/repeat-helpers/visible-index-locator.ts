@@ -46,7 +46,10 @@ export function locateVisibleIndex(
 }
 
 
-/** Locate the element in els that is in specified offset position. */
+/** 
+ * Locate the element in els that is in specified offset position.
+ * May returns value in range `0~els.length-1`.
+ */
 export function locateVisibleIndexAtOffset(
 	scroller: HTMLElement,
 	els: ArrayLike<HTMLElement>,
@@ -81,7 +84,7 @@ export function locateVisibleIndexAtOffset(
 	})
 
 	if (index === els.length) {
-		index = -1
+		index = els.length - 1
 	}
 
 	return index

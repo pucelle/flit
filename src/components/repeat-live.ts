@@ -176,6 +176,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	/** 
 	 * Get the element index at specified offset.
 	 * The offset value is the offset position relative to scroller,
+	 * may return value in range `0~els.length-1`.
 	 * it's not affected by scroll position.
 	 * 
 	 * Note if content in target offset has not been rendered,
