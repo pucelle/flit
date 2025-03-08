@@ -267,7 +267,7 @@ export class Notification<E = {}> extends Component<E> {
 		return html`<div class="notification-actions">${
 			actions.map(action => html`
 				<Button class="notification-action"
-					.primary=${action.primary}
+					.primary=${action.primary!}
 					@click=${() => this.onClickActionButton(action)}
 				>
 					${action.text}

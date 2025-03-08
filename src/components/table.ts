@@ -4,7 +4,7 @@ import {effect, Observed, PerFrameTransitionEasingName, ResizeWatcher, Transitio
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './repeat-live'
-import {Repeat, RepeatRenderFn} from './repeat'
+import {Repeat} from './repeat'
 import {AsyncLiveRepeat} from './repeat-live-async'
 import {Icon} from './icon'
 
@@ -449,7 +449,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			return html`
 				<AsyncLiveRepeat tagName="tbody" :ref=${this.repeatComponent}
 					.reservedPixels=${this.reservedPixels}
-					.renderFn=${this.renderRow.bind(this) as RepeatRenderFn<any>}
+					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
 					.dataLoader=${(this.store as RemoteStore).dataLoader}
 					@freshly-updated=${this.onLiveDataUpdated}
@@ -460,7 +460,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			return html`
 				<LiveRepeat tagName="tbody" :ref=${this.repeatComponent}
 					.reservedPixels=${this.reservedPixels}
-					.renderFn=${this.renderRow.bind(this) as RepeatRenderFn<any>}
+					.renderFn=${this.renderRow.bind(this)}
 					.data=${this.store.currentData}
 					.scrollerSelector=".table-body"
 					@updated=${this.onLiveDataUpdated}
@@ -471,7 +471,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			return html`
 				<Repeat tagName="tbody" style="display: table-row-group"
 					:ref=${this.repeatComponent}
-					.renderFn=${this.renderRow.bind(this) as RepeatRenderFn<any>}
+					.renderFn=${this.renderRow.bind(this)}
 					.data=${this.store.currentData}
 					.scrollerSelector=".table-body"
 				/>

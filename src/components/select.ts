@@ -245,11 +245,11 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					:ref.el=${this.listEl}
 					.mode="selection"
 					.selectable
-					.data=${data as ListItem<any>[]}
+					.data=${data}
 					.selected=${(this.multiple ? this.value : this.value === null ? [] : [this.value]) as any[]}
 					.multipleSelect=${this.multiple}
 					.keyComeFrom=${this.inputEl}
-					@select=${this.onSelected as (selected: readonly any[]) => void}
+					@select=${this.onSelected}
 				/>
 			</Popup>
 		`
@@ -308,7 +308,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 		}
 	}
 
-	protected onSelected(this: Select, selected: T[]) {
+	protected onSelected(this: Select, selected: readonly T[]) {
 		this.value = this.multiple ? selected : selected[0] ?? null
 
 		let hideAfterSelected = this.hideAfterSelected ?? !this.multiple
