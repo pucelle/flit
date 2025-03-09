@@ -201,19 +201,24 @@ export class RectSelection extends Component<RectSelectionEvents> {
 				let clientSize = this.scroller!.clientHeight
 
 				this.scrollerScrollSize = this.scroller!.scrollHeight
-				this.scrollerPosition += this.getIncrementalMovement(movements.y, frameTime)
-				this.scrollerPosition = Math.max(this.scrollerPosition, 0)
-				this.scrollerPosition = Math.min(this.scrollerPosition, this.scrollerScrollSize - clientSize)
 
-				if (movements.y < 0) {
-					this.endScrollPoint!.y = this.scrollerPosition
-				}
-				else {
-					this.endScrollPoint!.y = this.scrollerPosition + clientSize
-				}
+				let scrollPosition = this.scrollerPosition + this.getIncrementalMovement(movements.y, frameTime)
+				scrollPosition = Math.max(scrollPosition, 0)
+				scrollPosition = Math.min(scrollPosition, this.scrollerScrollSize - clientSize)
 
-				this.scroller!.scrollTop = this.scrollerPosition
-				this.fire('select-update', this.endScrollPoint!, this.startScrollPoint!)
+				if (scrollPosition !== this.scrollerPosition) {
+					this.scrollerPosition = scrollPosition
+
+					if (movements.y < 0) {
+						this.endScrollPoint!.y = scrollPosition
+					}
+					else {
+						this.endScrollPoint!.y = scrollPosition + clientSize
+					}
+
+					this.scroller!.scrollTop = scrollPosition
+					this.fire('select-update', this.endScrollPoint!, this.startScrollPoint!)
+				}
 			}
 		}
 		else if (this.scrollDirection === 'horizontal') {
@@ -221,19 +226,24 @@ export class RectSelection extends Component<RectSelectionEvents> {
 				let clientSize = this.scroller!.clientWidth
 
 				this.scrollerScrollSize = this.scroller!.scrollWidth
-				this.scrollerPosition += this.getIncrementalMovement(movements.x, frameTime)
-				this.scrollerPosition = Math.max(this.scrollerPosition, 0)
-				this.scrollerPosition = Math.min(this.scrollerPosition, this.scrollerScrollSize - clientSize)
 
-				if (movements.x < 0) {
-					this.endScrollPoint!.x = this.scrollerPosition
-				}
-				else {
-					this.endScrollPoint!.x = this.scrollerPosition + clientSize
-				}
+				let scrollPosition = this.scrollerPosition + this.getIncrementalMovement(movements.x, frameTime)
+				scrollPosition = Math.max(scrollPosition, 0)
+				scrollPosition = Math.min(scrollPosition, this.scrollerScrollSize - clientSize)
 
-				this.scroller!.scrollLeft = this.scrollerPosition
-				this.fire('select-update', this.endScrollPoint!, this.startScrollPoint!)
+				if (scrollPosition !== this.scrollerPosition) {
+					this.scrollerPosition = scrollPosition
+					
+					if (movements.x < 0) {
+						this.endScrollPoint!.x = scrollPosition
+					}
+					else {
+						this.endScrollPoint!.x = scrollPosition + clientSize
+					}
+
+					this.scroller!.scrollLeft = scrollPosition
+					this.fire('select-update', this.endScrollPoint!, this.startScrollPoint!)
+				}
 			}
 		}
 	}

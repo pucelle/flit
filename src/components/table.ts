@@ -1,12 +1,13 @@
 import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {Store} from '../data'
-import {effect, Observed, PerFrameTransitionEasingName, ResizeWatcher, TransitionResult} from '@pucelle/ff'
+import {DOMEvents, effect, Observed, PerFrameTransitionEasingName, Point, ResizeWatcher, Selections, sleep, TransitionResult} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './repeat-live'
 import {Repeat} from './repeat'
 import {AsyncLiveRepeat} from './repeat-live-async'
 import {Icon} from './icon'
+import {RectSelection} from './rect-selection'
 
 
 export interface TableEvents {
@@ -274,6 +275,32 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	orderDirection: 'asc' | 'desc' | null = null
 
 	/** 
+	 * Whether can select rows.
+	 * Default value is `false`.
+	 */
+	rowSelectable: boolean = false
+
+	/** 
+	 * Whether can select rows by rect selection.
+	 * Requires `rowSelectable` to be true to work.
+	 * Default value is `false`.
+	 * Note recently selection can't work in remote mode.`
+	 */
+	rowRectSelectable: boolean = false
+
+	/** 
+	 * If specified, and select start from element match this selector,
+	 * will not start selection.
+	 */
+	rowRectSelectionIgnoreSelector: string | null = null
+
+	/** 
+	 * Manage all selected items, exist when `rowSelectable` is true.
+	 * If not assign this property, will initialize a new instance.
+	 */
+	selections: Selections<T> | null = null
+
+	/** 
 	 * Help to resize column widths when `resizable` is `true`.
 	 * Get updated of columns config get changed.
 	 * Must get it after update completed.
@@ -281,45 +308,50 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	protected columnResizer: ColumnWidthResizer | null = null
 
 	/** Repeat component used. */
-	protected repeatComponent!: Repeat<T> | LiveRepeat<T> | AsyncLiveRepeat<T>
+	protected repeatRef!: Repeat<T> | LiveRepeat<T> | AsyncLiveRepeat<T>
 
-	/** The start index of the first item. */
-	get startIndex(): number {
-		if (!this.live) {
-			return 0
+	/** The start row index when starting row rect selection. */
+	protected rectSelectionStartRowIndex: number = 0
+
+	/** The selection results when rect selection started. */
+	protected rectStartSelections: T[] | null = null
+
+	/** Prevent selections change when has just completed rect selection. */
+	protected preventingLoseSelections: boolean = false
+
+	/** Initialize selections if needed. */
+	@effect
+	protected initSelections() {
+		if (this.rowSelectable && !this.selections) {
+			this.selections = new Selections()
 		}
-
-		return (this.repeatComponent as LiveRepeat<T>).startIndex
 	}
 
-	/** The end slicing index of the live data. */
-	get endIndex(): number {
-		if (!this.live) {
-			return 0
+	/** Cancel selection when have some selections on clicking document. */
+	@effect
+	protected cancelSelectionOnClick() {
+		if (!this.selections) {
+			return
 		}
-
-		return (this.repeatComponent as LiveRepeat<T>).endIndex
+		
+		let hasSelected = this.selections.hasAnySelected()
+		if (hasSelected) {
+			DOMEvents.on(this.el, 'click', this.clearSelections, this)
+		}
+		else {
+			DOMEvents.off(this.el, 'click', this.clearSelections, this)
+		}
 	}
 
-	/** 
-	 * Live data, rendering part of all the data.
-	 * If uses remote store, live data items may be `null`.
-	 */
-	get liveData(): (T | null)[] {
-		if (!this.live) {
-			return this.repeatComponent.data as T[]
+	/** Clear all selections. */
+	private clearSelections() {
+		if (!this.selections) {
+			return
 		}
 
-		return (this.repeatComponent as LiveRepeat<T>).liveData
-	}
-
-	/** Get latest align direction. */
-	get alignDirection(): 'start' | 'end' | null {
-		if (!this.live) {
-			return null
+		if (!this.preventingLoseSelections) {
+			this.selections.clear()
 		}
-
-		return (this.repeatComponent as LiveRepeat<T>).alignDirection
 	}
 
 	/** 
@@ -330,6 +362,60 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	protected applyColumnResizerProperties() {
 		this.columnResizer?.update(this.columns, this.minColumnWidth)
 		this.columnResizer?.updateColumnWidths()
+	}
+
+	/** Order specified column with specified direction by column name. */
+	@effect
+	protected applyOrderToStore() {
+		let column = this.columns.find((c, index) => this.getColumnName(c, index) === this.orderName)
+
+		if (this.store instanceof RemoteStore) {
+			this.store.orderName = this.orderName
+		}
+		else {
+			this.store.order = column?.orderBy ?? this.orderName
+		}
+
+		this.store.orderDirection = this.orderDirection
+	}
+
+	/** The start index of the first item. */
+	get startIndex(): number {
+		if (!this.live) {
+			return 0
+		}
+
+		return (this.repeatRef as LiveRepeat<T>).startIndex
+	}
+
+	/** The end slicing index of the live data. */
+	get endIndex(): number {
+		if (!this.live) {
+			return 0
+		}
+
+		return (this.repeatRef as LiveRepeat<T>).endIndex
+	}
+
+	/** 
+	 * Live data, rendering part of all the data.
+	 * If uses remote store, live data items may be `null`.
+	 */
+	get liveData(): (T | null)[] {
+		if (!this.live) {
+			return this.repeatRef.data as T[]
+		}
+
+		return (this.repeatRef as LiveRepeat<T>).liveData
+	}
+
+	/** Get latest align direction. */
+	get alignDirection(): 'start' | 'end' | null {
+		if (!this.live) {
+			return null
+		}
+
+		return (this.repeatRef as LiveRepeat<T>).alignDirection
 	}
 
 	protected onCreated() {
@@ -370,7 +456,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
 	protected render(): TemplateResult {
 		return html`
-		<template class="table">
+		<template class="table" @mousedown=${this.onMouseDown}>
 			<div class="table-head">
 				<div class="table-columns">
 					${this.renderColumns()}
@@ -386,6 +472,14 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 					</colgroup>
 					${this.renderRows()}
 				</table>
+				<lu:if ${this.rowSelectable}>
+					<RectSelection
+						.ignoreSelector=${this.rowRectSelectionIgnoreSelector}
+						@select-started=${this.onRectSelectStarted}
+						@select-ended=${this.onRectSelectEnded}
+						@select-update=${this.onRectSelectUpdate}
+					/>
+				</lu:if>
 			</div>
 		</template>
 		`
@@ -447,7 +541,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	protected renderRows() {
 		if (this.store instanceof RemoteStore) {
 			return html`
-				<AsyncLiveRepeat tagName="tbody" :ref=${this.repeatComponent}
+				<AsyncLiveRepeat tagName="tbody" :ref=${this.repeatRef}
 					.reservedPixels=${this.reservedPixels}
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
@@ -458,7 +552,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		}
 		else if (this.live) {
 			return html`
-				<LiveRepeat tagName="tbody" :ref=${this.repeatComponent}
+				<LiveRepeat tagName="tbody" :ref=${this.repeatRef}
 					.reservedPixels=${this.reservedPixels}
 					.renderFn=${this.renderRow.bind(this)}
 					.data=${this.store.currentData}
@@ -470,7 +564,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		else {
 			return html`
 				<Repeat tagName="tbody" style="display: table-row-group"
-					:ref=${this.repeatComponent}
+					:ref=${this.repeatRef}
 					.renderFn=${this.renderRow.bind(this)}
 					.data=${this.store.currentData}
 					.scrollerSelector=".table-body"
@@ -485,7 +579,14 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * if want to do more customized rendering.
 	 */
 	protected renderRow(item: T, index: number) {
-		return html`<tr class="table-row">${this.renderCells(item, index)}</tr>`
+		return html`
+			<tr class="table-row"
+				:class.selected=${this.selections?.hasSelected(item)}
+				@click=${(e: MouseEvent) => this.onClickRow(item, index, e)}
+			>
+				${this.renderCells(item, index)}
+			</tr>
+		`
 	}
 
 	/** Render all cells within a row. */
@@ -556,19 +657,62 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		return column.name ?? 'column_' + index
 	}
 
-	/** Order specified column with specified direction by column name. */
-	@effect
-	protected applyOrderToStore() {
-		let column = this.columns.find((c, index) => this.getColumnName(c, index) === this.orderName)
+	/** Prevent shift text selection. */
+	protected onMouseDown(e: MouseEvent) {
+		if (this.rowSelectable && e.shiftKey) {
+			e.preventDefault()
+		}
+	}
 
-		if (this.store instanceof RemoteStore) {
-			this.store.orderName = this.orderName
+	protected onClickRow(_item: T, index: number, e: MouseEvent) {
+		if (!this.rowSelectable) {
+			return
+		}
+
+		e.stopPropagation()
+		e.preventDefault()
+
+		this.selections!.selectByMouseEvent(index, (this.store as Store).currentData, e)
+	}
+
+	protected onRectSelectStarted(startOffset: Point, e: MouseEvent) {
+		this.rectSelectionStartRowIndex = this.repeatRef.getIndexAtOffset(startOffset.y)
+
+		if (e.ctrlKey || e.shiftKey) {
+			this.rectStartSelections = [...this.selections!.getSelected()]
 		}
 		else {
-			this.store.order = column?.orderBy ?? this.orderName
+			this.rectStartSelections = []
+		}
+	}
+
+	protected onRectSelectEnded() {
+		this.rectStartSelections = null
+		this.rectSelectionStartRowIndex = 0
+		this.preventingLoseSelections = true
+
+		sleep(0).then(() => {
+			this.preventingLoseSelections = false
+		})
+	}
+
+	protected onRectSelectUpdate(endOffset: Point) {
+		let startRowIndex = this.rectSelectionStartRowIndex
+		let endRowIndex = this.repeatRef.getIndexAtOffset(endOffset.y)
+
+		if (startRowIndex === -1 || endRowIndex === -1) {
+			return
 		}
 
-		this.store.orderDirection = this.orderDirection
+		if (startRowIndex > endRowIndex) {
+			[startRowIndex, endRowIndex] = [endRowIndex, startRowIndex]
+		}
+
+		let allData = (this.store as Store).currentData
+		let items = allData.slice(startRowIndex, endRowIndex + 1)
+
+		items.push(...this.rectStartSelections!)
+		this.selections!.selectOnly(...items)
 	}
 
 	/** Check whether item at specified index is rendered. */
@@ -584,12 +728,12 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	
 	/** Get the index of the first visible item. */
 	getStartVisibleIndex(fullyVisible: boolean = false): number {
-		return this.repeatComponent.getStartVisibleIndex(fullyVisible)
+		return this.repeatRef.getStartVisibleIndex(fullyVisible)
 	}
 
 	/** Get the index after the last visible item. */
 	getEndVisibleIndex(fullyVisible: boolean = false): number {
-		return this.repeatComponent.getEndVisibleIndex(fullyVisible)
+		return this.repeatRef.getEndVisibleIndex(fullyVisible)
 	}
 
 	/** 
@@ -602,7 +746,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			throw new Error(`"setStartIndex(...)" only works in "live" mode.`)
 		}
 
-		(this.repeatComponent as LiveRepeat).setStartVisibleIndex(startIndex)
+		(this.repeatRef as LiveRepeat).setStartVisibleIndex(startIndex)
 	}
 
 	/** 
@@ -611,7 +755,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
 	 */
 	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		return this.repeatComponent.scrollIndexToStart(index, gap, duration, easing)
+		return this.repeatRef.scrollIndexToStart(index, gap, duration, easing)
 	}
 
 	/** 
@@ -619,6 +763,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
 	 */
 	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		return this.repeatComponent.scrollIndexToView(index, gap, duration, easing)
+		return this.repeatRef.scrollIndexToView(index, gap, duration, easing)
 	}
 }
