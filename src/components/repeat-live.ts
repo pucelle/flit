@@ -237,6 +237,9 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.renderer!.setRenderIndices(startIndex, endIndex, scrollingDown ? 'start' : 'end')
 
 			this.willUpdate()
+
+			// Must wait for too loops, may check after first rendering and re-render.
+			await untilUpdateComplete()
 			await untilUpdateComplete()
 		}
 
@@ -261,6 +264,9 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.renderer!.setRenderIndices(startIndex, endIndex, scrollingDown ? 'start' : 'end')
 
 			this.willUpdate()
+
+			// Must wait for too loops, may check after first rendering and re-render.
+			await untilUpdateComplete()
 			await untilUpdateComplete()
 		}
 
