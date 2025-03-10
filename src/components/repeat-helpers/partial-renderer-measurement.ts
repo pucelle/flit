@@ -8,7 +8,6 @@ export type UnCoveredSituation =
 	| 'quarterly-start'	// Has less than 1/4 rest at start
 	| 'quarterly-end'	// Has less than 1/4 rest at end
 	| 'break'			// Have no intersection, ust re-render totally by current scroll position.
-	| 'reset'			// Failed to do continuous updating, must re-render totally by current indices.
 
 
 interface LatestPlaceholderProperties {
