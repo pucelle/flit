@@ -217,57 +217,35 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		// No need to worry about coverage, set scroll position cause scroll event emitted.
 
 		if (!this.isIndexRendered(index)) {
-			let renderCount = this.endIndex - this.startIndex
-			let startIndex: number
-			let scrollingDown = index > this.startIndex
-
-			if (scrollingDown) {
-				let transitionCount = 0
-				if (duration) {
-					transitionCount = Math.floor(this.reservedPixels / this.renderer!.measurement.getItemSize())
-				}
-
-				startIndex = Math.max(index - transitionCount, 0)
-			}
-			else {
-				startIndex = index
-			}
-
-			let endIndex = startIndex + renderCount
-			this.renderer!.setRenderIndices(startIndex, endIndex, scrollingDown ? 'start' : 'end')
-
-			this.willUpdate()
-
-			// Must wait for two loops, may check after first rendering and re-render.
-			await untilUpdateComplete()
-			await untilUpdateComplete()
+			await this.toRenderItemAtIndex(index)
 		}
 
 		return super.scrollIndexToStart(index - this.startIndex, gap, duration, easing)
 	}
 
+	/** To ensure item at index get rendered. */
+	protected async toRenderItemAtIndex(index: number) {
+		let scrollingDown = index > this.startIndex
+		let startIndex: number | undefined = undefined
+		let endIndex: number | undefined = undefined
+
+		if (scrollingDown) {
+			startIndex = index
+		}
+		else {
+			endIndex = index + 1
+		}
+
+		this.renderer!.setRenderIndices(startIndex, endIndex, scrollingDown ? 'start' : 'end', true)
+		this.willUpdate()
+
+		// Must wait for two loops, may check after first rendering and re-render.
+		await untilUpdateComplete()
+	}
+
 	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		if (!this.isIndexRendered(index)) {
-			let renderCount = this.endIndex - this.startIndex
-			let startIndex: number
-			let scrollingDown = index > this.startIndex
-
-			// Item at index will be finally located at bottom edge of scroller.
-			if (scrollingDown) {
-				startIndex = Math.max(index - renderCount + 1, 0)
-			}
-			else {
-				startIndex = index
-			}
-
-			let endIndex = startIndex + renderCount
-			this.renderer!.setRenderIndices(startIndex, endIndex, scrollingDown ? 'start' : 'end', true)
-
-			this.willUpdate()
-
-			// Must wait for two loops, may check after first rendering and re-render.
-			await untilUpdateComplete()
-			await untilUpdateComplete()
+			await this.toRenderItemAtIndex(index)
 		}
 
 		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)

@@ -1,4 +1,4 @@
-import {AsyncTaskQueue, DOMEvents, ResizeWatcher, Timeout, untilReadComplete, untilUpdateComplete} from '@pucelle/ff'
+import {AsyncTaskQueue, DOMEvents, ResizeWatcher, Timeout, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialRendererMeasurement} from './partial-renderer-measurement'
@@ -14,17 +14,24 @@ interface NeedToApply {
 	 * Latest `startIndex` property has changed and need to be applied.
 	 * Soon need to re-render according to the new start index.
 	 * Note it was initialized as `0`.
+	 * When `alignDirection=start`, it must exist.
 	 */
-	startIndex: number
+	startIndex: number | undefined
 
-	/** Latest `endIndex` property has changed and need to be applied. */
+	/** 
+	 * Latest `endIndex` property has changed and need to be applied.
+	 * When `alignDirection=end`, it must exist.
+	 */
 	endIndex: number | undefined
 
 	/** Latest `alignDirection` property has changed and need to be applied. */
 	alignDirection: 'start' | 'end'
 
-	/** If is `true`, will try to persist current scroll position. */
-	persistScrollPositionIfPossible: boolean
+	/** 
+	 * If is `true`, will try to persist current scroll position,
+	 * by adjusting `startIndex` or `endIndex`.
+	 */
+	tryAdjustToPersistScrollPosition: boolean
 }
 
 
@@ -68,7 +75,7 @@ export class PartialRenderer {
 		startIndex: 0,
 		endIndex: undefined,
 		alignDirection: 'start',
-		persistScrollPositionIfPossible: false,
+		tryAdjustToPersistScrollPosition: false,
 	}
 
 	/** Cache latest scroll position. */
@@ -156,16 +163,16 @@ export class PartialRenderer {
 	 * been located at the end edge of scroll viewport.
 	 */
 	setRenderIndices(
-		startIndex: number,
+		startIndex: number | undefined,
 		endIndex: number | undefined = undefined,
 		alignDirection: 'start' | 'end' = 'start',
-		persistScrollPositionIfPossible: boolean = false
+		tryAdjustToPersistScrollPosition: boolean = false
 	) {
 		this.needToApply = {
 			startIndex,
 			endIndex,
 			alignDirection,
-			persistScrollPositionIfPossible,
+			tryAdjustToPersistScrollPosition,
 		}
 	}
 
@@ -253,26 +260,48 @@ export class PartialRenderer {
 
 	/** Update when start index specified and need to apply. */
 	private async updateWithApplyingIndices(hasMeasured: boolean): Promise<boolean> {
-		let {startIndex, endIndex, alignDirection, persistScrollPositionIfPossible} = this.needToApply!
-		let oldStartIndex = this.startIndex
-		let oldEndIndex = this.endIndex
+		let {startIndex, endIndex, alignDirection, tryAdjustToPersistScrollPosition: tryAdjustToPersist} = this.needToApply!
+		let renderCount = this.endIndex - this.startIndex
+	
+		// Adjust index and persist continuous.
+		if (tryAdjustToPersist && renderCount > 0) {
+			let startVisibleIndex = this.locateVisibleIndex('start')
+			let endVisibleIndex = this.locateVisibleIndex('end')
+			let canPersist = false
 
-		// Persist continuous.
-		if (persistScrollPositionIfPossible
-			&& Math.min(this.endIndex, oldEndIndex) - Math.max(this.startIndex, oldStartIndex) > 0
-		) {
-			await this.updateContinuously(alignDirection, startIndex, endIndex)
-			return true
+			if (alignDirection === 'start') {
+				let renderCountToPersist = Math.max(endVisibleIndex, startIndex! + 1) - Math.min(startVisibleIndex, startIndex!)
+				if (renderCountToPersist <= renderCount) {
+					startIndex = Math.min(startVisibleIndex, startIndex!)
+					endIndex = startVisibleIndex + renderCount
+					canPersist = true
+				}
+				else {
+
+				}
+			}
+			else {
+				let renderCountToPersist = Math.max(endVisibleIndex, endIndex!) - Math.min(startVisibleIndex, endIndex!)
+				if (renderCountToPersist <= renderCount) {
+					endIndex = Math.max(endVisibleIndex, endIndex!)
+					startIndex = endIndex - renderCount
+					canPersist = true
+				}
+			}
+
+			if (canPersist) {
+				await this.updateContinuously(alignDirection, startIndex!, endIndex)
+				return true
+			}
 		}
 
 		// Reset scroll position, but will align item with index viewport edge.
-		else {
-			this.setIndices(startIndex, endIndex)
-			this.setAlignDirection(alignDirection ?? 'start')
-			this.updateRendering()
-			this.resetPositions(hasMeasured, startIndex, endIndex)
-			return false
-		}
+		this.setIndices(startIndex, endIndex)
+		this.setAlignDirection(alignDirection ?? 'start')
+		this.updateRendering()
+		this.resetPositions(hasMeasured, tryAdjustToPersist ? undefined : startIndex, tryAdjustToPersist ? undefined : endIndex)
+
+		return false
 	}
 
 	/** Update data normally, and try to keep indices and scroll position. */
@@ -303,9 +332,13 @@ export class PartialRenderer {
 	}
 
 	/** Update start and end indices before rendering. */
-	private setIndices(newStartIndex: number, newEndIndex: number | undefined = undefined) {
+	private setIndices(newStartIndex: number | undefined, newEndIndex: number | undefined = undefined) {
 		let itemSize = this.measurement.getItemSize()
 		let renderCount = this.measurement.getSafeRenderCount(itemSize, this.reservedPixels)
+
+		if (newStartIndex === undefined) {
+			newStartIndex = newEndIndex! - renderCount
+		}
 
 		newStartIndex = Math.min(newStartIndex, this.dataCount - renderCount)
 		newStartIndex = Math.max(0, newStartIndex)
@@ -488,7 +521,6 @@ export class PartialRenderer {
 		else if (unCoveredSituation === 'break') {
 
 			//// Read complete, now can only write.
-			await untilReadComplete()
 
 			this.updatePersistScrollPosition()
 			this.updatePlaceholderSizeProgressively()
@@ -518,12 +550,18 @@ export class PartialRenderer {
 
 		// Failed to do continuous updating, must re-render totally by current indices.
 		let needReset = false
-	
-		// Scrolling down, render more at end.
-		if (alignDirection === 'start') {
-			let oldStartIndex = this.startIndex
-			this.setIndices(newStartIndex)
+		let oldStartIndex = this.startIndex
+		let oldEndIndex = this.endIndex
 
+		this.setIndices(newStartIndex, newEndIndex)
+
+		// Has no intersection.
+		if (Math.min(this.endIndex, oldEndIndex) - Math.max(this.startIndex, oldStartIndex) <= 0) {
+			needReset = true
+		}
+
+		// Scrolling down, render more at end.
+		else if (alignDirection === 'start') {
 			// Rendered item count changed much, not rendering progressively.
 			if (this.startIndex < oldStartIndex) {
 				needReset = true
@@ -544,11 +582,7 @@ export class PartialRenderer {
 
 		// Scrolling up, render more at end.
 		else {
-			let oldStartIndex = this.startIndex
-			let oldEndIndex = this.endIndex
-
-			this.setIndices(newStartIndex, newEndIndex)
-
+			
 			// Rendered item count changed much, not rendering progressively.
 			if (this.endIndex < oldStartIndex + 1 || this.endIndex > oldEndIndex) {
 				needReset = true
@@ -569,7 +603,6 @@ export class PartialRenderer {
 
 
 		//// Read complete, now can only write.
-		await untilReadComplete()
 
 
 		// Totally reset scroll position.
