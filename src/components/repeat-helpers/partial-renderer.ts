@@ -273,11 +273,14 @@ export class PartialRenderer {
 				let renderCountToPersist = Math.max(endVisibleIndex, startIndex! + 1) - Math.min(startVisibleIndex, startIndex!)
 				if (renderCountToPersist <= renderCount) {
 					startIndex = Math.min(startVisibleIndex, startIndex!)
-					endIndex = startVisibleIndex + renderCount
+					endIndex = startIndex + renderCount
 					canPersist = true
 				}
-				else {
 
+				// Try keep most intersection.
+				else if (startIndex! > endVisibleIndex) {
+					endIndex = Math.max(endVisibleIndex, startIndex! + 1)
+					startIndex = endIndex - renderCount
 				}
 			}
 			else {
@@ -286,6 +289,12 @@ export class PartialRenderer {
 					endIndex = Math.max(endVisibleIndex, endIndex!)
 					startIndex = endIndex - renderCount
 					canPersist = true
+				}
+
+				// Try keep most intersection.
+				else if (endIndex! < startVisibleIndex) {
+					startIndex = endIndex! - 1
+					endIndex = startIndex + renderCount
 				}
 			}
 
