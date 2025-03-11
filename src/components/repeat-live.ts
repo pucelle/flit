@@ -217,35 +217,25 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		// No need to worry about coverage, set scroll position cause scroll event emitted.
 
 		if (!this.isIndexRendered(index)) {
-			await this.toRenderItemAtIndex(index)
+			await this.toRenderItemAtIndex(index, 'start')
 		}
 
 		return super.scrollIndexToStart(index - this.startIndex, gap, duration, easing)
 	}
 
 	/** To ensure item at index get rendered. */
-	protected async toRenderItemAtIndex(index: number) {
-		let scrollingDown = index > this.startIndex
-		let startIndex: number | undefined = undefined
-		let endIndex: number | undefined = undefined
-
-		if (scrollingDown) {
-			startIndex = index
-		}
-		else {
-			endIndex = index + 1
-		}
-
-		this.renderer!.setRenderIndices(startIndex, endIndex, scrollingDown ? 'start' : 'end', true)
+	protected async toRenderItemAtIndex(startIndex: number | undefined, alignDirection: 'start' | 'end') {
+		this.renderer!.setRenderIndices(startIndex, undefined, alignDirection, true)
 		this.willUpdate()
 
 		// Must wait for two loops, may check after first rendering and re-render.
+		await untilUpdateComplete()
 		await untilUpdateComplete()
 	}
 
 	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		if (!this.isIndexRendered(index)) {
-			await this.toRenderItemAtIndex(index)
+			await this.toRenderItemAtIndex(index, 'start')
 		}
 
 		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)
