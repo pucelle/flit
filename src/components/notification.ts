@@ -1,5 +1,5 @@
 import {css, html, Component, RenderResultRenderer} from '@pucelle/lupos.js'
-import {Timeout, fold, fade, TransitionResult} from '@pucelle/ff'
+import {Timeout, fold, fade} from '@pucelle/ff'
 import {Icon} from './icon'
 import {Button} from './button'
 
@@ -207,7 +207,7 @@ export class Notification<E = {}> extends Component<E> {
 					@mouseleave=${() => this.onMouseLeave(item)}
 					@transition-leave-ended=${this.onLeaveTransitionEnded}
 					:transition.immediate=${fade()}
-					:transition=${fold() as TransitionResult<Element, any>}
+					:transition=${fold()}
 				>
 					<div class="notification-stripe" />
 

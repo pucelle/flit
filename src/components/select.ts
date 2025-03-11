@@ -246,7 +246,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					.mode="selection"
 					.selectable
 					.data=${data}
-					.selected=${(this.multiple ? this.value : this.value === null ? [] : [this.value]) as any[]}
+					.selected=${(this.multiple ? this.value : this.value === null ? [] : [this.value])}
 					.multipleSelect=${this.multiple}
 					.keyComeFrom=${this.inputEl}
 					@select=${this.onSelected}
