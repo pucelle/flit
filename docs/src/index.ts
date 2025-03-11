@@ -5,7 +5,10 @@ import {
 	Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
 	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore, draggable, droppable,
-	Resizer
+	Resizer,
+	DroppableOptions,
+	TooltipOptions,
+	PopupOptions
 } from '../../out'
 import {range, watch} from '@pucelle/ff'
 
@@ -202,7 +205,7 @@ class Preview extends Component {
 				<Row style="margin: 8px 0;" .gutter=${24}>
 					<Col .span=${6}>
 						<h3>Checkboxes</h3>
-						<CheckboxGroup .value=${this.checkboxValue} @change=${(value: string[]) => this.checkboxValue = value}>
+						<CheckboxGroup .value=${this.checkboxValue} @change=${(value: string[]) => {this.checkboxValue = value}}>
 							<Checkbox .value="1">${this.checkboxValue.includes('1') ? 'Checked' : 'Unchecked'}</Checkbox><br>
 							<Checkbox .value="2">${this.checkboxValue.includes('2') ? 'Checked' : 'Unchecked'}</Checkbox><br>
 							<Checkbox .value="3" .indeterminate=${this.checkboxIndeterminate} @change=${() => this.checkboxIndeterminate = false}>${
@@ -469,17 +472,17 @@ class Preview extends Component {
 				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 					<Col .span=${4}>
 						<header style="margin-bottom: 8px;">18 + 3</header>
-						<Loader .size=${18} .strokeSize=${3} .speed="0.7" />
+						<Loader .size=${18} .strokeSize=${3} .speed=${0.7} />
 					</Col>
 
 					<Col .span=${4}>
 						<header style="margin-bottom: 8px;">28 + 4</header>
-						<Loader .size=${28} .strokeSize=${4} .speed="0.6" />
+						<Loader .size=${28} .strokeSize=${4} .speed=${0.6} />
 					</Col>
 
 					<Col .span=${4}>
 						<header style="margin-bottom: 8px;">38 + 5</header>
-						<Loader .size=${38} .strokeSize=${5} .speed="0.5" />
+						<Loader .size=${38} .strokeSize=${5} .speed=${0.5} />
 					</Col>
 
 					<Col .span=${4}>
@@ -540,7 +543,7 @@ class Preview extends Component {
 									]}
 								]
 							},
-							{value: 2, text: 'Folder B', opened: true, children:
+							{value: 2, text: 'Folder B', children:
 								[
 									{value: 21, text: 'Sub Folder a', children: [
 										{value: 211, text: 'Item 1'},
@@ -583,7 +586,7 @@ class Preview extends Component {
 										]}
 									]
 								},
-								{value: 2, text: 'Folder B', opened: true, children:
+								{value: 2, text: 'Folder B', children:
 									[
 										{value: 21, text: 'Sub Folder a', children: [
 											{value: 211, text: 'Item 1'},
@@ -622,7 +625,7 @@ class Preview extends Component {
 								This is Popover content.
 							</Popover>
 							`,
-							{trigger: 'click', position: 'b', fixTriangle: true}
+							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>Click to Open Popover</Button>
 					</Col>
 
@@ -634,7 +637,7 @@ class Preview extends Component {
 								This is Popover content.
 							</Popover>
 							`,
-							{trigger: 'click', position: 'b', fixTriangle: true}
+							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>Click to Open Popover</Button>
 					</Col>
 
@@ -646,7 +649,7 @@ class Preview extends Component {
 								This is Popover content.
 							</Popover>
 							`,
-							{trigger: 'click', position: 'b', fixTriangle: true}
+							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>Click to Open Popover</Button>
 					</Col>
 
@@ -662,7 +665,7 @@ class Preview extends Component {
 								</div>
 							</Popover>
 							`,
-							{trigger: 'click', position: 'b', fixTriangle: true}
+							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>Click to Open Popover</Button>
 					</Col>
 				</Row>
@@ -684,7 +687,7 @@ class Preview extends Component {
 									<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} />
 								</Menu>
 							`,
-							{trigger: 'click', position: 'b', fixTriangle: true,}
+							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>
 							<span>Click to Open Menu</span>
 							<Icon .type="down" />
@@ -697,7 +700,7 @@ class Preview extends Component {
 								<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} .selectable .selected=${[1]} />
 							</Menu>
 							`,
-							{trigger: 'click', position: 'b', fixTriangle: true,}
+							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>
 							<span>Menu with Title</span>
 							<Icon .type="down" />
@@ -717,12 +720,12 @@ class Preview extends Component {
 				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">Default</header>
-						<Button :tooltip=${'Tooltip text', {type: 'default'}}>Hover for Tooltip</Button>
+						<Button :tooltip=${'Tooltip text', {type: 'default'} as Partial<TooltipOptions>}>Hover for Tooltip</Button>
 					</Col>
 
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">Prompt</header>
-						<Button :tooltip=${'Add some items to your list by clicking this button.', {type: 'prompt'}}>Add Items</Button>
+						<Button :tooltip=${'Add some items to your list by clicking this button.', {type: 'prompt'} as Partial<TooltipOptions>}>Add Items</Button>
 					</Col>
 				</Row>
 
@@ -731,7 +734,7 @@ class Preview extends Component {
 						<header style="margin-bottom: 8px;">Error</header>
 						<Button .primary disabled :tooltip=${
 							'You can\'t submit, try resolve all mistakes then this tooltip will disappear.',
-							{type: 'error'}
+							{type: 'error'} as Partial<TooltipOptions>
 						}>Submit</Button>
 					</Col>
 				</Row>
@@ -1125,7 +1128,7 @@ class Preview extends Component {
 						else {
 							this.leftData.splice(index, 0, value)
 						}
-					}), {itemsAlignDirection: 'horizontal'}}
+					}), {itemsAlignDirection: 'horizontal'} as DroppableOptions<number>}
 				>
 					${this.leftData.map((data: number, index: number) => html`
 						<div style="width: 100px; vertical-align: top; margin: 4px; cursor: grab; background: color-mix(in srgb, var(--background-color) 85%, var(--text-color))"
@@ -1146,7 +1149,7 @@ class Preview extends Component {
 						else {
 							this.rightData.splice(index, 0, value)
 						}
-					}), {itemsAlignDirection: 'horizontal'}}
+					}), {itemsAlignDirection: 'horizontal'} as DroppableOptions<number>}
 				>
 					${this.rightData.map((data: number, index: number) => html`
 						<div style="width: 100px; vertical-align: top; margin: 4px; cursor: grab; background: color-mix(in srgb, var(--background-color) 85%, var(--text-color));"
