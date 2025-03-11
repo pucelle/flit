@@ -228,7 +228,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.setRenderIndices(startIndex, undefined, alignDirection, true)
 		this.willUpdate()
 
-		// Must wait for two loops, may check after first rendering and re-render.
+		// Wait for two loops, may check after first rendering and re-render.
 		await untilUpdateComplete()
 		await untilUpdateComplete()
 	}
