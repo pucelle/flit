@@ -1,6 +1,7 @@
 import {Binding, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {DOMEvents, WebTransitionEasingName} from '@pucelle/ff'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
+import {registerDraggable} from './drag-drop-helpers/all-draggables'
 
 
 export interface DraggableOptions {
@@ -13,28 +14,34 @@ export interface DraggableOptions {
 
 	/** Transition easing. */
 	transitionEasing?: WebTransitionEasingName
+
+	/** 
+	 * Whether can slider only in x/y axis.
+	 * If specifies as `true`, means can only swap with dragging element siblings.
+	 */
+	slideOnly?: boolean
+
+	/** The class name to apply when start dragging. */
+	className?: string
 }
 
 
 /** 
  * Make current element draggable.
- * :draggable=${data, index, options}
+ * :draggable=${data, index, ?options}
  * - `data`: Data item to identify current dragging item.
  * - `index`: Data item index within it's siblings, normally the for loop index.
  * - `options` Draggable options.
  */
-export class draggable<T = any> implements Binding, Part {
+export class draggable<T = any> implements Binding, Part, DraggableOptions {
 
 	readonly el: HTMLElement
 
-	/** Can only drop to same named droppable. */
 	name: string = ''
-
-	/** Transition duration in milliseconds. */
 	transitionDuration: number | undefined
-
-	/** Transition easing. */
 	transitionEasing: WebTransitionEasingName | undefined
+	slideOnly: boolean = false
+	className: string | undefined
 
 	/** Data can be passed to droppable. */
 	data: T | null = null
@@ -52,7 +59,8 @@ export class draggable<T = any> implements Binding, Part {
 		if (this.connected) {
 			return
 		}
-
+		
+		registerDraggable(this)
 		DOMEvents.on(this.el, 'mousedown', this.onMouseDown, this)
 		DOMEvents.on(this.el, 'mouseenter', this.onMouseEnter, this)
 		
@@ -79,26 +87,33 @@ export class draggable<T = any> implements Binding, Part {
 		this.name = options.name || ''
 		this.transitionDuration = options.transitionDuration
 		this.transitionEasing = options.transitionEasing
-
+		this.slideOnly = options.slideOnly ?? false
+		this.className = options.className
 	}
 
 	private onMouseDown(e: MouseEvent) {
 		e.preventDefault()
 
 		let isDragging = false
-		let startX = e.clientX
-		let startY = e.clientY
-
+		let startPosition = DOMEvents.getClientPosition(e)
+	
 		let onMouseMove = (e: MouseEvent) => {
-			if (!isDragging && (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5)) {
+			let currentPosition = DOMEvents.getClientPosition(e)
+			let moves = currentPosition.diff(startPosition)
+
+			if (!isDragging && moves.getLength() > 5) {
 				GlobalDragDropRelationship.startDragging(this)
+				startPosition = currentPosition
+				moves.reset()
 				isDragging = true
+
+				if (this.className) {
+					this.el.classList.add(this.className)
+				}
 			}
 			
 			if (isDragging) {
-				let moveX = e.clientX - startX
-				let moveY = e.clientY - startY
-				GlobalDragDropRelationship.translateDraggingElement(moveX, moveY)
+				GlobalDragDropRelationship.translateDraggingElement(moves)
 			}
 		}
 
@@ -107,6 +122,10 @@ export class draggable<T = any> implements Binding, Part {
 
 			if (isDragging) {
 				GlobalDragDropRelationship.endDragging()
+
+				if (this.className) {
+					this.el.classList.remove(this.className)
+				}
 			}
 		}
 

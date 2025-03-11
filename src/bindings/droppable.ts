@@ -31,13 +31,14 @@ export interface DroppableOptions<T> {
  * Make current element droppable.
  * A `:droppable` element should normally contains several `:draggable`.
  * 
- * :draggable=${onDrop, options}
+ * :droppable=${onDrop, ?options}
  * - onDrop: `(dropData, dragIndex) => void`
  * - options: droppable options.
  */
 export class droppable<T = any> implements Binding, Part {
 	
 	readonly el: HTMLElement
+	readonly context: any
 	
 	/** Allows only same-named draggable drop to current. */
 	name: string = ''
@@ -49,8 +50,9 @@ export class droppable<T = any> implements Binding, Part {
 	private options: DroppableOptions<T> = {}
 	private connected: boolean = false
 
-	constructor(el: Element) {
+	constructor(el: Element, context: any) {
 		this.el = el as HTMLElement
+		this.context = context
 	}
 
 	afterConnectCallback() {
@@ -117,7 +119,7 @@ export class droppable<T = any> implements Binding, Part {
 	/** After draggable drop to current droppable. */
 	fireDrop(dragging: draggable<T>, toIndex: number) {
 		if (this.onDrop) {
-			this.onDrop(dragging.data as T, toIndex)
+			this.onDrop.call(this.context, dragging.data as T, toIndex)
 		}
 	}
 }

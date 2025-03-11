@@ -1,6 +1,7 @@
-import {DOMUtils, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
+import {Box, DOMUtils, Vector, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
 import type {draggable} from '../draggable'
 import {droppable} from '../droppable'
+import {getDraggableByElement} from './all-draggables'
 
 
 /** 
@@ -19,7 +20,10 @@ export class DragDropMovement {
 	private readonly el: HTMLElement
 
 	/** Dragging element rect. */
-	private readonly rect: DOMRect
+	private readonly elRect: Box
+
+	/** Margin left and top. */
+	private readonly elMarginVector: Vector
 
 	/** Where the dragging come from. */
 	private readonly startDrop: droppable
@@ -28,7 +32,7 @@ export class DragDropMovement {
 	private readonly autoLayout: boolean
 
 	/** Dragging element translate. */
-	private readonly translate: [number, number] = [0, 0]
+	private readonly translate: Vector = new Vector()
 
 	/** Keeps original style text for dragging element and restore it after dragging end. */
 	private readonly startStyleText: string = ''
@@ -66,13 +70,21 @@ export class DragDropMovement {
 	/** Dragging element siblings align direction. */
 	private itemsAlignDirection: HVDirection = 'vertical'
 
+	/** Siblings, only prepare it when `sliderOnly`. */
+	private slideOnlySiblingsData: {draggable: draggable, rect: Box}[] | null = null
+
+	/** Recently entering sibling, only exist when `sliderOnly` */
+	private slideOnlyEnteringSiblingData: {draggable: draggable, rect: Box} | null = null
+
 	constructor(drag: draggable, drop: droppable) {
 		this.dragging = drag
 		this.el = drag.el
 		this.startDrop = this.activeDrop = drop
 		this.itemsAlignDirection = drop.itemsAlignDirection ?? 'vertical'
 
-		this.rect = this.el.getBoundingClientRect()
+		this.elRect = Box.fromLike(this.el.getBoundingClientRect())
+		this.elMarginVector = new Vector(DOMUtils.getNumericStyleValue(this.el, 'marginLeft'), DOMUtils.getNumericStyleValue(this.el, 'marginTop'))
+		
 		this.autoLayout = DOMUtils.getStyleValue(this.el, 'position') !== 'absolute'
 
 		// Not consider about margin collapse.
@@ -84,6 +96,7 @@ export class DragDropMovement {
 
 		this.startStyleText = this.el.style.cssText
 		this.setDraggingStyle()
+		this.prepareSiblingsData()
 	}
 
 	/** Set dragging style for dragging element. */
@@ -96,22 +109,41 @@ export class DragDropMovement {
 		}
 		
 		this.el.style.zIndex = '9999'
-		this.el.style.width = this.rect.width + 'px'
-		this.el.style.height = this.rect.height + 'px'
-		this.el.style.left = this.rect.left + 'px'
-		this.el.style.top = this.rect.top + 'px'
+		this.el.style.width = this.elRect.width + 'px'
+		this.el.style.height = this.elRect.height + 'px'
+		this.el.style.left = this.elRect.left - this.elMarginVector.x + 'px'
+		this.el.style.top = this.elRect.top - this.elMarginVector.y + 'px'
 		this.el.style.boxShadow = `0 0 var(--popup-shadow-blur-radius) var(--popup-shadow-color)`
 		this.el.style.pointerEvents = 'none'
 		this.el.style.opacity = '1'
 		this.el.style.willChange = 'transform'
 	}
 
+	private prepareSiblingsData() {
+		if (!this.dragging.slideOnly) {
+			return
+		}
+
+		let siblings = [...this.dragging.el.parentElement!.children]
+			.filter(el => {
+				return el !== this.dragging.el
+					&& getDraggableByElement(el as HTMLElement)
+			})
+
+		this.slideOnlySiblingsData = siblings.map(el => {
+			return {
+				draggable: getDraggableByElement(el as HTMLElement)!,
+				rect: Box.fromLike(el.getBoundingClientRect()),
+			}
+		})
+	}
+
 	/** Create a placeholder having same size with dragging element and insert into drop element. */
 	private initPlaceholder() {
 		let placeholder = this.dragging.el.cloneNode() as HTMLElement
 		placeholder.style.visibility = 'hidden'
-		placeholder.style.width = this.rect.width + 'px'
-		placeholder.style.height = this.rect.height + 'px'
+		placeholder.style.width = this.elRect.width + 'px'
+		placeholder.style.height = this.elRect.height + 'px'
 
 		return placeholder
 	}
@@ -218,7 +250,8 @@ export class DragDropMovement {
 		willMoveElements.delete(this.el)
 		willMoveElements.delete(this.placeholder)
 
-		// When the dragged into element has been moved, dragged into it again means that it's movement will be restored.
+		// When the dragged into element has been moved,
+		// dragged into it again means that it's movement will be restored.
 		if (this.movedElements.has(drag.el)) {
 			willMoveElements.delete(drag.el)
 		}
@@ -290,10 +323,46 @@ export class DragDropMovement {
 	}
 
 	/** Translate dragging element follow mouse. */
-	translateDraggingElement(x: number, y: number) {
-		this.translate[0] = x
-		this.translate[1] = y
-		this.el.style.transform = `translate(${x}px, ${y}px)`
+	translateDraggingElement(moves: Vector) {
+		this.translate.copyFrom(moves)
+
+		if (this.dragging.slideOnly) {
+			if (this.itemsAlignDirection === 'vertical') {
+				this.el.style.transform = `translateY(${moves.y}px)`
+			}
+			else {
+				this.el.style.transform = `translateX(${moves.x}px)`
+			}
+		}
+		else {
+			this.el.style.transform = `translate(${moves.x}px, ${moves.y}px)`
+		}
+
+		if (this.dragging.slideOnly) {
+			this.testForEnteringSibling(moves)
+		}
+	}
+
+	/** Test which sibling get entered by current position. */
+	private testForEnteringSibling(moves: Vector) {
+		let rect = this.elRect.translateBy(moves)
+		let siblings = this.slideOnlySiblingsData!
+		let found = false
+
+		for (let sibling of siblings) {
+			if (rect.isIntersectWithAtHV(sibling.rect, this.itemsAlignDirection)) {
+				if (sibling !== this.slideOnlyEnteringSiblingData) {
+					this.onEnterDrag(sibling.draggable)
+					this.slideOnlyEnteringSiblingData = sibling
+				}
+				found = true				
+				break
+			}
+		}
+
+		if (!found) {
+			this.slideOnlyEnteringSiblingData = null
+		}
 	}
 
 	/** Whether drag & drop completed and will swap elements. */
@@ -350,20 +419,28 @@ export class DragDropMovement {
 		let fromRect = this.el.getBoundingClientRect()
 		let toRect = this.dragToRect || this.placeholder!.getBoundingClientRect()
 
-		let x = toRect.left - fromRect.left + this.translate[0]
-		let y = toRect.top - fromRect.top + this.translate[1]
+		let x = toRect.left - fromRect.left + this.translate.x
+		let y = toRect.top - fromRect.top + this.translate.y
 
 		if (this.itemsAlignDirection === 'horizontal') {
 
 			// Move from left to right, align at right.
 			if (this.dragging.index < this.dragToIndex) {
-				x = toRect.right - fromRect.right + this.translate[0]
+				x = toRect.right - fromRect.right + this.translate.x
+			}
+
+			if (this.dragging.slideOnly) {
+				y = 0
 			}
 		}
 		else {
 			// Move from top to bottom, align at bottom.
 			if (this.dragging.index < this.dragToIndex) {
-				y = toRect.bottom - fromRect.bottom + this.translate[1]
+				y = toRect.bottom - fromRect.bottom + this.translate.y
+			}
+
+			if (this.dragging.slideOnly) {
+				x = 0
 			}
 		}
 

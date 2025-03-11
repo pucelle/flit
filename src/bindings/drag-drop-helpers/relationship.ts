@@ -1,3 +1,4 @@
+import {Vector} from '@pucelle/ff'
 import type {draggable} from '../draggable'
 import type {droppable} from '../droppable'
 import {DragDropMovement} from './movement'
@@ -56,22 +57,25 @@ class DragDropRelationship {
 	}
 
 	/** Translate dragging element to keep follows with mouse. */
-	translateDraggingElement(x: number, y: number) {
+	translateDraggingElement(moves: Vector) {
 		if (this.movement) {
-			this.movement.translateDraggingElement(x, y)
+			this.movement.translateDraggingElement(moves)
 		}
 	}
 
 	/** When dragging and enter a draggable. */
 	enterDrag(drag: draggable) {
-		if (this.canSwapWith(drag) && this.movement) {
+		if (this.canEnterToSwapWith(drag) && this.movement) {
 			this.movement.onEnterDrag(drag)
 		}
 	}
 
 	/** Whether dragging can swap with draggable. */
-	protected canSwapWith(drag: draggable) {
-		return this.dragging && this.dragging.name === drag.name && this.dragging !== drag
+	protected canEnterToSwapWith(drag: draggable) {
+		return this.dragging
+			&& !this.dragging.slideOnly
+			&& this.dragging.name === drag.name
+			&& this.dragging !== drag
 	}
 
 	/** When dragging and enter a droppable. */
@@ -92,6 +96,12 @@ class DragDropRelationship {
 
 	/** When dragging and leave a droppable. */
 	leaveDrop(drop: droppable) {
+
+		// Always in same drop for slide only mode.
+		if (this.dragging?.slideOnly) {
+			return
+		}
+		
 		this.enteredDroppable.delete(drop)
 
 		if (this.activeDroppable === drop) {
