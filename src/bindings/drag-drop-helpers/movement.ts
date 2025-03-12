@@ -1,7 +1,7 @@
 import {Box, DOMUtils, Vector, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
 import type {draggable} from '../draggable'
 import {droppable} from '../droppable'
-import {getDraggableByElement} from './all-draggables'
+import {getDraggableByElement} from './all-draggable'
 
 
 /** 
@@ -71,10 +71,10 @@ export class DragDropMovement {
 	private itemsAlignDirection: HVDirection = 'vertical'
 
 	/** Siblings, only prepare it when `sliderOnly`. */
-	private slideOnlySiblingsData: {draggable: draggable, rect: Box}[] | null = null
+	private slideOnlySiblings: draggable[] | null = null
 
 	/** Recently entering sibling, only exist when `sliderOnly` */
-	private slideOnlyEnteringSiblingData: {draggable: draggable, rect: Box} | null = null
+	private slideOnlyEnteringSiblingData: draggable | null = null
 
 	constructor(drag: draggable, drop: droppable) {
 		this.dragging = drag
@@ -91,12 +91,13 @@ export class DragDropMovement {
 		this.outerWidth = DOMUtils.getOuterWidth(this.el)
 		this.outerHeight = DOMUtils.getOuterHeight(this.el)
 
+		this.prepareSiblings()
+
 		this.placeholder = this.initPlaceholder()
 		this.insertPlaceholder(drop, false)
 
 		this.startStyleText = this.el.style.cssText
 		this.setDraggingStyle()
-		this.prepareSiblingsData()
 	}
 
 	/** Set dragging style for dragging element. */
@@ -119,23 +120,18 @@ export class DragDropMovement {
 		this.el.style.willChange = 'transform'
 	}
 
-	private prepareSiblingsData() {
+	private prepareSiblings() {
 		if (!this.dragging.slideOnly) {
 			return
 		}
 
-		let siblings = [...this.dragging.el.parentElement!.children]
+		let siblingEls = [...this.dragging.el.parentElement!.children]
 			.filter(el => {
 				return el !== this.dragging.el
 					&& getDraggableByElement(el as HTMLElement)
 			})
 
-		this.slideOnlySiblingsData = siblings.map(el => {
-			return {
-				draggable: getDraggableByElement(el as HTMLElement)!,
-				rect: Box.fromLike(el.getBoundingClientRect()),
-			}
-		})
+		this.slideOnlySiblings = siblingEls.map(el => getDraggableByElement(el as HTMLElement)!)
 	}
 
 	/** Create a placeholder having same size with dragging element and insert into drop element. */
@@ -191,9 +187,10 @@ export class DragDropMovement {
 		}
 
 		let transformProperty = this.itemsAlignDirection === 'vertical' ? 'translateY' : 'translateX'
+		let translatePixels = translateDirection * movePx
 
 		let transform = translateDirection !== 0
-			? `${transformProperty}(${translateDirection * movePx}px)`
+			? `${transformProperty}(${translatePixels}px)`
 			: 'none'
 
 		if (playTransition) {
@@ -346,16 +343,28 @@ export class DragDropMovement {
 	/** Test which sibling get entered by current position. */
 	private testForEnteringSibling(moves: Vector) {
 		let rect = this.elRect.translateBy(moves)
-		let siblings = this.slideOnlySiblingsData!
+		let siblings = this.slideOnlySiblings!
 		let found = false
 
 		for (let sibling of siblings) {
-			if (rect.isIntersectWithAtHV(sibling.rect, this.itemsAlignDirection)) {
-				if (sibling !== this.slideOnlyEnteringSiblingData) {
-					this.onEnterDrag(sibling.draggable)
-					this.slideOnlyEnteringSiblingData = sibling
-				}
+			let siblingRect = Box.fromLike(sibling.el.getBoundingClientRect())
+
+			if (rect.isIntersectWithAtHV(siblingRect, this.itemsAlignDirection)) {
 				found = true				
+
+				// Same entering sibling.
+				if (sibling === this.slideOnlyEnteringSiblingData) {
+					break
+				}
+					
+				// Skip elements that are playing transition.
+				let isPlayingTransition = DOMUtils.getStyleValue(sibling.el, 'pointerEvents') === 'none'
+				if (isPlayingTransition) {
+					break
+				}
+				
+				this.onEnterDrag(sibling)
+				this.slideOnlyEnteringSiblingData = sibling
 				break
 			}
 		}
@@ -458,7 +467,7 @@ export class DragDropMovement {
 
 	/** Restore all moved and also translated elements. */
 	private restoreMovedElements(playTransition: boolean) {
-		for (let el of this.translatedElements) {
+		for (let el of this.translatedElements.keys()) {
 			if (playTransition) {
 				this.playTransitionTo(el, {transform: 'none'})
 			}

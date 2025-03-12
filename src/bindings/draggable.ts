@@ -1,7 +1,7 @@
 import {Binding, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {DOMEvents, WebTransitionEasingName} from '@pucelle/ff'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
-import {registerDraggable} from './drag-drop-helpers/all-draggables'
+import {registerDraggable} from './drag-drop-helpers/all-draggable'
 
 
 export interface DraggableOptions {
@@ -59,7 +59,7 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 		if (this.connected) {
 			return
 		}
-		
+
 		registerDraggable(this)
 		DOMEvents.on(this.el, 'mousedown', this.onMouseDown, this)
 		DOMEvents.on(this.el, 'mouseenter', this.onMouseEnter, this)
