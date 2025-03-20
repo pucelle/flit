@@ -1,21 +1,28 @@
 import {css, html, Component, render} from '@pucelle/lupos.js'
-import {DOMEvents, NumberUtils} from '@pucelle/ff'
+import {MouseMovement, Vector} from '@pucelle/ff'
 
 
 interface ResizerEvents {
 
+	/** Fires after resizing start. */
+	'resize-start': (e: MouseEvent) => void
+
 	/** Fires after every time resizing. */
-	resize: (size: number) => void
+	'resize-move': (moves: Vector, e: MouseEvent) => void
 
 	/** Fires after resizing end. */
-	change: (size: number) => void
+	'resize-end': (e: MouseEvent) => void
 }
 
 /** Resize direction to indicate which direction the resizer should be align to relative it's parent. */
 export type ResizerPosition = 'top' | 'right' | 'bottom' | 'left'
 
 
-/** `<f-resizer>` should an absolute type resizer bar, drag it will */
+/** 
+ * `<Resizer>` can be used to drag to adjust item sizes.
+ * You should normally use it to adjust sibling sizes in 'resize-move' event.
+ * Or use `<ParentalResizer>` to adjust parent size directly.
+ */
 export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 	
 	static style = css`
@@ -74,78 +81,37 @@ export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 		}
 	`
 
+
 	/** Which position should align resizer relative to it's parent. */
 	position: ResizerPosition = 'right'
-
-	/** 
-	 * Resizing speed rate,
-	 * set it to `2` if element aligns to center, and moves 1px will cause 2px increases.
-	 */
-	rate: number = 1
-
-	/** Minimum size of parent. */
-	min: number = 0
-
-	/** Maximum size of parent. */
-	max: number = Infinity
-
-	/** Current size of parent. */
-	size: number = -1
 
 	protected render() {
 		return html`
 			<template class="resizer resizer-${this.position}"
-				@mousedown=${this.onStartResize}
+				@mousedown=${this.onMouseDown}
 			/>
 		`
 	}
 
-	protected onStartResize(this: Resizer, e: MouseEvent) {
-		let startX = e.clientX
-		let startY = e.clientY
-		let startParentWidth = this.el.parentElement!.offsetWidth
-		let startParentHeight = this.el.parentElement!.offsetHeight
+	protected onMouseDown(this: Resizer, e: MouseEvent) {
+		let mover = new MouseMovement(e)
 
-		let onMouseMove = (e: MouseEvent) => {
+		mover.onMove = (moves: Vector, _m: Vector, e: MouseEvent) => {
 			e.preventDefault()
-			this.resize(startParentWidth, startParentHeight, e.clientX - startX, e.clientY - startY)
+			this.fire('resize-move', moves, e)
 		}
 
-		let onMouseUp = () => {
-			DOMEvents.off(document, 'mousemove', onMouseMove as (e: Event) => void)
+		mover.onEnd = (e: MouseEvent) => {
 			cursorMask.remove()
-			this.fire('change', this.size)
+			this.fire('resize-end', e)
 		}
+
+		let hvClass = this.position === 'left' || this.position === 'right' ? 'horizontal' : 'vertical'
 
 		let cursorMask = render(html`
-			<div class="resizing-mask ${this.position === 'left' || this.position === 'right' ? 'horizontal' : 'vertical'}" />
+			<div class="resizing-mask ${hvClass}" />
 		`)
 
 		cursorMask.appendTo(document.body)
-
-		DOMEvents.on(document, 'mousemove', onMouseMove as (e: Event) => void)
-		DOMEvents.once(document, 'mouseup', onMouseUp)
-	}
-
-	protected resize(this: Resizer, startParentWidth: number, startParentHeight: number, movementX: number, movementY: number) {
-		let value: number
-
-		if (this.position === 'top' || this.position === 'bottom') {
-			let flag = this.position === 'bottom' ? 1 : -1
-
-			value = startParentHeight + flag * movementY * this.rate
-			value = NumberUtils.clamp(value, this.min, this.max)
-			this.el.parentElement!.style.height = value + 'px'
-		}
-		else {
-			let flag = this.position === 'right' ? 1 : -1
-
-			value = startParentWidth + flag * movementX * this.rate
-			value = NumberUtils.clamp(value, this.min, this.max)
-			this.el.parentElement!.style.width = value + 'px'
-		}
-
-		this.size = value
-		this.fire('change', this.size)
 	}
 }

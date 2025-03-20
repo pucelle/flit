@@ -48,6 +48,7 @@ export * from './modal'
 export * from './table'
 
 export * from './resizer'
+export * from './resizer-parental'
 
 export * from './router'
 

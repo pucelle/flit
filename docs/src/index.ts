@@ -5,7 +5,7 @@ import {
 	Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
 	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore, draggable, droppable,
-	Resizer,
+	ParentalResizer,
 	DroppableOptions,
 	TooltipOptions,
 	PopupOptions
@@ -1169,7 +1169,7 @@ class Preview extends Component {
 
 				<div style="position: relative; display: inline-flex; justify-content: center; line-height: 100px; font-size: 14px; text-align: center; width: 200px; height: 100px; background: color-mix(in srgb, var(--background-color) 95%, var(--text-color));">
 					Resizer on the Right
-					<Resizer .position="right" .min=${200} .max=${600} style="background: color-mix(in srgb, var(--background-color) 85%, var(--text-color));"></f-resizer>
+					<ParentalResizer .position="right" .min=${200} .max=${600} style="background: color-mix(in srgb, var(--background-color) 85%, var(--text-color));"></f-resizer>
 				</div>
 				<br>
 			</section>
