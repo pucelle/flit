@@ -99,7 +99,8 @@ export interface PopupOptions extends AnchorAlignerOptions {
 	/** 
 	 * If specified as `true`, will keep the popup visible once popup opened,
 	 * until this value becomes `false`, or hide popup manually.
-	 * If `keepVisible` is true, it prevents `key` based popup sharing.
+	 * If `keepVisible` is true, it prevents `key` based popup sharing,
+	 * and prevents `stickToEdges`.
 	 * Default value is `false`.
 	 */
 	keepVisible: boolean
@@ -557,12 +558,13 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** Get options for Aligner. */
 	protected getAlignerOptions(): AnchorAlignerOptions {
 		let triangle = this.popup!.el.querySelector("[class*='triangle']") as HTMLElement | null
+		let keepVisible = this.shouldKeepVisible()
 
 		return {
 			position: this.options?.position as AnchorPosition,
 			gaps: this.options?.gaps,
 			edgeGaps: this.options?.edgeGaps,
-			stickToEdges: this.options?.stickToEdges,
+			stickToEdges: this.options?.stickToEdges && !keepVisible,
 			flipDirection: this.options?.flipDirection,
 			fixedTriangle: this.options?.fixedTriangle,
 			triangle: triangle ?? undefined,

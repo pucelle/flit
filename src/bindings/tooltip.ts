@@ -11,6 +11,9 @@ export interface TooltipOptions extends PopupOptions{
 
 	/** Tooltip text size. */
 	size: ThemeSize
+
+	/** Class name which will be assigned to tooltip element. */
+	class?: string
 }
 
 
@@ -53,7 +56,11 @@ export class tooltip extends popup {
 		let rendered = typeof renderer === 'function' ? renderer.call(this.context) : renderer
 
 		return html`
-			<Tooltip .type=${this.options.type} .size=${this.options.size}>
+			<Tooltip
+				:class=${this.options.class ?? ''}
+				.type=${this.options.type}
+				.size=${this.options.size}
+			>
 				${rendered}
 			</Tooltip>
 		`
