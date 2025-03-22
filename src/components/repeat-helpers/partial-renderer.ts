@@ -670,14 +670,14 @@ export class PartialRenderer {
 	 * Locate start or after end index at which the item is visible in viewport.
 	 * Must after update complete.
 	 */
-	locateVisibleIndex(direction: 'start' | 'end', fullyVisible: boolean = false): number {
+	locateVisibleIndex(direction: 'start' | 'end', minimumRatio: number = 0): number {
 		let visibleIndex = locateVisibleIndex(
 			this.scroller,
 			this.repeat.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
 			this.measurement.cachedSliderStartPosition,
 			direction,
-			fullyVisible
+			minimumRatio
 		)
 
 		return visibleIndex + this.startIndex

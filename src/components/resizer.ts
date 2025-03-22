@@ -27,39 +27,32 @@ export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 	
 	static style = css`
 		.resizer{
-			position: absolute;
+			flex: none;
+			position: relative;
 			z-index: 100;
 		}
 
 		.resizer-top{
 			width: 100%;
 			height: 10px;
-			top: -5px;
-			left: 0;
 			cursor: ns-resize;
 		}
 
 		.resizer-bottom{
 			width: 100%;
 			height: 10px;
-			bottom: -5px;
-			left: 0;
 			cursor: ns-resize;
 		}
 
 		.resizer-left{
 			width: 10px;
 			height: 100%;
-			top: 0;
-			left: -5px;
 			cursor: ew-resize;
 		}
 
 		.resizer-right{
 			width: 10px;
 			height: 100%;
-			top: 0;
-			right: -5px;
 			cursor: ew-resize;
 		}
 

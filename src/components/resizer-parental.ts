@@ -1,9 +1,38 @@
 import {NumberUtils, Vector} from '@pucelle/ff'
 import {Resizer} from './resizer'
+import {css, html} from '@pucelle/lupos.js'
 
 
 /** `<Resizer>` will resize it's parent by dragging it. */
 export class ParentalResizer<E = {}> extends Resizer<E> {
+
+	static style = css`
+		.parental-resizer{
+			position: absolute;
+			z-index: 100;
+			
+			&.resizer-top{
+				top: -5px;
+				left: 0;
+			}
+
+			&.resizer-bottom{
+				bottom: -5px;
+				left: 0;
+			}
+
+			&.resizer-left{
+				top: 0;
+				left: -5px;
+			}
+
+			&.resizer-right{
+				top: 0;
+				right: -5px;
+			}
+		}
+	`
+	
 	
 	/** 
 	 * Resizing speed rate,
@@ -26,6 +55,14 @@ export class ParentalResizer<E = {}> extends Resizer<E> {
 		super.onCreated()
 		this.on('resize-start', this.onResizeStart, this)
 		this.on('resize-move', this.onResizeMoves, this)
+	}
+
+	protected render() {
+		return html`
+			<template class="resizer parental-resizer resizer-${this.position}"
+				@mousedown=${this.onMouseDown}
+			/>
+		`
 	}
 
 	protected onResizeStart() {

@@ -195,12 +195,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.startIndex + index
 	}
 
-	getStartVisibleIndex(fullyVisible: boolean = false): number {
-		return this.renderer!.locateVisibleIndex('start', fullyVisible)
+	getStartVisibleIndex(minimumRatio: number = 0): number {
+		return this.renderer!.locateVisibleIndex('start', minimumRatio)
 	}
 
-	getEndVisibleIndex(fullyVisible: boolean = false): number {
-		return this.renderer!.locateVisibleIndex('end', fullyVisible)
+	getEndVisibleIndex(minimumRatio: number = 0): number {
+		return this.renderer!.locateVisibleIndex('end', minimumRatio)
 	}
 
 	/** 

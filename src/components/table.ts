@@ -721,19 +721,19 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	}
 
 	/** Check whether item at specified index is visible. */
-	isIndexVisible(index: number, fullyVisible: boolean = false): boolean {
-		return index >= this.getStartVisibleIndex(fullyVisible)
-			&& index <= this.getEndVisibleIndex(fullyVisible)
+	isIndexVisible(index: number, minimumRatio: number = 0): boolean {
+		return index >= this.getStartVisibleIndex(minimumRatio)
+			&& index <= this.getEndVisibleIndex(minimumRatio)
 	}
 	
 	/** Get the index of the first visible item. */
-	getStartVisibleIndex(fullyVisible: boolean = false): number {
-		return this.repeatRef.getStartVisibleIndex(fullyVisible)
+	getStartVisibleIndex(minimumRatio: number = 0): number {
+		return this.repeatRef.getStartVisibleIndex(minimumRatio)
 	}
 
 	/** Get the index after the last visible item. */
-	getEndVisibleIndex(fullyVisible: boolean = false): number {
-		return this.repeatRef.getEndVisibleIndex(fullyVisible)
+	getEndVisibleIndex(minimumRatio: number = 0): number {
+		return this.repeatRef.getEndVisibleIndex(minimumRatio)
 	}
 
 	/** 

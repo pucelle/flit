@@ -4,6 +4,8 @@ import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 
 /** 
  * Locate the first or after the last element in els that is at least partial visible.
+ * `minimumRatio` specifies the size of visible part relative to full size,
+ * only when intersection rate greater the element get recognized as visible.
  * Returned range is `0 ~ list.length`.
  */
 export function locateVisibleIndex(
@@ -12,7 +14,7 @@ export function locateVisibleIndex(
 	doa: DirectionalOverflowAccessor,
 	sliderStartPosition: number,
 	direction: 'start' | 'end',
-	fullyVisible: boolean
+	minimumRatio: number = 0
 ): number {
 	let scrollerSize = doa.getClientSize(scroller)
 	let scrolled = doa.getScrolled(scroller)
@@ -25,15 +27,19 @@ export function locateVisibleIndex(
 		let start = doa.getOffset(el) + translated
 		let size = doa.getOffsetSize(el)
 		let end = start + size
+		let ratio = (Math.min(end, scrollerSize) - Math.max(start, 0)) / Math.min(size, scrollerSize)
 
-		// Above, move right.
-		if (fullyVisible ? start < 0 : end < 0) {
-			return -1
-		}
+		if (ratio <= minimumRatio) {
+			
+			// Above, move right.
+			if (start < 0) {
+				return -1
+			}
 
-		// Below, move left.
-		else if (fullyVisible ? end > scrollerSize : start > scrollerSize) {
-			return 1
+			// Below, move left.
+			else {
+				return 1
+			}
 		}
 
 		// Move to right if `locateLast` is `1`.
