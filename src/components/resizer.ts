@@ -113,5 +113,6 @@ export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 		`)
 
 		cursorMask.appendTo(document.body)
+		this.fire('resize-start', e)
 	}
 }
