@@ -1,4 +1,4 @@
-import {css, Component, html} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult} from '@pucelle/lupos.js'
 import {SharedPopups} from '../bindings'
 import {Triangle} from './triangle'
 
@@ -58,7 +58,7 @@ export class Popup<E = {}> extends Component<E> {
 		}
 	}
 
-	protected render() {
+	protected render(): RenderResult {
 		return html`
 			<template class="popup" tabindex="0">
 				<lu:if ${this.triangle}>

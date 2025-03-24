@@ -1,4 +1,4 @@
-import {css, html} from '@pucelle/lupos.js'
+import {css, html, RenderResult} from '@pucelle/lupos.js'
 import {Popup} from './popup'
 
 
@@ -23,7 +23,7 @@ export class ContextMenu<E = {}> extends Popup<E> {
 	
 	readonly triangle: boolean = false
 
-	protected render() {
+	protected render(): RenderResult {
 		return html`
 			<template class="popup contextmenu" tabindex="0">
 				<slot />

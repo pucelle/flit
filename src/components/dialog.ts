@@ -1,4 +1,4 @@
-import {css, html, Component, RenderResultRenderer} from '@pucelle/lupos.js'
+import {css, html, Component, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
 import {AnchorAligner, DOMEvents, fade, translations, promiseWithResolves, untilUpdateComplete} from '@pucelle/ff'
 import {Input} from './input'
 import {Textarea} from './textarea'
@@ -180,7 +180,7 @@ export class Dialog<E = {}> extends Component<E> {
 	/** Whether dialog opened. */
 	protected opened: boolean = false
 
-	protected render() {
+	protected render(): RenderResult {
 		let options = this.options
 		if (!options) {
 			return null
