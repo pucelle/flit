@@ -438,14 +438,15 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		let inDOMAlready = !!popup && document.contains(popup.el)
 
 
-		// Make rendered.
-		if (!rendered) {
-			rendered = render(this.renderer!, this.context)
+		// Reset renderer.
+		if (rendered) {
+			rendered.renderer = this.renderer
+			rendered.context = this.context
 		}
 
-		// Reset renderer.
-		else if (rendered.renderer !== this.renderer!) {
-			rendered.renderer = this.renderer!
+		// Reset rendered.
+		else {
+			rendered = render(this.renderer, this.context)
 		}
 
 		this.rendered = rendered
