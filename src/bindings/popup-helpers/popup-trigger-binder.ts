@@ -165,6 +165,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		}
 		else if (this.trigger === 'click' || this.trigger === 'contextmenu') {
 			DOMEvents.on(document, 'mousedown', this.onDocMouseDownOrTouch, this)
+			DOMEvents.on(document, 'wheel', this.onDocMouseWheel, this)
 			MouseLeaveControl.lock(this.el)
 		}
 		else if (this.trigger === 'focus') {
@@ -196,6 +197,18 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		}
 	}
 
+	/** 
+	 * When mouse wheel outside of target, will also hide popup.
+	 * Especially for `contextmenu` event.
+	 */
+	private onDocMouseWheel(e: WheelEvent) {
+		let target = e.target as Element
+
+		if (!this.content?.contains(target)) {
+			this.fire('will-hide')
+		}
+	}
+
 	private hidePopupLater() {
 		this.fire('will-hide')
 	}
@@ -219,6 +232,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		}
 		else if (this.trigger === 'click' || this.trigger === 'contextmenu') {
 			DOMEvents.off(document, 'mousedown', this.onDocMouseDownOrTouch, this)
+			DOMEvents.off(document, 'wheel', this.onDocMouseWheel, this)
 			MouseLeaveControl.unlock(this.el)
 		}
 		else if (this.trigger === 'focus') {
