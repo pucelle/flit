@@ -672,7 +672,15 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		e.stopPropagation()
 		e.preventDefault()
 
-		this.selections!.selectByMouseEvent(index, (this.store as Store).currentData, e)
+		if (e.type === 'contextmenu') {
+			let item = (this.store as Store).currentData[index]
+			if (item) {
+				this.selections!.select(item)
+			}
+		}
+		else {
+			this.selections!.selectByMouseEvent(index, (this.store as Store).currentData, e)
+		}
 	}
 
 	protected onRectSelectStarted(startOffset: Point, e: MouseEvent) {
