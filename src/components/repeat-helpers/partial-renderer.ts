@@ -223,13 +223,17 @@ export class PartialRenderer {
 
 		//// Can only write dom properties now.
 
-		let hasMeasured = this.measurement.getItemSize() > 0
+		let hasMeasuredBefore = this.measurement.getItemSize() > 0
 		let continuouslyUpdated: boolean = false
+		let needToApply = this.needToApply
 
 		// Adjust scroll position by specified indices.
-		if (this.needToApply) {
-			continuouslyUpdated = await this.updateWithApplyingIndices(hasMeasured)
-			this.needToApply = null
+		if (needToApply) {
+			continuouslyUpdated = await this.updateWithApplyingIndices(needToApply)
+
+			if (needToApply === this.needToApply) {
+				this.needToApply = null
+			}
 		}
 
 		// Data changed, try persist start index and scroll position.
@@ -237,7 +241,7 @@ export class PartialRenderer {
 			this.updateWithStartIndexPersist()
 		}
 
-		if (hasMeasured) {
+		if (hasMeasuredBefore) {
 			this.updatePlaceholderSizeProgressively()
 		}
 
@@ -248,6 +252,13 @@ export class PartialRenderer {
 			await untilUpdateComplete()
 
 			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
+
+			// If newly measured, and render from a specified index, re-render after measured.
+			if (needToApply && !hasMeasuredBefore && needToApply.startIndex) {
+				this.updatePlaceholderSizeProgressively()
+				await this.updateWithApplyingIndices(needToApply)
+			}
+
 			this.checkEdgeCasesAfterMeasured()
 		}
 
@@ -259,12 +270,13 @@ export class PartialRenderer {
 	}
 
 	/** Update when start index specified and need to apply. */
-	private async updateWithApplyingIndices(hasMeasured: boolean): Promise<boolean> {
-		let {startIndex, endIndex, alignDirection, tryAdjustToPersistScrollPosition: tryAdjustToPersist} = this.needToApply!
+	private async updateWithApplyingIndices(needToApply: NeedToApply): Promise<boolean> {
+		let {startIndex, endIndex, alignDirection, tryAdjustToPersistScrollPosition} = needToApply
+		let hasMeasured = this.measurement.getItemSize() > 0
 		let renderCount = this.endIndex - this.startIndex
 	
 		// Adjust index and persist continuous.
-		if (tryAdjustToPersist && renderCount > 0) {
+		if (tryAdjustToPersistScrollPosition && renderCount > 0) {
 			let startVisibleIndex = this.locateVisibleIndex('start')
 			let endVisibleIndex = this.locateVisibleIndex('end')
 			let canPersist = false
@@ -308,7 +320,7 @@ export class PartialRenderer {
 		this.setIndices(startIndex, endIndex)
 		this.setAlignDirection(alignDirection ?? 'start')
 		this.updateRendering()
-		this.resetPositions(hasMeasured, tryAdjustToPersist ? undefined : startIndex, tryAdjustToPersist ? undefined : endIndex)
+		this.resetPositions(hasMeasured, tryAdjustToPersistScrollPosition ? undefined : startIndex, tryAdjustToPersistScrollPosition ? undefined : endIndex)
 
 		return false
 	}
@@ -571,6 +583,7 @@ export class PartialRenderer {
 
 		// Scrolling down, render more at end.
 		else if (alignDirection === 'start') {
+			
 			// Rendered item count changed much, not rendering progressively.
 			if (this.startIndex < oldStartIndex) {
 				needReset = true

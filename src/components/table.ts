@@ -749,11 +749,15 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * The data item of this index will be renderer at the topmost or leftmost of the viewport.
 	 * You can safely call this before update complete, no additional rendering will cost.
 	 */
-	setStartVisibleIndex(startIndex: number) {
+	async setStartVisibleIndex(startIndex: number) {
 		if (!this.live) {
 			throw new Error(`"setStartIndex(...)" only works in "live" mode.`)
 		}
 
+		if (!this.repeatRef) {
+			await this.untilUpdated()
+		}
+		
 		(this.repeatRef as LiveRepeat).setStartVisibleIndex(startIndex)
 	}
 

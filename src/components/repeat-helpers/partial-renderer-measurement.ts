@@ -151,6 +151,10 @@ export class PartialRendererMeasurement {
 
 	/** Every time after update complete, do measurement. */
 	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
+		if (startIndex === endIndex) {
+			return
+		}
+
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
 		let paddingSize = sliderClientSize - sliderInnerSize
@@ -225,11 +229,17 @@ export class PartialRendererMeasurement {
 		let itemSize = this.getItemSize()
 		let placeholderSize: number
 		
-		if (alignDirection === 'start') {
-			placeholderSize = itemSize * (dataCount - startIndex) + this.cachedSliderStartPosition
+		// If has measured before.
+		if (this.cachedPlaceholderProperties.itemSize > 0) {
+			if (alignDirection === 'start') {
+				placeholderSize = itemSize * (dataCount - startIndex) + this.cachedSliderStartPosition
+			}
+			else {
+				placeholderSize = itemSize * (dataCount - endIndex) + this.cachedSliderEndPosition
+			}
 		}
 		else {
-			placeholderSize = itemSize * (dataCount - endIndex) + this.cachedSliderEndPosition
+			placeholderSize = itemSize * dataCount
 		}
 
 		return placeholderSize
