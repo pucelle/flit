@@ -108,8 +108,9 @@ export class PartialRendererMeasurement {
 	/** 
 	 * Get safe render count of items to render.
 	 * `itemSize` can either be latest size or average size.
+	 * If `proposed` specified, and finally render count close to it, will use it.
 	 */
-	getSafeRenderCount(itemSize: number, reservedPixels: number): number {
+	getSafeRenderCount(itemSize: number, reservedPixels: number, proposed: number): number {
 		if (this.cachedScrollerSize === 0) {
 			return 1
 		}
@@ -120,6 +121,12 @@ export class PartialRendererMeasurement {
 
 		// Because normally can scroll twice per frame.
 		let totalSize = this.cachedScrollerSize + reservedPixels
+		let minimumCount = this.cachedScrollerSize / itemSize
+		let count = totalSize / itemSize
+
+		if (Math.abs(count - proposed) < 0.5 && proposed > minimumCount) {
+			return proposed
+		}
 
 		return Math.ceil(totalSize / itemSize)
 	}
@@ -274,12 +281,12 @@ export class PartialRendererMeasurement {
 		}
 
 		// Can't cover and need to render more items at top/left.
-		else if (sliderStart > 0 || unexpectedScrollStart) {
+		else if (sliderStart - 1 > 0 || unexpectedScrollStart) {
 			return 'start'
 		}
 
 		// Can't cover and need to render more items at bottom/right.
-		else if (sliderEnd < scrollerSize || unexpectedScrollEnd) {
+		else if (sliderEnd + 1 < scrollerSize || unexpectedScrollEnd) {
 			return 'end'
 		}
 

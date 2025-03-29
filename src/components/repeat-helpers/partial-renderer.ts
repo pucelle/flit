@@ -359,7 +359,8 @@ export class PartialRenderer {
 	/** Update start and end indices before rendering. */
 	private setIndices(newStartIndex: number | undefined, newEndIndex: number | undefined = undefined) {
 		let itemSize = this.measurement.getItemSize()
-		let renderCount = this.measurement.getSafeRenderCount(itemSize, this.reservedPixels)
+		let currentRenderCount = this.endIndex - this.startIndex
+		let renderCount = this.measurement.getSafeRenderCount(itemSize, this.reservedPixels, currentRenderCount)
 
 		if (newStartIndex === undefined) {
 			newStartIndex = newEndIndex! - renderCount
