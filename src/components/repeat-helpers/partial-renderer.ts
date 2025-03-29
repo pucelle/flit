@@ -255,8 +255,12 @@ export class PartialRenderer {
 
 			// If newly measured, and render from a specified index, re-render after measured.
 			if (needToApply && !hasMeasuredBefore && needToApply.startIndex) {
+
+				// Muse update placeholder size firstly, or may can't set scroll position correctly.
 				this.updatePlaceholderSizeProgressively()
+
 				await this.updateWithApplyingIndices(needToApply)
+				this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 			}
 
 			this.checkEdgeCasesAfterMeasured()
