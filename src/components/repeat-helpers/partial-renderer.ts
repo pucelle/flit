@@ -1,7 +1,7 @@
 import {AsyncTaskQueue, DOMEvents, ResizeWatcher, Timeout, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {PartialRendererMeasurement} from './partial-renderer-measurement'
+import {PartialRendererMeasurement, UnCoveredSituation} from './partial-renderer-measurement'
 
 
 /** Function for doing updating. */
@@ -218,8 +218,13 @@ export class PartialRenderer {
 	/** Update from applying start index or updating data. */
 	async update() {
 		this.quarterlyUpdateTimeout.cancel()
-		let completeRendering = await this.renderQueue.request()
+		await this.renderQueue.enqueue(() => this.doNormalUpdate())
 
+		// If item size become smaller much, may cause can't fully covered.
+		await this.checkCoverage()
+	}
+
+	private async doNormalUpdate() {
 
 		//// Can only write dom properties now.
 
@@ -265,12 +270,6 @@ export class PartialRenderer {
 
 			this.checkEdgeCasesAfterMeasured()
 		}
-
-		completeRendering()
-
-
-		// If item size become smaller much, may cause can't fully covered.
-		await this.checkCoverage()
 	}
 
 	/** Update when start index specified and need to apply. */
@@ -515,7 +514,10 @@ export class PartialRenderer {
 			return
 		}
 
-		let completeRendering = await this.renderQueue.request()
+		await this.renderQueue.enqueue(() => this.doCoverageUpdate(unCoveredSituation))
+	}
+
+	private async doCoverageUpdate(unCoveredSituation: UnCoveredSituation) {
 
 		// Update and try to keep same element with same position.
 		if (unCoveredSituation === 'end' || unCoveredSituation === 'start') {
@@ -558,8 +560,6 @@ export class PartialRenderer {
 			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 			this.checkEdgeCasesAfterMeasured()
 		}
-
-		completeRendering()
 	}
 
 	/** Update and make render content continuous. */
@@ -659,7 +659,10 @@ export class PartialRenderer {
 			return
 		}
 
-		let completeRendering = await this.renderQueue.request()
+		await this.renderQueue.enqueue(() => this.doQuarterlyUpdate(scrollDirection))
+	}
+
+	private async doQuarterlyUpdate(scrollDirection: 'start' | 'end') {
 		let alignDirection: 'start' | 'end' = scrollDirection === 'end' ? 'start' : 'end'
 		let visibleIndex = this.locateVisibleIndex(alignDirection)
 		let newStartIndex: number
@@ -680,8 +683,6 @@ export class PartialRenderer {
 		}
 
 		await this.updateContinuously(alignDirection, newStartIndex, newEndIndex)
-
-		completeRendering()
 	}
 
 	/** 
