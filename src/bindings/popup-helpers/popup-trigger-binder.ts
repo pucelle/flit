@@ -69,6 +69,10 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 	/** Bind enter events */
 	bindEnter() {
+		if (this.bound & BoundMask.Enter) {
+			return
+		}
+
 		if (this.trigger === 'click' || this.trigger === 'mousedown' || this.trigger === 'contextmenu') {
 			DOMEvents.on(this.el, this.trigger, this.triggerWithoutDelay, this)
 		}
@@ -125,6 +129,10 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 	/** Bind events to handle canceling show before popup showed. */
 	bindLeaveBeforeShow() {
+		if (this.bound & BoundMask.LeaveBeforeShow) {
+			return
+		}
+
 		if (this.trigger === 'hover') {
 			DOMEvents.once(this.el, 'mouseleave', this.cancelShowPopup, this)
 		}
@@ -154,6 +162,10 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	bindLeave(hideDelay: number, content: Element) {
 		this.unbindLeaveBeforeShow()
 		this.content = content
+
+		if (this.bound & BoundMask.Leave) {
+			return
+		}
 
 		if (this.trigger === 'hover') {
 			if (DOMEvents.havePointer()) {

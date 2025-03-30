@@ -267,13 +267,17 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	protected renderItem(item: Observed<ListItem<T>>, anySiblingHaveChildren: boolean): RenderResult {
 		let expanded = this.expanded.includes(item.value)
 
+		// tooltip and contextmenu may be getters.
+		let itemTooltip = item.tooltip
+		let itemContextmenu = item.contextmenu
+
 		return html`
 			<div
 				class="list-item"
 				:class=${this.renderActiveSelectedClassName(item)}
 				:class.arrow-selected=${item === this.keyNavigator.current}
-				:tooltip=${item.tooltip ?? null}
-				:contextmenu=${item.contextmenu ?? null}
+				?:tooltip=${itemTooltip, itemTooltip!}
+				?:contextmenu=${itemContextmenu, itemContextmenu!}
 				@click.prevent=${() => this.onClickItem(item)}
 			>
 				<lu:if ${item.children && item.children.length > 0}>

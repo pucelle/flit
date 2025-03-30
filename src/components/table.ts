@@ -674,9 +674,15 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
 		if (e.type === 'contextmenu') {
 			let item = (this.store as Store).currentData[index]
-			if (item) {
-				this.selections!.select(item)
+			if (!item) {
+				return
 			}
+
+			if (this.selections!.hasSelected(item)) {
+				return
+			}
+
+			this.selections!.selectByMouseEvent(index, (this.store as Store).currentData, e)
 		}
 		else {
 			this.selections!.selectByMouseEvent(index, (this.store as Store).currentData, e)
