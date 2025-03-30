@@ -216,7 +216,6 @@ export class Dialog<E = {}> extends Component<E> {
 				</lu:if>
 
 				<div class="dialog-content">
-
 					<lu:if ${options.icon}>
 						<Icon class="dialog-left" .type="${options.icon}" />
 					</lu:if>
@@ -259,7 +258,7 @@ export class Dialog<E = {}> extends Component<E> {
 			<Button class="action"
 				.primary=${!!action.primary}
 				:class.dialog-third=${action.third}
-				:tooltip=${action.tooltip ?? null, {direction: 'b'}}
+				:tooltip=${action.tooltip ?? null, {position: 'b'}}
 				@click=${() => this.onClickActionButton(action)}
 			>
 				${action.text}

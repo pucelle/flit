@@ -1,9 +1,9 @@
-import {css, Component, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, TemplateResult, RenderResultRenderer} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {DOMEvents, EventKeys, Observed, fold, effect, DOMScroll, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
-import {tooltip} from '../bindings'
+import {tooltip, contextmenu} from '../bindings'
 
 
 /** 
@@ -32,11 +32,11 @@ export type ListItem<T = any> = {
 	 */
 	icon?: string
 
-	/** 
-	 * Tooltip content to show as tooltip when mouse hover,
-	 * can be a pre-generated template result.
-	 */
-	tip?: string | TemplateResult
+	/** Tooltip content to show as tooltip when mouse hover. */
+	tooltip?: RenderResultRenderer
+
+	/** Contextmenu content when doing context menu on list item. */
+	contextmenu?: RenderResultRenderer
 
 	/** To render subsection list. */
 	children?: ListItem<T>[]
@@ -345,7 +345,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else {
 			return html`
 				<div class="list-content"
-					?:tooltip=${item.tip, item.tip!}
+					:tooltip=${item.tooltip ?? null}
+					:contextmenu=${item.contextmenu ?? null}
 				>
 					${item.text}
 				</div>
