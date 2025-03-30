@@ -4,6 +4,7 @@ import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
 import {Button} from './button'
+import {tooltip} from '../bindings'
 
 
 export interface DialogOptions {
@@ -31,6 +32,9 @@ export interface DialogAction {
 
 	/** Button text. */
 	text: string
+
+	/** Tooltip text or result. */
+	tooltip?: RenderResultRenderer
 
 	/** Action button becomes primary if set to `true`. */
 	primary?: boolean
@@ -123,9 +127,13 @@ export class Dialog<E = {}> extends Component<E> {
 			margin-top: 0.6em;
 		}
 
-		.dialog-icon{
+		.dialog-left{
 			margin-top: 0.1em;
 			margin-right: 0.8em;
+		}
+
+		.dialog-right{
+			flex: 1;
 		}
 
 		.dialog-message{
@@ -210,18 +218,20 @@ export class Dialog<E = {}> extends Component<E> {
 				<div class="dialog-content">
 
 					<lu:if ${options.icon}>
-						<Icon class="dialog-icon" .type="${options.icon}" />
+						<Icon class="dialog-left" .type="${options.icon}" />
 					</lu:if>
 
-					<div class="dialog-message">
-						${this.renderMessage()}
+					<div class="dialog-right">
+						<div class="dialog-message">
+							${this.renderMessage()}
+						</div>
+
+						<lu:if ${options.list && options.list.length > 0}>
+							<ul class="dialog-list">
+								${options.list!.map(text => html`<li>${text}</li>`)}
+							</ul>
+						</lu:if>
 					</div>
-
-					<lu:if ${options.list && options.list.length > 0}>
-						<ul class="dialog-list">
-							${options.list!.map(text => html`<li>${text}</li>`)}
-						</ul>
-					</lu:if>
 				</div>
 
 				${this.renderActions(options.actions)}
@@ -249,6 +259,7 @@ export class Dialog<E = {}> extends Component<E> {
 			<Button class="action"
 				.primary=${!!action.primary}
 				:class.dialog-third=${action.third}
+				:tooltip=${action.tooltip ?? null, {direction: 'b'}}
 				@click=${() => this.onClickActionButton(action)}
 			>
 				${action.text}
