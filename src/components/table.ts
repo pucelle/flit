@@ -68,7 +68,7 @@ export interface TableColumn<T = any> {
 	align?: 'left' | 'right' | 'center'
 
 	/** Class name that will apply to table cell. */
-	class?: string
+	className?: string
 }
 
 
@@ -598,7 +598,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
 			return html`
 				<td class="table-cell"
-					:class=${column.class ?? ''}
+					:class=${column.className ?? ''}
 					:style.text-align=${column.align || ''}
 				>
 					${result}

@@ -13,7 +13,7 @@ export interface TooltipOptions extends PopupOptions{
 	size: ThemeSize
 
 	/** Class name which will be assigned to tooltip element. */
-	class?: string
+	className?: string
 }
 
 
@@ -57,7 +57,7 @@ export class tooltip extends popup {
 
 		return html`
 			<Tooltip
-				:class=${this.options.class ?? ''}
+				:class=${this.options.className ?? ''}
 				.type=${this.options.type}
 				.size=${this.options.size}
 			>
