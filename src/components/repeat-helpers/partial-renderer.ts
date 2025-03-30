@@ -330,29 +330,14 @@ export class PartialRenderer {
 
 	/** Update data normally, and try to keep indices and scroll position. */
 	private updateWithStartIndexPersist() {
-		let oldStartIndex = this.startIndex
-		let oldAlignDirection = this.alignDirection
+		// let oldStartIndex = this.startIndex
+		// let oldAlignDirection = this.alignDirection
 
 		// Required, may data count increase or decrease.
 		this.setIndices(this.startIndex)
 
 		this.setAlignDirection('start')
 		this.updateRendering()
-		
-		// If start index has not changed, needs to persist the scroll position.
-		if (oldStartIndex === this.startIndex) {
-
-			// Rendered things may change, should not persist end scroll position.
-			// Here we try to toggle to persist start scroll position.
-			if (oldAlignDirection === 'end') {
-				this.setSliderPosition(this.measurement.cachedSliderStartPosition)
-			}
-		}
-
-		// If start index has changed, reset positions.
-		else {
-			this.resetPositions(true)
-		}
 	}
 
 	/** Update start and end indices before rendering. */
