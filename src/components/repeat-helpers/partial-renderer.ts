@@ -330,9 +330,7 @@ export class PartialRenderer {
 
 	/** Update data normally, and try to keep indices and scroll position. */
 	private updateWithStartIndexPersist() {
-		// let oldStartIndex = this.startIndex
-		// let oldAlignDirection = this.alignDirection
-
+		
 		// Required, may data count increase or decrease.
 		this.setIndices(this.startIndex)
 
