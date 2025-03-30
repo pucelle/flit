@@ -272,6 +272,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				class="list-item"
 				:class=${this.renderActiveSelectedClassName(item)}
 				:class.arrow-selected=${item === this.keyNavigator.current}
+				:tooltip=${item.tooltip ?? null}
+				:contextmenu=${item.contextmenu ?? null}
 				@click.prevent=${() => this.onClickItem(item)}
 			>
 				<lu:if ${item.children && item.children.length > 0}>
@@ -344,10 +346,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 		else {
 			return html`
-				<div class="list-content"
-					:tooltip=${item.tooltip ?? null}
-					:contextmenu=${item.contextmenu ?? null}
-				>
+				<div class="list-content">
 					${item.text}
 				</div>
 			`

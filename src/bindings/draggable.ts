@@ -9,6 +9,9 @@ export interface DraggableOptions {
 	/** `name` for draggable, can drop to droppable only when name match. */
 	name?: string
 	
+	/** The class name to apply when start dragging. */
+	draggingClassName?: string
+
 	/** Transition duration in milliseconds. */
 	transitionDuration?: number
 
@@ -20,9 +23,6 @@ export interface DraggableOptions {
 	 * If specifies as `true`, means can only swap with dragging element siblings.
 	 */
 	slideOnly?: boolean
-
-	/** The class name to apply when start dragging. */
-	className?: string
 }
 
 
@@ -41,7 +41,7 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 	transitionDuration: number | undefined
 	transitionEasing: WebTransitionEasingName | undefined
 	slideOnly: boolean = false
-	className: string | undefined
+	draggingClassName: string | undefined
 
 	/** Data can be passed to droppable. */
 	data: T | null = null
@@ -88,7 +88,7 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 		this.transitionDuration = options.transitionDuration
 		this.transitionEasing = options.transitionEasing
 		this.slideOnly = options.slideOnly ?? false
-		this.className = options.className
+		this.draggingClassName = options.draggingClassName
 	}
 
 	private onMouseDown(e: MouseEvent) {
@@ -107,8 +107,8 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 				moves.reset()
 				isDragging = true
 
-				if (this.className) {
-					this.el.classList.add(this.className)
+				if (this.draggingClassName) {
+					this.el.classList.add(this.draggingClassName)
 				}
 			}
 			
@@ -123,8 +123,8 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 			if (isDragging) {
 				GlobalDragDropRelationship.endDragging()
 
-				if (this.className) {
-					this.el.classList.remove(this.className)
+				if (this.draggingClassName) {
+					this.el.classList.remove(this.draggingClassName)
 				}
 			}
 		}
