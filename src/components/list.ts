@@ -38,7 +38,7 @@ export type ListItem<T = any> = {
 	/** Contextmenu content when doing context menu on list item. */
 	contextmenu?: RenderResultRenderer
 
-	/** To render subsection list. */
+	/** Child items to render subsection list. */
 	children?: ListItem<T>[]
 }
 
@@ -257,7 +257,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderItems(items: Observed<ListItem<T>[]>): RenderResult[] {
-		let anySiblingHaveChildren = items.some(item => item.children)
+		let anySiblingHaveChildren = items.some(item => item.children && item.children.length > 0)
 
 		return items.map((item: ListItem<T>) => {
 			return this.renderItem(item, anySiblingHaveChildren)
@@ -267,9 +267,10 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	protected renderItem(item: Observed<ListItem<T>>, anySiblingHaveChildren: boolean): RenderResult {
 		let expanded = this.expanded.includes(item.value)
 
-		// tooltip and contextmenu may be getters.
+		// tooltip and contextmenu may get from getters.
 		let itemTooltip = item.tooltip
 		let itemContextmenu = item.contextmenu
+		let children = item.children
 
 		return html`
 			<div
@@ -280,7 +281,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				?:contextmenu=${itemContextmenu, itemContextmenu!}
 				@click.prevent=${() => this.onClickItem(item)}
 			>
-				<lu:if ${item.children && item.children.length > 0}>
+				<lu:if ${children && children.length > 0}>
 					<div class='list-toggle-placeholder'
 						@click.stop=${() => this.toggleExpanded(item)}
 					>
@@ -307,7 +308,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				</lu:if>
 			</div>
 
-			<lu:if ${item.children && expanded}>
+			<lu:if ${children && children.length > 0 && expanded}>
 				<div class="list-subsection"
 					:transition.immediate=${
 						() => item.value === this.latestExpandedOrCollapsed
@@ -315,7 +316,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 							: null
 					}
 				>
-					${this.renderItems(item.children!)}
+					${this.renderItems(children!)}
 				</div>
 			</lu:if>
 		`
