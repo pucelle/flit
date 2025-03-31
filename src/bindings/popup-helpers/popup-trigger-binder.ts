@@ -49,12 +49,19 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		this.el = el	
 	}
 
-	setTriggerType(trigger: TriggerType) {
-		this.trigger = this.mapTriggerType(trigger)
-	}
-
+	/** Get trigger event to align with it. */
 	getLatestTriggerEvent() {
 		return this.latestTriggerEvent
+	}
+
+	/** Must re-bind after change to a different trigger type. */
+	setTriggerType(trigger: TriggerType) {
+		trigger = this.mapTriggerType(trigger)
+
+		if (this.trigger !== trigger) {
+			this.clear()
+			this.trigger = trigger
+		}
 	}
 
 	private mapTriggerType(trigger: TriggerType): TriggerType {
@@ -67,7 +74,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		return trigger
 	}
 
-	/** Bind enter events */
+	/** Bind enter events if haven't bound. */
 	bindEnter() {
 		if (this.bound & BoundMask.Enter) {
 			return
@@ -90,7 +97,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		this.bound |= BoundMask.Enter
 	}
 
-	/** Unbind enter events if needed. */
+	/** Unbind enter events if bound. */
 	unbindEnter() {
 		if ((this.bound & BoundMask.Enter) === 0) {
 			return
@@ -140,7 +147,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		this.bound |= BoundMask.LeaveBeforeShow
 	}
 
-	/** Unbind events to handle leaving trigger element before popup showing if needed. */
+	/** Unbind events to handle leaving trigger element before popup showing if bound. */
 	unbindLeaveBeforeShow() {
 		if ((this.bound & BoundMask.LeaveBeforeShow) === 0) {
 			return
@@ -158,7 +165,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		this.fire('cancel-show')
 	}
 
-	/** Bind events to hide popup content. */
+	/** Bind events to hide popup content if haven't bound. */
 	bindLeave(hideDelay: number, content: Element) {
 		this.unbindLeaveBeforeShow()
 		this.content = content
@@ -225,7 +232,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		this.fire('will-hide')
 	}
 
-	/** Unbind events to hide popup if needed. */
+	/** Unbind events to hide popup if bound. */
 	unbindLeave() {
 		if ((this.bound & BoundMask.Leave) === 0) {
 			return
@@ -257,13 +264,6 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	/** Clear all bound. */
 	clear() {
 		this.unbindEnter()
-		this.unbindLeave()
-		this.unbindLeaveBeforeShow()
-		this.content = null
-	}
-
-	/** Clear all bound with content. */
-	clearContent() {
 		this.unbindLeave()
 		this.unbindLeaveBeforeShow()
 		this.content = null
