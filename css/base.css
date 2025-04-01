@@ -8,6 +8,56 @@
 	outline: none;
 }
 
+
+
+::-webkit-scrollbar{
+	height: 8px;
+	width: 8px;
+	background: color-mix(in srgb, var(--background-color) 96%, var(--text-color));
+}
+
+::-webkit-scrollbar-thumb{
+	background: color-mix(in srgb, var(--background-color) 84%, var(--text-color));
+	border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover{
+	background: color-mix(in srgb, var(--background-color) 72%, var(--text-color));
+}
+
+::-webkit-scrollbar-thumb:active{
+	background: color-mix(in srgb, var(--background-color) 60%, var(--text-color));
+}
+
+/* Scrollbar which will become visible when hover. */
+.scrollbar-overlay{
+	scrollbar-gutter: stable;
+
+	&::-webkit-scrollbar, &::-webkit-scrollbar-thumb{
+		background:rgba(0, 0, 0, 0);
+	}
+
+	&::-webkit-scrollbar{
+		height: 6px;
+		width: 6px;
+	}
+
+	&:hover::-webkit-scrollbar-thumb{
+		background: color-mix(in srgb, var(--text-color) 16%, rgba(0, 0, 0, 0));
+		border-radius: 4px;
+	}
+}
+
+@supports not selector(::-webkit-scrollbar) {
+	*{
+		scrollbar-width: thin;
+		scrollbar-color: color-mix(in srgb, var(--background-color) 96%, var(--text-color))
+		                 color-mix(in srgb, var(--background-color) 85%, var(--text-color));
+	}
+}
+
+
+
 html{
 	height: 100%;
 	tab-size: 4;
@@ -75,6 +125,8 @@ table{
 	border-spacing: 0;
 }
 
+
+
 [disabled]{
 	opacity: 0.4;
 	cursor: not-allowed !important;
@@ -89,32 +141,7 @@ table{
 	display: none !important;
 }
 
-::-webkit-scrollbar{
-	height: 8px;
-	width: 8px;
-	background: color-mix(in srgb, var(--background-color) 96%, var(--text-color));
-}
 
-::-webkit-scrollbar-thumb{
-	background: color-mix(in srgb, var(--background-color) 80%, var(--text-color));
-}
-
-::-webkit-scrollbar-thumb:hover{
-	background: color-mix(in srgb, var(--background-color) 65%, var(--text-color));
-}
-
-::-webkit-scrollbar-thumb:active{
-	background: color-mix(in srgb, var(--background-color) 50%, var(--text-color));
-}
-
-
-@supports not selector(::-webkit-scrollbar) {
-	*{
-		scrollbar-width: thin;
-		scrollbar-color: color-mix(in srgb, var(--background-color) 96%, var(--text-color))
-		                 color-mix(in srgb, var(--background-color) 80%, var(--text-color));
-	}
-}
 
 .size-small{
 	font-size: 13;
