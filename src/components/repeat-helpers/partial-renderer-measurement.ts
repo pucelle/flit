@@ -158,10 +158,6 @@ export class PartialRendererMeasurement {
 
 	/** Every time after update complete, do measurement. */
 	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
-		if (startIndex === endIndex) {
-			return
-		}
-
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
 		let paddingSize = sliderClientSize - sliderInnerSize
