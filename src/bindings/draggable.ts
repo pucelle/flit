@@ -1,21 +1,27 @@
-import {Binding, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
+import {Binding, Part, PartCallbackParameterMask, RenderResultRenderer} from '@pucelle/lupos.js'
 import {DOMEvents, WebTransitionEasingName} from '@pucelle/ff'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
 import {registerDraggable} from './drag-drop-helpers/all-draggable'
 
 
 export interface DraggableOptions {
+	
+	/** 
+	 * If `as-sibling` by default, will move droppable elements to give a space to
+	 * indicate draggable element's position after dropping.
+	 */
+	mode: 'reorder' | 'nest'
 
 	/** `name` for draggable, can drop to droppable only when name match. */
-	name?: string
-	
+	name: string
+
 	/** The class name to apply when start dragging. */
 	draggingClassName?: string
 
-	/** Transition duration in milliseconds. */
+	/** Transition duration when playing dragging movement, in milliseconds. */
 	transitionDuration?: number
 
-	/** Transition easing. */
+	/** Transition easing when playing dragging movement. */
 	transitionEasing?: WebTransitionEasingName
 
 	/** 
@@ -23,6 +29,15 @@ export interface DraggableOptions {
 	 * If specifies as `true`, means can only swap with dragging element siblings.
 	 */
 	slideOnly?: boolean
+
+	/** Generate an element to follow mouse after start dragging. */
+	followElementRenderer?: RenderResultRenderer
+}
+
+const DefaultDraggableOptions: DraggableOptions = {
+	name: '',
+	mode: 'reorder',
+	slideOnly: false,
 }
 
 
@@ -33,15 +48,11 @@ export interface DraggableOptions {
  * - `index`: Data item index within it's siblings, normally the for loop index.
  * - `options` Draggable options.
  */
-export class draggable<T = any> implements Binding, Part, DraggableOptions {
+export class draggable<T = any> implements Binding, Part {
 
 	readonly el: HTMLElement
 
-	name: string = ''
-	transitionDuration: number | undefined
-	transitionEasing: WebTransitionEasingName | undefined
-	slideOnly: boolean = false
-	draggingClassName: string | undefined
+	options: DraggableOptions = DefaultDraggableOptions
 
 	/** Data can be passed to droppable. */
 	data: T | null = null
@@ -81,14 +92,10 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 		this.connected = false
 	}
 
-	update(data: T, index: number, options: DraggableOptions = {}) {
+	update(data: T, index: number, options: DraggableOptions) {
 		this.data = data
 		this.index = index
-		this.name = options.name || ''
-		this.transitionDuration = options.transitionDuration
-		this.transitionEasing = options.transitionEasing
-		this.slideOnly = options.slideOnly ?? false
-		this.draggingClassName = options.draggingClassName
+		this.options = {...DefaultDraggableOptions, ...options}
 	}
 
 	private onMouseDown(e: MouseEvent) {
@@ -102,13 +109,13 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 			let moves = currentPosition.diff(startPosition)
 
 			if (!isDragging && moves.getLength() > 5) {
-				GlobalDragDropRelationship.startDragging(this)
+				GlobalDragDropRelationship.startDragging(this, e)
 				startPosition = currentPosition
 				moves.reset()
 				isDragging = true
 
-				if (this.draggingClassName) {
-					this.el.classList.add(this.draggingClassName)
+				if (this.options.draggingClassName) {
+					this.el.classList.add(this.options.draggingClassName)
 				}
 			}
 			
@@ -123,8 +130,8 @@ export class draggable<T = any> implements Binding, Part, DraggableOptions {
 			if (isDragging) {
 				GlobalDragDropRelationship.endDragging()
 
-				if (this.draggingClassName) {
-					this.el.classList.remove(this.draggingClassName)
+				if (this.options.draggingClassName) {
+					this.el.classList.remove(this.options.draggingClassName)
 				}
 			}
 		}

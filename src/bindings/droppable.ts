@@ -7,7 +7,7 @@ import {draggable} from './draggable'
 export interface DroppableOptions<T> {
 
 	/** `name` for droppable, can drop draggable to droppable only when name match. */
-	name?: string
+	name: string
 
 	/** Add this class name after mouse enter, and remove it after mouse leave. */
 	enterClassName?: string
@@ -27,6 +27,11 @@ export interface DroppableOptions<T> {
 }
 
 
+const DefaultDroppableOptions: DroppableOptions<any> = {
+	name: ''
+}
+
+
 /** 
  * Make current element droppable.
  * A `:droppable` element should normally contains several `:draggable`.
@@ -39,15 +44,10 @@ export class droppable<T = any> implements Binding, Part {
 	
 	readonly el: HTMLElement
 	readonly context: any
-	
-	/** Allows only same-named draggable drop to current. */
-	name: string = ''
 
-	/** Get align direction of child draggable elements. */
-	itemsAlignDirection: HVDirection | undefined
+	options: DroppableOptions<T> = {name: ''}
 
 	private onDrop!: (data: T, toIndex: number) => void
-	private options: DroppableOptions<T> = {}
 	private connected: boolean = false
 
 	constructor(el: Element, context: any) {
@@ -77,12 +77,9 @@ export class droppable<T = any> implements Binding, Part {
 		this.connected = false
 	}
 
-	update(ondrop: (data: T, toIndex: number) => void, options: DroppableOptions<T> = {}) {
+	update(ondrop: (data: T, toIndex: number) => void, options: DroppableOptions<T>) {
 		this.onDrop = ondrop
-
-		this.name = options.name || ''
-		this.itemsAlignDirection = options.itemsAlignDirection
-		this.options = options
+		this.options = {...DefaultDroppableOptions, ...options}
 	}
 
 	private onMouseEnter() {

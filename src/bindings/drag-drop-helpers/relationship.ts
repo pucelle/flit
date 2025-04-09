@@ -1,7 +1,9 @@
-import {Vector} from '@pucelle/ff'
+import {DOMEvents, Vector} from '@pucelle/ff'
 import type {draggable} from '../draggable'
 import type {droppable} from '../droppable'
-import {DragDropMovement} from './movement'
+import {DragDropMovement} from './movement-drag-drop'
+import {DragOnlyMovement} from './movement-drag-only'
+import {render} from '@pucelle/lupos.js'
 
 
 /** 
@@ -17,7 +19,7 @@ class DragDropRelationship {
 	protected dragging: draggable | null = null
 
 	/** Help to manage movement. */
-	protected movement: DragDropMovement | null = null
+	protected movement: DragOnlyMovement | DragDropMovement | null = null
 
 	/** 
 	 * May mouse enter in several drop areas, and start dragging,
@@ -29,7 +31,7 @@ class DragDropRelationship {
 	protected activeDroppable: droppable | null = null
 	
 	/** When start dragging a draggable. */
-	startDragging(drag: draggable) {
+	startDragging(drag: draggable, e: MouseEvent) {
 		this.dragging = drag
 		let activeDroppable: droppable | undefined
 
@@ -40,7 +42,7 @@ class DragDropRelationship {
 				this.enteredDroppable.delete(drop)
 			}
 
-			else if (drop.name === drag.name) {
+			else if (drop.options.name === drag.options.name) {
 				activeDroppable = drop
 				break
 			}
@@ -53,28 +55,40 @@ class DragDropRelationship {
 		activeDroppable.fireEnter(this.dragging)
 
 		this.activeDroppable = activeDroppable
-		this.movement = new DragDropMovement(this.dragging!, activeDroppable)
+
+		if (this.dragging.options.mode === 'reorder') {
+			this.movement = new DragDropMovement(this.dragging!, activeDroppable)
+		}
+		else if (this.dragging.options.followElementRenderer) {
+			let rendered = render(this.dragging.options.followElementRenderer)
+			let el = rendered.el
+			let position = DOMEvents.getPagePosition(e)
+
+			this.movement = new DragOnlyMovement(this.dragging!, el, position)
+		}
+		else {
+			let position = DOMEvents.getPagePosition(e)
+			this.movement = new DragOnlyMovement(this.dragging!, this.dragging!.el, position)
+		}
 	}
 
 	/** Translate dragging element to keep follows with mouse. */
 	translateDraggingElement(moves: Vector) {
-		if (this.movement) {
-			this.movement.translateDraggingElement(moves)
-		}
+		this.movement!.translateDraggingElement(moves)
 	}
 
 	/** When dragging and enter a draggable. */
 	enterDrag(drag: draggable) {
-		if (this.canEnterToSwapWith(drag) && this.movement) {
-			this.movement.onEnterDrag(drag)
+		if (this.canEnterToSwapWith(drag)) {
+			this.movement!.onEnterDrag(drag)
 		}
 	}
 
 	/** Whether dragging can swap with draggable. */
 	protected canEnterToSwapWith(drag: draggable) {
 		return this.dragging
-			&& !this.dragging.slideOnly
-			&& this.dragging.name === drag.name
+			&& !this.dragging.options.slideOnly
+			&& this.dragging.options.name === drag.options.name
 			&& this.dragging !== drag
 	}
 
@@ -91,14 +105,14 @@ class DragDropRelationship {
 
 	/** Whether dragging can drop to a droppable. */
 	protected canDropTo(drop: droppable) {
-		return this.dragging && this.dragging.name === drop.name
+		return this.dragging && this.dragging.options.name === drop.options.name
 	}
 
 	/** When dragging and leave a droppable. */
 	leaveDrop(drop: droppable) {
 
 		// Always in same drop for slide only mode.
-		if (this.dragging?.slideOnly) {
+		if (this.dragging?.options.slideOnly) {
 			return
 		}
 		

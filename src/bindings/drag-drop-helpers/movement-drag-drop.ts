@@ -1,41 +1,15 @@
-import {Box, DOMUtils, Vector, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
+import {Box, DOMUtils, Point, Vector, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
 import type {draggable} from '../draggable'
 import {droppable} from '../droppable'
 import {getDraggableByElement} from './all-draggable'
+import {DragOnlyMovement} from './movement-drag-only'
 
 
-/** 
- * To handle dragging movements, includes:
- *   When moved out of the droppable it's inside: All elements below moved up
- *   When moved in a new droppable: Add a padding as space to contain
- *   When moved between siblings: Moving items betweens them up or down, include the mouse enter sibling.
- *   When moved into a already moved sibling: Fallback movements that not betweens them, include the mouse enter sibling.
- */
-export class DragDropMovement {
-	
-	/** Dragging draggable. */
-	private readonly dragging: draggable
-
-	/** Dragging element. */
-	private readonly el: HTMLElement
-
-	/** Dragging element rect. */
-	private readonly elRect: Box
-
-	/** Margin left and top. */
-	private readonly elMarginVector: Vector
-
-	/** Where the dragging come from. */
-	private readonly startDrop: droppable
+/** To handle dragging element movements */
+export class DragDropMovement extends DragOnlyMovement {
 
 	/** `true` means after `el` removed, followed elements will move and take it's place. */
 	private readonly autoLayout: boolean
-
-	/** Dragging element translate. */
-	private readonly translate: Vector = new Vector()
-
-	/** Keeps original style text for dragging element and restore it after dragging end. */
-	private readonly startStyleText: string = ''
 
 	/** Elements that moves to right (never moves to left) in visually, compare to their auto layout position. */
 	private readonly movedElements: Set<HTMLElement> = new Set()
@@ -50,22 +24,26 @@ export class DragDropMovement {
 	private readonly outerHeight!: number
 
 	/** After mouse enter a drop area, we should insert a placeholder that having same size with dragging element into. */
-	private placeholder!: HTMLElement
+	private readonly placeholder!: HTMLElement
+	
+	/** Where the dragging come from. */
+	private readonly startDrop: droppable
 
 	/** Currently mouse entered draggable. */
-	private dragTo: draggable | null = null
-
-	/** Rect of `dragTo`. */
-	private dragToRect: DOMRect | null = null
-
-	/** Indicates the index of where to insert dragging element in the current drop area if drop right now. */
-	private dragToIndex: number = -1
+	private draggingTo: draggable | null = null
 
 	/** 
 	 * Currently mouse entered drop area.
 	 * Term `droppable` is a little hard to understand, so use `drop area` instead.
 	 */
 	private activeDrop: droppable | null = null
+
+
+	/** Rect of `dragTo`. */
+	private dragToRect: DOMRect | null = null
+
+	/** Indicates the index of where to insert dragging element in the current drop area if drop right now. */
+	private dragToIndex: number = -1
 
 	/** Dragging element siblings align direction. */
 	private itemsAlignDirection: HVDirection = 'vertical'
@@ -77,51 +55,38 @@ export class DragDropMovement {
 	private slideOnlyEnteringSiblingData: draggable | null = null
 
 	constructor(drag: draggable, drop: droppable) {
-		this.dragging = drag
-		this.el = drag.el
-		this.startDrop = this.activeDrop = drop
-		this.itemsAlignDirection = drop.itemsAlignDirection ?? 'vertical'
+		let elRect = drag.el.getBoundingClientRect()
 
-		this.elRect = Box.fromLike(this.el.getBoundingClientRect())
-		this.elMarginVector = new Vector(DOMUtils.getNumericStyleValue(this.el, 'marginLeft'), DOMUtils.getNumericStyleValue(this.el, 'marginTop'))
-		
-		this.autoLayout = DOMUtils.getStyleValue(this.el, 'position') !== 'absolute'
+		super(
+			drag,
+			drag.el,
+			Point.from(elRect)
+		)
+
+		this.startDrop = this.activeDrop = drop
+		this.itemsAlignDirection = drop.options.itemsAlignDirection ?? 'vertical'
+		this.autoLayout = DOMUtils.getStyleValue(this.draggingEl, 'position') !== 'absolute'
 
 		// Not consider about margin collapse.
-		this.outerWidth = DOMUtils.getOuterWidth(this.el)
-		this.outerHeight = DOMUtils.getOuterHeight(this.el)
+		this.outerWidth = DOMUtils.getOuterWidth(this.draggingEl)
+		this.outerHeight = DOMUtils.getOuterHeight(this.draggingEl)
 
 		this.prepareSiblings()
 
-		this.placeholder = this.initPlaceholder()
+		this.placeholder = this.initPlaceholder(elRect)
 		this.insertPlaceholder(drop, false)
-
-		this.startStyleText = this.el.style.cssText
-		this.setDraggingStyle()
 	}
 
-	/** Set dragging style for dragging element. */
-	private setDraggingStyle() {
-		document.body.style.cursor = 'grabbing'
-		document.body.style.userSelect = 'none'
-		
-		if (this.el.localName !== 'tr') {
-			this.el.style.position = 'fixed'
-		}
-		
-		this.el.style.zIndex = '9999'
-		this.el.style.width = this.elRect.width + 'px'
-		this.el.style.height = this.elRect.height + 'px'
-		this.el.style.left = this.elRect.left - this.elMarginVector.x + 'px'
-		this.el.style.top = this.elRect.top - this.elMarginVector.y + 'px'
-		this.el.style.boxShadow = `0 0 var(--popup-shadow-blur-radius) var(--popup-shadow-color)`
-		this.el.style.pointerEvents = 'none'
-		this.el.style.opacity = '1'
-		this.el.style.willChange = 'transform'
+	protected setDraggingStyle(mousePosition: Point) {
+		super.setDraggingStyle(mousePosition)
+
+		let elRect = this.draggingEl.getBoundingClientRect()
+		this.draggingEl.style.width = elRect.width + 'px'
+		this.draggingEl.style.height = elRect.height + 'px'
 	}
 
 	private prepareSiblings() {
-		if (!this.dragging.slideOnly) {
+		if (!this.dragging.options.slideOnly) {
 			return
 		}
 
@@ -135,11 +100,11 @@ export class DragDropMovement {
 	}
 
 	/** Create a placeholder having same size with dragging element and insert into drop element. */
-	private initPlaceholder() {
+	private initPlaceholder(elRect: DOMRect) {
 		let placeholder = this.dragging.el.cloneNode() as HTMLElement
 		placeholder.style.visibility = 'hidden'
-		placeholder.style.width = this.elRect.width + 'px'
-		placeholder.style.height = this.elRect.height + 'px'
+		placeholder.style.width = elRect.width + 'px'
+		placeholder.style.height = elRect.height + 'px'
 
 		return placeholder
 	}
@@ -150,7 +115,7 @@ export class DragDropMovement {
 
 		// After dragging element become fixed, must move following siblings to persist their position.
 		if (draggingInSameArea) {
-			for (let el of this.walkSiblingsAfter(this.el)) {
+			for (let el of this.walkSiblingsAfter(this.draggingEl)) {
 				this.moveElement(el, 1, playTransition)
 			}
 		}
@@ -171,7 +136,7 @@ export class DragDropMovement {
 	 * @param moveDirection `1` to move right or bottom, `0` to keep still.
 	 */
 	private moveElement(el: HTMLElement, moveDirection: 1 | 0, playTransition: boolean) {
-		if (el === this.el) {
+		if (el === this.draggingEl) {
 			return
 		}
 
@@ -182,7 +147,7 @@ export class DragDropMovement {
 		// So we make `moveDirection` -= 1 to keep balance.
 		//   0: No translate needed.
 		//  -1: Translate to left to fix empty after dragging element removed.
-		if (!this.autoLayout && this.el.compareDocumentPosition(el) === el.DOCUMENT_POSITION_FOLLOWING) {
+		if (!this.autoLayout && this.draggingEl.compareDocumentPosition(el) === el.DOCUMENT_POSITION_FOLLOWING) {
 			translateDirection -= 1
 		}
 
@@ -218,8 +183,8 @@ export class DragDropMovement {
 	/** Play movement transition. */
 	private async playTransitionTo(el: HTMLElement, endFrame: WebTransitionKeyFrame) {
 		let transition = new WebTransition(el, {
-			duration: this.dragging.transitionDuration ?? WebTransition.DefaultOptions.duration,
-			easing: this.dragging.transitionEasing ?? WebTransition.DefaultOptions.easing,
+			duration: this.dragging.options.transitionDuration ?? WebTransition.DefaultOptions.duration,
+			easing: this.dragging.options.transitionEasing ?? WebTransition.DefaultOptions.easing,
 		})
 	
 		el.style.pointerEvents = 'none'
@@ -230,21 +195,19 @@ export class DragDropMovement {
 		}
 	}
 
-	/** When mouse enter droppable. */
 	onEnterDrop(drop: droppable) {
-		this.insertPlaceholder(drop, true)
 		this.activeDrop = drop
-		this.itemsAlignDirection = drop.itemsAlignDirection ?? 'vertical'
+		this.itemsAlignDirection = drop.options.itemsAlignDirection ?? 'vertical'
+		this.insertPlaceholder(drop, true)
 	}
 	
-	/** When mouse enter draggable. */
 	onEnterDrag(drag: draggable) {
 		if (!this.activeDrop) {
 			return
 		}
 
 		let willMoveElements = new Set([drag.el, ...this.walkSiblingsAfter(drag.el)])
-		willMoveElements.delete(this.el)
+		willMoveElements.delete(this.draggingEl)
 		willMoveElements.delete(this.placeholder)
 
 		// When the dragged into element has been moved,
@@ -267,7 +230,7 @@ export class DragDropMovement {
 			}
 		}
 
-		this.dragTo = drag
+		this.draggingTo = drag
 		this.dragToRect = drag.el.getBoundingClientRect()
 		this.dragToIndex = this.generateDraggedToIndex(drag, willMoveElements.has(drag.el))
 	}
@@ -319,30 +282,29 @@ export class DragDropMovement {
 		}
 	}
 
-	/** Translate dragging element follow mouse. */
 	translateDraggingElement(moves: Vector) {
 		this.translate.copyFrom(moves)
 
-		if (this.dragging.slideOnly) {
+		if (this.dragging.options.slideOnly) {
 			if (this.itemsAlignDirection === 'vertical') {
-				this.el.style.transform = `translateY(${moves.y}px)`
+				this.draggingEl.style.transform = `translateY(${moves.y}px)`
 			}
 			else {
-				this.el.style.transform = `translateX(${moves.x}px)`
+				this.draggingEl.style.transform = `translateX(${moves.x}px)`
 			}
 		}
 		else {
-			this.el.style.transform = `translate(${moves.x}px, ${moves.y}px)`
+			this.draggingEl.style.transform = `translate(${moves.x}px, ${moves.y}px)`
 		}
 
-		if (this.dragging.slideOnly) {
-			this.testForEnteringSibling(moves)
+		if (this.dragging.options.slideOnly) {
+			this.testForEnteringSibling()
 		}
 	}
 
 	/** Test which sibling get entered by current position. */
-	private testForEnteringSibling(moves: Vector) {
-		let rect = this.elRect.translateBy(moves)
+	private testForEnteringSibling() {
+		let rect = Box.fromLike(this.draggingEl.getBoundingClientRect())
 		let siblings = this.slideOnlySiblings!
 		let found = false
 
@@ -374,17 +336,6 @@ export class DragDropMovement {
 		}
 	}
 
-	/** Whether drag & drop completed and will swap elements. */
-	willSwapElements(): boolean {
-		return !!(this.dragTo || this.activeDrop && this.startDrop !== this.activeDrop)
-	}
-
-	/** Returns the index of inserting index into drop area. */
-	getSwapIndex(): number {
-		return this.dragToIndex
-	}
-
-	/** When mouse leaves drop area. */
 	onLeaveDrop(drop: droppable) {
 		if (drop !== this.activeDrop) {
 			return
@@ -395,18 +346,25 @@ export class DragDropMovement {
 		}
 
 		this.activeDrop = null
-		this.dragTo = null
+		this.draggingTo = null
 		this.dragToRect = null
 		this.dragToIndex = -1
 	}
 
-	/** Play drag end end transition. */
+	willSwapElements(): boolean {
+		return !!(this.draggingTo || this.activeDrop && this.startDrop !== this.activeDrop)
+	}
+
+	getSwapIndex(): number {
+		return this.dragToIndex
+	}
+
 	async playEndDraggingTransition() {
 
 		// Transition dragging element to drop area.
 		if (this.willSwapElements()) {
 			await this.transitionDraggingElementToDropArea()
-			this.el.style.transform = ''
+			this.draggingEl.style.transform = ''
 		}
 
 		// Transition dragging element to it's original position.
@@ -416,7 +374,7 @@ export class DragDropMovement {
 				this.moveSiblingsToGiveSpace(true)
 			}
 
-			await this.playTransitionTo(this.el, {transform: 'none'})
+			await this.playTransitionTo(this.draggingEl, {transform: 'none'})
 		}
 
 		this.restoreMovedElements(false)
@@ -425,7 +383,7 @@ export class DragDropMovement {
 
 	/** Transition dragging element to where it dropped. */
 	private async transitionDraggingElementToDropArea() {
-		let fromRect = this.el.getBoundingClientRect()
+		let fromRect = this.draggingEl.getBoundingClientRect()
 		let toRect = this.dragToRect || this.placeholder!.getBoundingClientRect()
 
 		let x = toRect.left - fromRect.left + this.translate.x
@@ -438,7 +396,7 @@ export class DragDropMovement {
 				x = toRect.right - fromRect.right + this.translate.x
 			}
 
-			if (this.dragging.slideOnly) {
+			if (this.dragging.options.slideOnly) {
 				y = 0
 			}
 		}
@@ -448,19 +406,19 @@ export class DragDropMovement {
 				y = toRect.bottom - fromRect.bottom + this.translate.y
 			}
 
-			if (this.dragging.slideOnly) {
+			if (this.dragging.options.slideOnly) {
 				x = 0
 			}
 		}
 
 		let transform = `translate(${x}px, ${y}px)`
 
-		await this.playTransitionTo(this.el, {transform})
+		await this.playTransitionTo(this.draggingEl, {transform})
 	}
 
 	/** Move next sibling element to give space for dragging element. */
 	private moveSiblingsToGiveSpace(playTransition: boolean) {
-		for (let el of this.walkSiblingsAfter(this.el)) {
+		for (let el of this.walkSiblingsAfter(this.draggingEl)) {
 			this.moveElement(el, 1, playTransition)
 		}
 	}
@@ -481,13 +439,5 @@ export class DragDropMovement {
 		this.translatedElements.clear()
 
 		this.placeholder.remove()
-	}
-
-	/** Clear dragging style for dragging element. */
-	private clearDraggingStyle() {
-		document.body.style.cursor = ''
-		document.body.style.userSelect = ''
-
-		this.el.style.cssText = this.startStyleText
 	}
 }
