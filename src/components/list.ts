@@ -87,7 +87,6 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		.list-item{
 			position: relative;
 			display: flex;
-			padding: 0.4em 0;
 			cursor: pointer;
 			border-top: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
 
@@ -126,11 +125,13 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			display: flex;
 			width: 1.6em;
 			opacity: 0.7;
+			align-items: center;
 		}
 
 		.list-icon-placeholder{
 			display: flex;
 			width: 1.6em;
+			align-items: center;
 		}
 
 		.list-icon{
@@ -143,6 +144,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
+			padding: 0.4em 0;
 			padding-right: 4px;
 		}
 
@@ -157,10 +159,13 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			font-size: 0.928em;
 
 			.list-item{
-				padding-top: 0.3em;
-				padding-bottom: 0.3em;
 				border-top: none;
 				line-height: calc(1lh - 2px);
+			}
+
+			.list-content{
+				padding-top: 0.3em;
+				padding-bottom: 0.3em;
 			}
 
 			.list-subsection{
