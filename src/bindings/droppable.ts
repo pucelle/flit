@@ -113,10 +113,13 @@ export class droppable<T = any> implements Binding, Part {
 		}
 	}
 
-	/** After draggable drop to current droppable. */
-	fireDrop(dragging: draggable<T>, toIndex: number) {
+	/** 
+	 * After draggable drop to current droppable.
+	 * `insertIndex` indicates at which index should insert into on 'reorder' mode.
+	 */
+	fireDrop(dragging: draggable<T>, insertIndex: number) {
 		if (this.onDrop) {
-			this.onDrop.call(this.context, dragging.data as T, toIndex)
+			this.onDrop.call(this.context, dragging.data as T, insertIndex)
 		}
 	}
 }

@@ -40,10 +40,10 @@ export class DragDropMovement extends DragOnlyMovement {
 
 
 	/** Rect of `dragTo`. */
-	private dragToRect: DOMRect | null = null
+	private draggingToRect: DOMRect | null = null
 
 	/** Indicates the index of where to insert dragging element in the current drop area if drop right now. */
-	private dragToIndex: number = -1
+	private draggingToIndex: number = -1
 
 	/** Dragging element siblings align direction. */
 	private itemsAlignDirection: HVDirection = 'vertical'
@@ -235,11 +235,11 @@ export class DragDropMovement extends DragOnlyMovement {
 		}
 
 		this.draggingTo = drag
-		this.dragToRect = drag.el.getBoundingClientRect()
-		this.dragToIndex = this.generateDraggedToIndex(drag, willMoveElements.has(drag.el))
+		this.draggingToRect = drag.el.getBoundingClientRect()
+		this.draggingToIndex = this.calcDraggingToIndex(drag, willMoveElements.has(drag.el))
 	}
 
-	private generateDraggedToIndex(drag: draggable, beenMoved: boolean): number {
+	private calcDraggingToIndex(drag: draggable, beenMoved: boolean): number {
 		let isInSameDropArea = this.startDrop === this.activeDrop
 		let index = drag.index
 
@@ -351,22 +351,27 @@ export class DragDropMovement extends DragOnlyMovement {
 
 		this.activeDrop = null
 		this.draggingTo = null
-		this.dragToRect = null
-		this.dragToIndex = -1
+		this.draggingToRect = null
+		this.draggingToIndex = -1
 	}
 
-	willSwapElements(): boolean {
-		return !!(this.draggingTo || this.activeDrop && this.startDrop !== this.activeDrop)
+	canDrop(): boolean {
+		return !!(
+			this.draggingTo
+
+				// Can drop to a new droppable even have no siblings entered.
+				|| this.activeDrop && this.startDrop !== this.activeDrop
+		)
 	}
 
-	getSwapIndex(): number {
-		return this.dragToIndex
+	getInsertIndex(): number {
+		return this.draggingToIndex
 	}
 
 	async playEndDraggingTransition() {
 
 		// Transition dragging element to drop area.
-		if (this.willSwapElements()) {
+		if (this.canDrop()) {
 			await this.transitionDraggingElementToDropArea()
 			this.draggingEl.style.transform = ''
 		}
@@ -388,7 +393,7 @@ export class DragDropMovement extends DragOnlyMovement {
 	/** Transition dragging element to where it dropped. */
 	private async transitionDraggingElementToDropArea() {
 		let fromRect = this.draggingEl.getBoundingClientRect()
-		let toRect = this.dragToRect || this.placeholder!.getBoundingClientRect()
+		let toRect = this.draggingToRect || this.placeholder!.getBoundingClientRect()
 
 		let x = toRect.left - fromRect.left + this.translate.x
 		let y = toRect.top - fromRect.top + this.translate.y
@@ -396,7 +401,7 @@ export class DragDropMovement extends DragOnlyMovement {
 		if (this.itemsAlignDirection === 'horizontal') {
 
 			// Move from left to right, align at right.
-			if (this.dragging.index < this.dragToIndex) {
+			if (this.dragging.index < this.draggingToIndex) {
 				x = toRect.right - fromRect.right + this.translate.x
 			}
 
@@ -406,7 +411,7 @@ export class DragDropMovement extends DragOnlyMovement {
 		}
 		else {
 			// Move from top to bottom, align at bottom.
-			if (this.dragging.index < this.dragToIndex) {
+			if (this.dragging.index < this.draggingToIndex) {
 				y = toRect.bottom - fromRect.bottom + this.translate.y
 			}
 

@@ -110,13 +110,13 @@ export class DragOnlyMovement {
 		this.edgeTimer?.updateEvent(e)
 	}
 
-	/** Whether drag & drop completed and will swap elements. */
-	willSwapElements(): boolean {
-		return false
+	/** Whether can drop to currently active drop. */
+	canDrop(): boolean {
+		return true
 	}
 
-	/** Returns the index of inserting index into drop area. */
-	getSwapIndex(): number {
+	/** Returns the index of the inserting index of drop area. */
+	getInsertIndex(): number {
 		return -1
 	}
 

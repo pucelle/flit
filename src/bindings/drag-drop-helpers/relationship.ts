@@ -135,11 +135,13 @@ class DragDropRelationship {
 		let lastActiveDroppable = this.activeDroppable!
 
 		mover.playEndDraggingTransition().then(() => {
-			if (mover.willSwapElements()) {
-				lastActiveDroppable.fireDrop(dragging, mover.getSwapIndex())
+			if (mover.canDrop()) {
+				lastActiveDroppable.fireDrop(dragging, mover.getInsertIndex())
 			}
 		})
-		
+
+		this.leaveDrop(this.activeDroppable!)
+
 		this.dragging = null
 		this.movement = null
 		this.activeDroppable = null
