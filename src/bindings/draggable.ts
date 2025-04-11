@@ -2,6 +2,7 @@ import {Binding, Part, PartCallbackParameterMask, RenderResultRenderer} from '@p
 import {DOMEvents, WebTransitionEasingName} from '@pucelle/ff'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
 import {registerDraggable} from './drag-drop-helpers/all-draggable'
+import {droppable} from './droppable'
 
 
 export interface DraggableOptions {
@@ -30,14 +31,27 @@ export interface DraggableOptions {
 	 */
 	slideOnly?: boolean
 
-	/** Generate an element to follow mouse after start dragging. */
+	/** Can cause nearest scroller to scroll when touch edges of scroll area. */
+	canCauseScrolling?: boolean
+
+	/** 
+	 * Generate an element to follow mouse after start dragging.
+	 * The returned content may extend `<Popup>` or not, not limit it much.
+	 */
 	followElementRenderer?: RenderResultRenderer
+
+	/** 
+	 * On dragging end.
+	 * If dragging canceled, `drop` is null.
+	 */
+	onEnd?: (drop: droppable | null) => void
 }
 
 const DefaultDraggableOptions: DraggableOptions = {
 	name: '',
 	mode: 'reorder',
 	slideOnly: false,
+	canCauseScrolling: false,
 }
 
 
@@ -45,7 +59,7 @@ const DefaultDraggableOptions: DraggableOptions = {
  * Make current element draggable.
  * :draggable=${data, index, ?options}
  * - `data`: Data item to identify current dragging item.
- * - `index`: Data item index within it's siblings, normally the for loop index.
+ * - `index`: Data item index within it's siblings, required for `reorder` mode.
  * - `options` Draggable options.
  */
 export class draggable<T = any> implements Binding, Part {
@@ -120,7 +134,7 @@ export class draggable<T = any> implements Binding, Part {
 			}
 			
 			if (isDragging) {
-				GlobalDragDropRelationship.translateDraggingElement(moves)
+				GlobalDragDropRelationship.translateDraggingElement(moves, e)
 			}
 		}
 
@@ -128,11 +142,14 @@ export class draggable<T = any> implements Binding, Part {
 			DOMEvents.off(document, 'mousemove', onMouseMove as (e: Event) => void)
 
 			if (isDragging) {
+				let activeDroppable = GlobalDragDropRelationship.activeDroppable
 				GlobalDragDropRelationship.endDragging()
 
 				if (this.options.draggingClassName) {
 					this.el.classList.remove(this.options.draggingClassName)
 				}
+
+				this.options.onEnd?.(activeDroppable)
 			}
 		}
 

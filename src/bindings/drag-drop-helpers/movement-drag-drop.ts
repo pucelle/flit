@@ -27,7 +27,7 @@ export class DragDropMovement extends DragOnlyMovement {
 	private readonly placeholder!: HTMLElement
 	
 	/** Where the dragging come from. */
-	private readonly startDrop: droppable
+	private readonly startDrop: droppable | null
 
 	/** Currently mouse entered draggable. */
 	private draggingTo: draggable | null = null
@@ -54,17 +54,18 @@ export class DragDropMovement extends DragOnlyMovement {
 	/** Recently entering sibling, only exist when `sliderOnly` */
 	private slideOnlyEnteringSiblingData: draggable | null = null
 
-	constructor(drag: draggable, drop: droppable) {
+	constructor(drag: draggable, drop: droppable | null) {
 		let elRect = drag.el.getBoundingClientRect()
 
 		super(
 			drag,
 			drag.el,
+			true,
 			Point.from(elRect)
 		)
 
 		this.startDrop = this.activeDrop = drop
-		this.itemsAlignDirection = drop.options.itemsAlignDirection ?? 'vertical'
+		this.itemsAlignDirection = drop?.options.itemsAlignDirection ?? 'vertical'
 		this.autoLayout = DOMUtils.getStyleValue(this.draggingEl, 'position') !== 'absolute'
 
 		// Not consider about margin collapse.
@@ -74,11 +75,14 @@ export class DragDropMovement extends DragOnlyMovement {
 		this.prepareSiblings()
 
 		this.placeholder = this.initPlaceholder(elRect)
-		this.insertPlaceholder(drop, false)
+
+		if (drop) {
+			this.insertPlaceholder(drop, false)
+		}
 	}
 
-	protected setDraggingStyle(mousePosition: Point) {
-		super.setDraggingStyle(mousePosition)
+	protected setAdditionalDraggingStyle() {
+		super.setAdditionalDraggingStyle()
 
 		let elRect = this.draggingEl.getBoundingClientRect()
 		this.draggingEl.style.width = elRect.width + 'px'

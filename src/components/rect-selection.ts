@@ -26,7 +26,7 @@ export interface RectSelectionEvents {
 
 /** 
  * Handle rect selection, especially it can cause
- * scrolls of scroller to select more items.
+ * scrolling of parent scroller to select more items.
  * 
  * It children are partial rendered, you can specify a `data-index` for it.
  * 
@@ -85,7 +85,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 	protected scrollDirection: HVDirection | null = null
 
 	/** To do timer after mouse leaves edge. */
-	protected timer: EdgeMovementTimer | null = null
+	protected edgeTimer: EdgeMovementTimer | null = null
 
 	/** Whether started selecting. */
 	protected inSelecting: boolean = false
@@ -115,8 +115,8 @@ export class RectSelection extends Component<RectSelectionEvents> {
 		let point = DOMEvents.getClientPosition(e)
 		this.startScrollPoint = this.clientPointToLocal(point)
 
-		this.timer = new EdgeMovementTimer(this.scroller!, {padding: this.edgePadding})
-		this.timer.onUpdate = this.onTimerUpdate.bind(this)
+		this.edgeTimer = new EdgeMovementTimer(this.scroller!, {padding: this.edgePadding})
+		this.edgeTimer.onUpdate = this.onEdgeTimerUpdate.bind(this)
 
 		this.startEvent = e
 
@@ -157,7 +157,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 	}
 
 	protected onMouseMove(e: MouseEvent) {
-		this.timer!.updateEvent(e)
+		this.edgeTimer!.updateEvent(e)
 
 		let point = DOMEvents.getClientPosition(e)
 		this.endScrollPoint = this.clientPointToLocal(point)
@@ -191,7 +191,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 		this.endSelection(e)
 	}
 
-	protected onTimerUpdate(movements: Vector, frameTime: number) {
+	protected onEdgeTimerUpdate(movements: Vector, frameTime: number) {
 		if (!this.inSelecting) {
 			return
 		}
@@ -258,8 +258,8 @@ export class RectSelection extends Component<RectSelectionEvents> {
 		let inSelecting = this.inSelecting
 
 		this.inSelecting = false
-		this.timer?.end()
-		this.timer = null
+		this.edgeTimer?.end()
+		this.edgeTimer = null
 		this.startScrollPoint = null
 		this.endScrollPoint = null
 		this.startEvent = null

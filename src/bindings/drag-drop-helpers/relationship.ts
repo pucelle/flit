@@ -3,37 +3,41 @@ import type {draggable} from '../draggable'
 import type {droppable} from '../droppable'
 import {DragDropMovement} from './movement-drag-drop'
 import {DragOnlyMovement} from './movement-drag-only'
-import {render} from '@pucelle/lupos.js'
+import {render, RenderedComponentLike} from '@pucelle/lupos.js'
 
 
-/** 
- * Global manager to relate current dragging and it's droppable. 
- *   When start dragging, check it's related drop area.
- *   When dragging element enters another draggable element, relate them and adjust position using `mover`.
- *   When dragging element enters one drop area, give additional space for it.
- *   When dragging element leaves one drop area, remove space that belongs to it.
- */
+/** Global manager to relate current dragging and it's droppable.  */
 class DragDropRelationship {
 
 	/** Currently dragging draggable. */
-	protected dragging: draggable | null = null
+	private dragging: draggable | null = null
 
 	/** Help to manage movement. */
-	protected movement: DragOnlyMovement | DragDropMovement | null = null
+	private movement: DragOnlyMovement | DragDropMovement | null = null
 
 	/** 
 	 * May mouse enter in several drop areas, and start dragging,
 	 * then we need to check which drop area should trigger enter.
 	 */
-	protected enteredDroppable: Set<droppable> = new Set()
+	private enteredDroppable: Set<droppable> = new Set()
 
-	/** Current drop area. */
-	protected activeDroppable: droppable | null = null
+	/** Rendered follow element. */
+	private followElementRendered: RenderedComponentLike<any> | null = null
+
+	/** Rendered follow element. */
+	private followElementRenderedEl: HTMLElement | null = null
 	
+	/** 
+	 * Current drop area.
+	 * Readonly outside.
+	 */
+	activeDroppable: droppable | null = null
+
 	/** When start dragging a draggable. */
-	startDragging(drag: draggable, e: MouseEvent) {
+	async startDragging(drag: draggable, e: MouseEvent) {
 		this.dragging = drag
-		let activeDroppable: droppable | undefined
+
+		let activeDroppable: droppable | null = null
 
 		for (let drop of [...this.enteredDroppable]) {
 
@@ -48,11 +52,7 @@ class DragDropRelationship {
 			}
 		}
 
-		if (!activeDroppable) {
-			throw new Error(`Element with ':draggable' must be contained in a ':droppable' element!`)
-		}
-
-		activeDroppable.fireEnter(this.dragging)
+		activeDroppable?.fireEnter(this.dragging)
 
 		this.activeDroppable = activeDroppable
 
@@ -60,21 +60,24 @@ class DragDropRelationship {
 			this.movement = new DragDropMovement(this.dragging!, activeDroppable)
 		}
 		else if (this.dragging.options.followElementRenderer) {
-			let rendered = render(this.dragging.options.followElementRenderer)
-			let el = rendered.el
+			let rendered = this.followElementRendered = render(this.dragging.options.followElementRenderer)
 			let position = DOMEvents.getPagePosition(e)
 
-			this.movement = new DragOnlyMovement(this.dragging!, el, position)
+			await rendered.connectManually()
+			let el = this.followElementRenderedEl = rendered.el.firstElementChild as HTMLElement
+			document.body.append(el)
+			
+			this.movement = new DragOnlyMovement(this.dragging!, el, false, position)
 		}
 		else {
 			let position = DOMEvents.getPagePosition(e)
-			this.movement = new DragOnlyMovement(this.dragging!, this.dragging!.el, position)
+			this.movement = new DragOnlyMovement(this.dragging!, this.dragging!.el, true, position)
 		}
 	}
 
 	/** Translate dragging element to keep follows with mouse. */
-	translateDraggingElement(moves: Vector) {
-		this.movement!.translateDraggingElement(moves)
+	translateDraggingElement(moves: Vector, e: MouseEvent) {
+		this.movement?.translateDraggingElement(moves, e)
 	}
 
 	/** When dragging and enter a draggable. */
@@ -85,7 +88,7 @@ class DragDropRelationship {
 	}
 
 	/** Whether dragging can swap with draggable. */
-	protected canEnterToSwapWith(drag: draggable) {
+	private canEnterToSwapWith(drag: draggable) {
 		return this.dragging
 			&& !this.dragging.options.slideOnly
 			&& this.dragging.options.name === drag.options.name
@@ -104,7 +107,7 @@ class DragDropRelationship {
 	}
 
 	/** Whether dragging can drop to a droppable. */
-	protected canDropTo(drop: droppable) {
+	private canDropTo(drop: droppable) {
 		return this.dragging && this.dragging.options.name === drop.options.name
 	}
 
@@ -140,6 +143,15 @@ class DragDropRelationship {
 		this.dragging = null
 		this.movement = null
 		this.activeDroppable = null
+
+		if (this.followElementRendered) {
+			this.followElementRendered.remove()
+			this.followElementRendered = null
+		}
+
+		if (this.followElementRenderedEl) {
+			this.followElementRenderedEl.remove()
+		}
 	}
 }
 
