@@ -142,7 +142,7 @@ export class draggable<T = any> implements Binding, Part {
 			DOMEvents.off(document, 'mousemove', onMouseMove as (e: Event) => void)
 
 			if (isDragging) {
-				let activeDroppable = GlobalDragDropRelationship.activeDroppable
+				let activeDroppable = GlobalDragDropRelationship.activeDrop
 				GlobalDragDropRelationship.endDragging()
 
 				if (this.options.draggingClassName) {

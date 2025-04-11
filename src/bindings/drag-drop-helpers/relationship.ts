@@ -31,13 +31,13 @@ class DragDropRelationship {
 	 * Current drop area.
 	 * Readonly outside.
 	 */
-	activeDroppable: droppable | null = null
+	activeDrop: droppable | null = null
 
 	/** When start dragging a draggable. */
 	async startDragging(drag: draggable, e: MouseEvent) {
 		this.dragging = drag
 
-		let activeDroppable: droppable | null = null
+		let activeDrop: droppable | null = null
 
 		for (let drop of [...this.enteredDroppable]) {
 
@@ -47,17 +47,17 @@ class DragDropRelationship {
 			}
 
 			else if (drop.options.name === drag.options.name) {
-				activeDroppable = drop
+				activeDrop = drop
 				break
 			}
 		}
 
-		activeDroppable?.fireEnter(this.dragging)
+		activeDrop?.fireEnter(this.dragging)
 
-		this.activeDroppable = activeDroppable
+		this.activeDrop = activeDrop
 
 		if (this.dragging.options.mode === 'reorder') {
-			this.movement = new DragDropMovement(this.dragging!, activeDroppable)
+			this.movement = new DragDropMovement(this.dragging!, activeDrop)
 		}
 		else if (this.dragging.options.followElementRenderer) {
 			let rendered = this.followElementRendered = render(this.dragging.options.followElementRenderer)
@@ -101,7 +101,7 @@ class DragDropRelationship {
 
 		if (this.canDropTo(drop)) {
 			drop.fireEnter(this.dragging!)
-			this.activeDroppable = drop
+			this.activeDrop = drop
 			this.movement!.onEnterDrop(drop)
 		}
 	}
@@ -121,9 +121,9 @@ class DragDropRelationship {
 		
 		this.enteredDroppable.delete(drop)
 
-		if (this.activeDroppable === drop) {
+		if (this.activeDrop === drop) {
 			drop.fireLeave(this.dragging!)
-			this.activeDroppable = null
+			this.activeDrop = null
 			this.movement!.onLeaveDrop(drop)
 		}
 	}
@@ -132,19 +132,21 @@ class DragDropRelationship {
 	endDragging() {
 		let mover = this.movement!
 		let dragging = this.dragging!
-		let lastActiveDroppable = this.activeDroppable!
+		let activeDrop = this.activeDrop
 
-		mover.playEndDraggingTransition().then(() => {
+		if (activeDrop) {
+			this.leaveDrop(activeDrop)
+		}
+
+		mover.endDragging().then(() => {
 			if (mover.canDrop()) {
-				lastActiveDroppable.fireDrop(dragging, mover.getInsertIndex())
+				activeDrop?.fireDrop(dragging, mover.getInsertIndex())
 			}
 		})
 
-		this.leaveDrop(this.activeDroppable!)
-
 		this.dragging = null
 		this.movement = null
-		this.activeDroppable = null
+		this.activeDrop = null
 
 		if (this.followElementRendered) {
 			this.followElementRendered.remove()

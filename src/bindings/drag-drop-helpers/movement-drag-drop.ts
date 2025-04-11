@@ -368,7 +368,7 @@ export class DragDropMovement extends DragOnlyMovement {
 		return this.draggingToIndex
 	}
 
-	async playEndDraggingTransition() {
+	async endDragging() {
 
 		// Transition dragging element to drop area.
 		if (this.canDrop()) {

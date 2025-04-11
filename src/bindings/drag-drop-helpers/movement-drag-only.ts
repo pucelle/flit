@@ -163,8 +163,8 @@ export class DragOnlyMovement {
 		return move * frameTime / 16.66
 	}
 
-	/** Play drag end end transition. */
-	async playEndDraggingTransition() {
+	/** End dragging and play drag end transition. */
+	async endDragging() {
 		this.clearDraggingStyle()
 	}
 
