@@ -19,6 +19,9 @@ export interface DraggableOptions {
 	/** The class name to apply when start dragging. */
 	draggingClassName?: string
 
+	/** Which style value should be persisted, like width, height. */
+	persistStyleNames?: (string & keyof CSSStyleDeclaration)[]
+
 	/** Transition duration when playing dragging movement, in milliseconds. */
 	transitionDuration?: number
 
@@ -127,10 +130,6 @@ export class draggable<T = any> implements Binding, Part {
 				startPosition = currentPosition
 				moves.reset()
 				isDragging = true
-
-				if (this.options.draggingClassName) {
-					this.el.classList.add(this.options.draggingClassName)
-				}
 			}
 			
 			if (isDragging) {

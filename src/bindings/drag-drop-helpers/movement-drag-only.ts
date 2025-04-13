@@ -32,22 +32,25 @@ export class DragOnlyMovement {
 	protected edgeTimer: EdgeMovementTimer | null = null
 
 	constructor(
-		drag: draggable,
+		dragging: draggable,
 		draggingEl: HTMLElement,
 		applyDraggingStyle: boolean,
 		mousePosition: Point
 	) {
-		this.dragging = drag
+		this.dragging = dragging
 		this.draggingEl = draggingEl
 
 		this.setBaseDraggingStyle(mousePosition)
 
 		if (applyDraggingStyle) {
-			this.startStyleText = this.draggingEl.style.cssText
+			if (dragging.options.mode === 'reorder') {
+				this.startStyleText = this.draggingEl.style.cssText
+			}
+
 			this.setAdditionalDraggingStyle()
 		}
 
-		if (drag.options.canCauseScrolling) {
+		if (dragging.options.canCauseScrolling) {
 			this.initScroller()
 		}
 	}
