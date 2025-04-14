@@ -16,11 +16,17 @@ export interface DraggableOptions {
 	/** `name` for draggable, can drop to droppable only when name match. */
 	name: string
 
+	/** 
+	 * By default, dragging will be started if drag start from the element bounded.
+	 * By specifying `filterSelector`, can limit from only the element match this selector.
+	 */
+	matchSelector?: string
+
 	/** The class name to apply when start dragging. */
 	draggingClassName?: string
 
 	/** Which style value should be persisted, like width, height. */
-	persistStyleNames?: (string & keyof CSSStyleDeclaration)[]
+	persistStyleProperties?: (string & keyof CSSStyleDeclaration)[]
 
 	/** Transition duration when playing dragging movement, in milliseconds. */
 	transitionDuration?: number
@@ -116,23 +122,32 @@ export class draggable<T = any> implements Binding, Part {
 	}
 
 	private onMouseDown(e: MouseEvent) {
+
+		// If have `matchSelector` and not match, ignore.
+		if (this.options.matchSelector) {
+			let target = e.target as Element
+			if (!target.closest(this.options.matchSelector)) {
+				return
+			}
+		}
+
 		e.preventDefault()
 
-		let isDragging = false
+		let inDragging = false
 		let startPosition = DOMEvents.getClientPosition(e)
 	
 		let onMouseMove = (e: MouseEvent) => {
 			let currentPosition = DOMEvents.getClientPosition(e)
 			let moves = currentPosition.diff(startPosition)
 
-			if (!isDragging && moves.getLength() > 5) {
+			if (!inDragging && moves.getLength() > 5) {
 				GlobalDragDropRelationship.startDragging(this, e)
 				startPosition = currentPosition
 				moves.reset()
-				isDragging = true
+				inDragging = true
 			}
 			
-			if (isDragging) {
+			if (inDragging) {
 				GlobalDragDropRelationship.translateDraggingElement(moves, e)
 			}
 		}
@@ -140,7 +155,7 @@ export class draggable<T = any> implements Binding, Part {
 		let onMouseUp = async () => {
 			DOMEvents.off(document, 'mousemove', onMouseMove as (e: Event) => void)
 
-			if (isDragging) {
+			if (inDragging) {
 				let activeDroppable = GlobalDragDropRelationship.activeDrop
 				GlobalDragDropRelationship.endDragging()
 

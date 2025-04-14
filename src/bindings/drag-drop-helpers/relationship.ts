@@ -77,8 +77,8 @@ class DragDropRelationship {
 				followEl.classList.add(dragging.options.draggingClassName)
 			}
 
-			if (dragging.options.persistStyleNames) {
-				for (let styleName of dragging.options.persistStyleNames) {
+			if (dragging.options.persistStyleProperties) {
+				for (let styleName of dragging.options.persistStyleProperties) {
 					followEl.style.setProperty(styleName, DOMUtils.getStyleValue(this.dragging!.el, styleName))
 				}
 			}
@@ -146,17 +146,21 @@ class DragDropRelationship {
 
 	/** When release dragging. */
 	endDragging() {
-		let mover = this.movement!
-		let dragging = this.dragging!
+		if (!this.dragging) {
+			return
+		}
+
+		let dragging = this.dragging
+		let movement = this.movement!
 		let activeDrop = this.activeDrop
 
 		if (activeDrop) {
 			this.leaveDrop(activeDrop)
 		}
 
-		mover.endDragging().then(() => {
-			if (mover.canDrop()) {
-				activeDrop?.fireDrop(dragging, mover.getInsertIndex())
+		movement.endDragging().then(() => {
+			if (movement.canDrop()) {
+				activeDrop?.fireDrop(dragging, movement.getInsertIndex())
 			}
 		})
 
