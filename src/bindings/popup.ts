@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, DOMEvents, sleep, IntersectionWatcher, untilUpdateComplete, promiseWithResolves} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, IntersectionWatcher, untilUpdateComplete, promiseWithResolves} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -169,9 +169,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** Align to current popup. */
 	protected aligner: AnchorAligner | null = null
 
-	/** Whether have prevent hiding popup content. */
-	protected preventedHiding: boolean = false
-
 	constructor(el: Element, context: any) {
 		super()
 
@@ -193,13 +190,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.binder.bindEnter()
 
 		if (this.shouldShowImmediately()) {
-
-			// If window is not loaded, page scroll position may not determined yet.
-			// Sleep to avoid it affects browser paint.
-			DOMEvents.untilWindowLoaded().then(async () => {
-				await sleep(0)
-				this.showPopupLater()
-			})
+			this.showPopupLater()
 		}
 	}
 
@@ -211,16 +202,23 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		IntersectionWatcher.watch(this.el, this.onElIntersectionChanged, this)
 		this.state.clear()
 		this.binder.unbindLeave()
-		this.preventedHiding = false
 	}
 
 	/** Whether should show popup content immediately after connected. */
 	protected shouldShowImmediately(): boolean {
+		if (!this.renderer) {
+			return false
+		}
+
 		return this.options.showImmediately
 	}
 
 	/** Whether should keep popup content visible always. */
 	protected shouldKeepVisible(): boolean {
+		if (!this.renderer) {
+			return false
+		}
+
 		return this.options.keepVisible
 	}
 
@@ -243,7 +241,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** Like mouse leave, and need to hide soon. */
 	protected onWillHide() {
 		if (this.shouldKeepVisible()) {
-			this.preventedHiding = true
 			return
 		}
 
@@ -266,7 +263,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** Like trigger element become out-view, and need to hide immediately. */
 	protected onImmediateHide() {
 		if (this.shouldKeepVisible()) {
-			this.preventedHiding = true
 			return
 		}
 
@@ -299,10 +295,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	
 	/** Do hide popup action. */
 	protected async doHidePopup() {
-		if (!this.renderer) {
-			return
-		}
-
 		this.fire('opened-change', false)
 
 		// Play leave transition if need.
@@ -323,12 +315,15 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		IntersectionWatcher.unwatch(this.el)
 		this.aligner?.stop()
 		this.binder.unbindLeave()
-		this.preventedHiding = false
 	}
 
 
 	/** Show popup content after a short time out. */
 	showPopupLater() {
+		if (!this.renderer) {
+			return
+		}
+
 		let showDelay = this.options.showDelay
 		let key = this.options.key
 
@@ -350,6 +345,10 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	/** Send a request to show popup content, can be called repeatedly. */
 	showPopup() {
+		if (!this.renderer) {
+			return
+		}
+		
 		this.state.show()
 	}
 
@@ -368,8 +367,13 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.renderer = renderer
 		this.options = {...DefaultPopupOptions, ...options} as PopupOptions
 
+		// If should show immediately and haven't shown.
+		if (!this.opened && this.shouldKeepVisible()) {
+			this.showPopup()
+		}
+
 		// Options changes and no need to persist visible, or renderer becomes null.
-		if (this.preventedHiding && !this.shouldKeepVisible() || this.opened && !renderer) {
+		else if (this.opened && !this.shouldKeepVisible()) {
 			this.hidePopup()
 		}
 		
@@ -613,6 +617,5 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.transition = null
 		this.aligner?.stop()
 		this.aligner = null
-		this.preventedHiding = false
 	}
 }

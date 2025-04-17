@@ -36,7 +36,7 @@ export class Textarea extends Input {
 			<textarea class="input-field textarea-field"
 				placeholder=${this.placeholder}
 				?autofocus=${this.autoFocus}
-				:ref=${this.field}
+				:ref=${this.fieldRef}
 				:class.valid=${this.touched && this.valid === true}
 				:class.invalid=${this.touched && this.valid === false}
 				:style.resize=${this.resize}

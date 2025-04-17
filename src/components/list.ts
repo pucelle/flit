@@ -1,4 +1,4 @@
-import {css, Component, html, RenderResult, TemplateResult, RenderResultRenderer} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, RenderResultRenderer} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {DOMEvents, EventKeys, Observed, fold, effect, DOMScroll, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
@@ -16,15 +16,11 @@ export type ListItem<T = any> = {
 	/** Unique value to identify current item. */
 	value: T
 
-	/** List item content, can be a pre-generated template result. */
-	text?: string | TemplateResult
-
 	/** 
-	 * Plain text to do search and filter.
-	 * If need to search, and `searchText` is omit,
-	 * `text` must be string type.
+	 * List item content, can be a pre-generated template result.
+	 * If wanting to render template result, overwrite `List.renderText`.
 	 */
-	searchText?: string
+	text?: string
 
 	/** 
 	 * List item icon type.
@@ -32,11 +28,11 @@ export type ListItem<T = any> = {
 	 */
 	icon?: string
 
-	/** Tooltip content to show as tooltip when mouse hover. */
-	tooltip?: RenderResultRenderer
-
-	/** Contextmenu content when doing context menu on list item. */
-	contextmenu?: RenderResultRenderer
+	/** 
+	 * Tooltip content to show as tooltip when mouse hover.
+	 * If wanting to render template result, overwrite `List.renderTooltip`.
+	 */
+	tooltip?: string
 
 	/** Child items to render subsection list. */
 	children?: ListItem<T>[]
@@ -219,10 +215,10 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	data: ListItem<T>[] = []
 
 	/** 
-	 * Renderer to render each item display content.
-	 * If specifies, it overwrites default action of rendering item content.
+	 * Renderer to render text content.
+	 * If specifies, it overwrites default action of rendering `text` property.
 	 */
-	itemRenderer: ((item: ListItem<T>) => RenderResult | string | number) | null = null
+	textRenderer: ((item: ListItem<T>) => RenderResult | string | number) | null = null
 
 	/** Indicates currently selected values. */
 	selected: T[] = []
@@ -273,8 +269,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		let expanded = this.expanded.includes(item.value)
 
 		// tooltip and contextmenu may get from getters.
-		let itemTooltip = item.tooltip
-		let itemContextmenu = item.contextmenu
+		let itemTooltip = this.renderTooltip(item)
+		let itemContextmenu = this.renderContextmenu(item)
 		let children = item.children
 
 		return html`
@@ -327,7 +323,15 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderActiveSelectedClassName(item: Observed<ListItem<T>>) {
+	protected renderTooltip(item: Observed<ListItem<T>>): RenderResultRenderer | undefined {
+		return item.tooltip
+	}
+
+	protected renderContextmenu(_item: Observed<ListItem<T>>): RenderResultRenderer {
+		return null
+	}
+
+	protected renderActiveSelectedClassName(item: Observed<ListItem<T>>): string {
 		if (this.mode === 'navigation') {
 			if (this.isSelected(item)) {
 				return 'navigated'
@@ -346,12 +350,12 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * Render item content, can be overwritten for sub classes
 	 * who know about more details about data items.
 	 */
-	protected renderItemContent(item: Observed<ListItem<T>>) {
-		if (this.itemRenderer) {
+	protected renderItemContent(item: Observed<ListItem<T>>): RenderResult {
+		if (this.textRenderer) {
 			return html`
-			<div class="list-content">
-				${this.itemRenderer(item)}
-			</div>
+				<div class="list-content">
+					${this.textRenderer(item)}
+				</div>
 			`
 		}
 		else {
@@ -361,6 +365,10 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				</div>
 			`
 		}
+	}
+
+	protected renderText(item: Observed<ListItem<T>>): RenderResult | undefined {
+		return item.text
 	}
 
 	/** Whether an item has been selected.  */

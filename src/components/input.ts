@@ -108,16 +108,16 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	 * To validate current value, returns error message or `null` if valid.
 	 * Can also returns `null` and later set `error` asynchronously.
 	 */
-	validator: ((value: string) => string | null) | null = null
+	validator: ((value: string) => Promise<string | null>) | null = null
 
 	/** Show custom error message. */
-	error: string | null = ''
+	errorMessage: string | null = ''
 
 	/** Whether show error on a tooltip, so it doesn't need to leave a space for error message. */
 	errorOnTooltip: boolean = false
 
-	/** Input field element. */
-	protected field!: HTMLInputElement | HTMLTextAreaElement
+	/** Input field element reference. */
+	protected fieldRef!: HTMLInputElement | HTMLTextAreaElement
 	
 	protected render() {
 		return html`
@@ -132,8 +132,8 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 					<Icon class="input-valid-icon" .type="checked" .size="inherit" />
 				</lu:if>
 
-				<lu:if ${this.touched && this.error && !this.errorOnTooltip}>
-					<div class="input-error">${this.error}</div>
+				<lu:if ${this.touched && this.errorMessage && !this.errorOnTooltip}>
+					<div class="input-error">${this.errorMessage}</div>
 				</lu:if>
 			</template>
 		`
@@ -149,8 +149,8 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			?autofocus=${this.autoFocus}
 			.placeholder=${this.placeholder || ''}
 			.value=${this.value}
-			:ref=${this.field}
-			?:tooltip=${this.touched && this.error && this.errorOnTooltip, this.error, {type: 'error'} as Partial<TooltipOptions>}
+			:ref=${this.fieldRef}
+			?:tooltip=${this.touched && this.errorMessage && this.errorOnTooltip, this.errorMessage, {type: 'error'} as Partial<TooltipOptions>}
 			@focus=${this.onFocus}
 			@blur=${this.onBlur}
 			@input=${this.onInput}
@@ -185,19 +185,19 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			return
 		}
 
-		let value = this.field.value
+		let value = this.fieldRef.value
 
 		// Clear validate result after input.
 		if (this.validator) {
 			this.valid = null
-			this.error = ''
+			this.errorMessage = ''
 		}
 
 		this.fire('input', value)
 	}
 
 	protected onChange(this: Input) {
-		let value = this.value = this.field.value
+		let value = this.value = this.fieldRef.value
 
 		this.validate()
 		this.fire('change', value, this.valid)
@@ -210,10 +210,15 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		}
 	}
 
-	protected validate() {
+	protected async validate() {
 		if (this.validator) {
-			this.error = this.validator(this.value)
-			this.valid = !this.error
+			let value = this.value
+			let error = await this.validator(this.value)
+
+			if (value === this.value) {
+				this.errorMessage = error
+				this.valid = !error
+			}
 		}
 	}
 }

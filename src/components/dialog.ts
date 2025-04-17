@@ -62,7 +62,7 @@ export interface PromptDialogOptions extends DialogOptions {
 	inputType?: 'text' | 'password' | 'textarea'
 
 	/** To validate current value, returns an error message, or `null` if passes. */
-	validator?: (value: string) => string | null
+	validator?: (value: string) => Promise<string | null>
 }
 
 interface DialogItem {

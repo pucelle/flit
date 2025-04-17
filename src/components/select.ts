@@ -1,5 +1,5 @@
 import {DOMScroll, untilUpdateComplete} from '@pucelle/ff'
-import {css, html, TemplateResult} from '@pucelle/lupos.js'
+import {css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
 import {ListItem, List} from './list'
@@ -137,6 +137,12 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	 */
 	hideAfterSelected: boolean | null = null
 
+	/** 
+	 * Renderer to render text content.
+	 * If specifies, it overwrites default action of rendering `text` property.
+	 */
+	itemTextRenderer: ((item: ListItem<T>) => RenderResult | string | number) | null = null
+
 
 	/** The element of popup component. */
 	protected popupEl: HTMLElement | null = null
@@ -246,6 +252,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					.mode="selection"
 					.selectable
 					.data=${data}
+					.textRenderer=${this.itemTextRenderer}
 					.selected=${(this.multiple ? this.value : this.value === null ? [] : [this.value])}
 					.multipleSelect=${this.multiple}
 					.keyComeFrom=${this.inputEl}
@@ -256,7 +263,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	}
 
 	/** Render text display to represent currently selected. */
-	protected renderDisplay(): string | TemplateResult[] | null {
+	protected renderDisplay(): string | null {
 		let filteredData: ListItem<T>[] = []
 
 		if (this.multiple) {
@@ -275,12 +282,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 			return null
 		}
 
-		if (typeof displays[0] === 'string') {
-			return displays.join('; ')
-		}
-		else {
-			return displays as TemplateResult[]
-		}
+		return displays.join('; ')
 	}
 
 	protected getFilteredData(): ListItem<T>[] {
@@ -289,8 +291,8 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 			let filteredData: ListItem<T>[] = []
 
 			for (let item of this.data) {
-				let searchText = item.searchText ?? String(item.text).toLowerCase()
-				if (searchText.includes(lowerSearchWord)) {
+				let searchText = item.text
+				if (searchText?.includes(lowerSearchWord)) {
 					filteredData.push(item)
 				}
 			}

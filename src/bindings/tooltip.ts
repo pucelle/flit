@@ -67,12 +67,20 @@ export class tooltip extends popup {
 	}
 
 	protected shouldShowImmediately(): boolean {
+		if (!this.renderer) {
+			return false
+		}
+
 		return this.options.showImmediately
 			|| this.options.type === 'prompt'
 			|| this.options.type === 'error'
 	}
 
 	protected shouldKeepVisible(): boolean {
+		if (!this.renderer) {
+			return false
+		}
+		
 		return this.options.keepVisible
 			|| this.options.type === 'prompt'
 			|| this.options.type === 'error'
