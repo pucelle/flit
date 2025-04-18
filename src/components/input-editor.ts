@@ -1,7 +1,7 @@
 import {css, html} from '@pucelle/lupos.js'
 import {Popup} from './popup'
 import {DOMEvents, EventKeys, Inset} from '@pucelle/ff'
-import {tooltip} from '../bindings'
+import {tooltip, TooltipOptions} from '../bindings'
 
 
 export interface InputEditorEvents {
@@ -63,7 +63,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		return html`
 			<template class="input-editor"
 				:style=${this.getStyle()}
-				:tooltip=${this.errorMessage, {position: 'b', type: 'error'}}
+				:tooltip=${this.errorMessage, {position: 'b', type: 'error'} as Partial<TooltipOptions>}
 			>
 				<input type="text" class="input-editor-input"
 					:ref=${this.inputRef}

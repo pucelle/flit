@@ -351,24 +351,21 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * who know about more details about data items.
 	 */
 	protected renderItemContent(item: Observed<ListItem<T>>): RenderResult {
-		if (this.textRenderer) {
-			return html`
-				<div class="list-content">
-					${this.textRenderer(item)}
-				</div>
-			`
-		}
-		else {
-			return html`
-				<div class="list-content">
-					${item.text}
-				</div>
-			`
-		}
+		return html`
+			<div class="list-content">
+				${this.renderText(item)}
+			</div>
+		`
 	}
 
+	/** Render text content within each list item. */
 	protected renderText(item: Observed<ListItem<T>>): RenderResult | undefined {
-		return item.text
+		if (this.textRenderer) {
+			return this.textRenderer(item)
+		}
+		else {
+			return item.text
+		}
 	}
 
 	/** Whether an item has been selected.  */
