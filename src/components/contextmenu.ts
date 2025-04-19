@@ -14,8 +14,8 @@ export class ContextMenu<E = {}> extends Popup<E> {
 				border-bottom: none;
 			}
 
-			.list-item{
-				padding: 0.2em 0.6em;
+			.list-content{
+				padding: 0.3em 0.6em;
 			}
 		}
 	`
