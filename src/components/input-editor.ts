@@ -25,6 +25,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		}
 
 		.input-editor-input{
+			width: 100%;
 			border: none;
 			background: transparent;
 		}
@@ -36,6 +37,9 @@ export class InputEditor extends Popup<InputEditorEvents> {
 
 	/** Which element is in editing. */
 	editing!: HTMLElement
+
+	/** Specifies width. */
+	width: number | null = null
 
 	/** Additional padding values. */
 	padding: number
@@ -77,16 +81,20 @@ export class InputEditor extends Popup<InputEditorEvents> {
 	}
 
 	protected getStyle() {
+		let style = getComputedStyle(this.editing)
+		let textAlignRate = style.textAlign === 'center' ? 0.5 : style.textAlign === 'right' ? 1 : 0
 		let paddingList = Array.isArray(this.padding) ? this.padding : [this.padding]
 		let padding = paddingList.map(v => v + 'px').join(' ')
 		let editingRect = this.editing.getBoundingClientRect()
-		let left = editingRect.left
+		let elWidth = this.width || editingRect.width
+		let left = editingRect.left + (editingRect.width - elWidth) * textAlignRate
 		let top = editingRect.top
 		let edges = new Inset(...paddingList)
 
 		return {
 			left: left - edges.left + 'px',
 			top: top - edges.top + 'px',
+			width: elWidth + 'px',
 			padding,
 		}
 	}
@@ -100,6 +108,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 			'font-weight': style.fontWeight,
 			'font-style': style.fontStyle,
 			'text-align': style.textAlign,
+			'line-height': style.lineHeight,
 			'padding': style.padding,
 		}
 	}
@@ -148,6 +157,8 @@ export class InputEditor extends Popup<InputEditorEvents> {
 	}
 
 	protected onKeyDown(e: KeyboardEvent) {
+		e.stopPropagation()
+
 		let key = EventKeys.getShortcutKey(e)
 		if (key === 'Enter') {
 			this.fire('commit', this.inputRef.value)

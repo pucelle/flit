@@ -457,12 +457,24 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	protected render(): TemplateResult {
 		return html`
 		<template class="table" @mousedown=${this.onMouseDown}>
+			${this.renderHead()}
+			${this.renderBody()}
+		</template>
+		`
+	}
+
+	protected renderHead() {
+		return html`
 			<div class="table-head">
 				<div class="table-columns">
 					${this.renderColumns()}
 				</div>
 			</div>
+		`
+	}
 
+	protected renderBody() {
+		return html`
 			<div class="table-body">
 				<table class="table-table">
 					<colgroup>
@@ -481,7 +493,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 					/>
 				</lu:if>
 			</div>
-		</template>
 		`
 	}
 
