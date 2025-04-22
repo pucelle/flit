@@ -60,6 +60,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 
 	protected errorMessage: string | null = null
 	protected inputRef!: HTMLInputElement
+	protected endedInputting: boolean = false
 
 	protected render() {
 		let text = this.value ?? this.editing.textContent
@@ -149,10 +150,14 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		}
 	}
 	protected onDOMMouseDown(e: MouseEvent) {
+		if (this.endedInputting) {
+			return
+		}
+		
 		let target = e.target as HTMLElement
 		if (!this.el.contains(target)) {
 			this.fire('commit', this.inputRef.value)
-			this.remove()
+			this.endedInputting = true
 		}
 	}
 
@@ -162,11 +167,11 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		let key = EventKeys.getShortcutKey(e)
 		if (key === 'Enter') {
 			this.fire('commit', this.inputRef.value)
-			this.remove()
+			this.endedInputting = true
 		}
 		else if (key === 'Escape') {
 			this.fire('cancel')
-			this.remove()
+			this.endedInputting = true
 		}
 	}
 }
