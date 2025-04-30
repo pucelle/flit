@@ -428,7 +428,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	}
 
 	protected onWillDisconnect() {
-		ResizeWatcher.unwatch(this.el)
+		ResizeWatcher.unwatch(this.el, this.onSizeChange, this)
 	}
 
 	protected onReady() {

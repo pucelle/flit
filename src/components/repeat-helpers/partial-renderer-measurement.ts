@@ -57,6 +57,18 @@ export class PartialRendererMeasurement {
 	private continuousRenderRange: ContinuousRenderRange | null = null
 	
 	/** 
+	 * If provided, it specifies the suggested end position,
+	 * to indicate the size of each item.
+	 * The size has no need to represent real size,
+	 * only represents the mutable part would be enough.
+	 * Which means: can ignores shared paddings or margins.
+	 */
+	private preEndPositions: number[] | null = null
+
+	/** Do additional item size statistic, guess additional item size. */
+	private preStat: PartialRendererSizeStat | null = null
+
+	/** 
 	 * Latest properties use when last time measure placeholder,
 	 * thus, can avoid update placeholder when scrolling up.
 	 */
@@ -95,9 +107,26 @@ export class PartialRendererMeasurement {
 		this.doa = doa
 	}
 
+	/** Set `preEndPositions` before updating. */
+	setPreEndPositions(positions: number[] | null) {
+		this.preEndPositions = positions
+
+		if (positions && !this.preStat) {
+			this.preStat = new PartialRendererSizeStat()
+		}
+		else if (!positions && this.preStat) {
+			this.preStat = null
+		}
+	}
+
 	/** Read new scroller size. */
 	readScrollerSize() {
 		this.cachedScrollerSize = this.doa.getClientSize(this.scroller)
+	}
+
+	/* Whether has measured. */
+	hasMeasured(): boolean {
+		return this.getItemSize() > 0
 	}
 
 	/** Get item size. */
@@ -107,14 +136,14 @@ export class PartialRendererMeasurement {
 
 	/** 
 	 * Get safe render count of items to render.
-	 * `itemSize` can either be latest size or average size.
 	 * If `proposed` specified, and finally render count close to it, will use it.
 	 */
-	getSafeRenderCount(itemSize: number, reservedPixels: number, proposed: number): number {
+	getSafeRenderCount(reservedPixels: number, proposed: number): number {
 		if (this.cachedScrollerSize === 0) {
 			return 1
 		}
 
+		let itemSize = this.getItemSize()
 		if (itemSize === 0) {
 			return 1
 		}
@@ -132,12 +161,24 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Calc new slider position by start and end indices. */
-	calcSliderPositionByIndices(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
-		if (alignDirection === 'start') {
-			return this.getItemSize() * startIndex
+	calcSliderPosition(startOrEndIndex: number, alignDirection: 'start' | 'end') {
+		if (this.preEndPositions) {
+			if (alignDirection === 'start') {
+				let start = startOrEndIndex > 0 ? this.preEndPositions[startOrEndIndex - 1] : 0
+				return start + this.preStat!.getLatestSize() * startOrEndIndex
+			}
+			else {
+				let end = startOrEndIndex > 0 ? this.preEndPositions[startOrEndIndex - 1] : 0
+				return end + this.preStat!.getLatestSize() * startOrEndIndex
+			}
 		}
 		else {
-			return this.getItemSize() * endIndex + this.cachedScrollerSize
+			if (alignDirection === 'start') {
+				return this.getItemSize() * startOrEndIndex
+			}
+			else {
+				return this.getItemSize() * startOrEndIndex + this.cachedScrollerSize
+			}
 		}
 	}
 
@@ -192,9 +233,16 @@ export class PartialRendererMeasurement {
 		let renderCount = this.continuousRenderRange.endIndex - this.continuousRenderRange.startIndex
 		let renderSize = this.continuousRenderRange.endPosition - this.continuousRenderRange.startPosition - paddingSize
 
-		// Avoid force render when hidden.
+		// Avoid update when hidden.
 		if (renderCount > 0 && renderSize > 0) {
-			this.stat.update(renderCount, renderSize)
+			this.stat.update(renderCount, renderSize, true)
+		}
+
+		if (renderCount > 0 && this.preEndPositions) {
+			let start = startIndex > 0 ? this.preEndPositions[startIndex - 1] : 0
+			let end = endIndex > 0 ? this.preEndPositions[endIndex - 1] : 0
+
+			this.preStat!.update(renderCount, sliderInnerSize - (end - start), false)
 		}
 	}
 
@@ -229,23 +277,28 @@ export class PartialRendererMeasurement {
 	 * No need to update when scrolling up.
 	 */
 	calcPlaceholderSize(startIndex: number, endIndex: number, dataCount: number, alignDirection: 'start' | 'end') {
-		let itemSize = this.getItemSize()
-		let placeholderSize: number
-		
-		// If has measured before.
-		if (this.cachedPlaceholderProperties.itemSize > 0) {
-			if (alignDirection === 'start') {
-				placeholderSize = itemSize * (dataCount - startIndex) + this.cachedSliderStartPosition
-			}
-			else {
-				placeholderSize = itemSize * (dataCount - endIndex) + this.cachedSliderEndPosition
-			}
+		if (this.preEndPositions) {
+			let end = this.preEndPositions.length > 0 ? this.preEndPositions[this.preEndPositions.length - 1] : 0
+			let additionalItemSize = this.preStat!.getLatestSize()
+
+			return end + additionalItemSize * dataCount
 		}
 		else {
-			placeholderSize = itemSize * dataCount
+			let itemSize = this.getItemSize()
+	
+			// If has measured before.
+			if (this.cachedPlaceholderProperties.itemSize > 0) {
+				if (alignDirection === 'start') {
+					return itemSize * (dataCount - startIndex) + this.cachedSliderStartPosition
+				}
+				else {
+					return itemSize * (dataCount - endIndex) + this.cachedSliderEndPosition
+				}
+			}
+			else {
+				return itemSize * dataCount
+			}
 		}
-
-		return placeholderSize
 	}
 
 	/** Cache placeholder size and other properties. */

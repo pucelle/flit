@@ -56,16 +56,24 @@ export class PartialRenderer {
 	readonly placeholder: HTMLDivElement
 	readonly updateRendering: UpdateRenderingFn
 
+	/** 
+	 * Whether partial rendering content as follower,
+	 * so the partial renderer only renders by current scroll position,
+	 * and will never cause scroll position change.
+	 */
+	readonly asFollower: boolean
+
 	/** Do rendered items measurement. */
 	readonly measurement: PartialRendererMeasurement
 
 	/** Help to get and set based on overflow direction. */
 	readonly doa: DirectionalOverflowAccessor
 
-	private dataCount: number = 0
-	
 	/** How many pixels to reserve to reduce update frequency when scrolling. */
 	private reservedPixels: number = 200
+
+	/** Total data count. */
+	private dataCount: number = 0
 
 	/** Enqueue rendering. */
 	private renderQueue: AsyncTaskQueue = new AsyncTaskQueue()
@@ -112,6 +120,7 @@ export class PartialRenderer {
 		slider: HTMLElement,
 		repeat: HTMLElement,
 		placeholder: HTMLDivElement,
+		asFollower: boolean,
 		doa: DirectionalOverflowAccessor,
 		updateRendering: UpdateRenderingFn
 	) {
@@ -119,6 +128,7 @@ export class PartialRenderer {
 		this.slider = slider
 		this.repeat = repeat
 		this.placeholder = placeholder
+		this.asFollower = asFollower
 		this.doa = doa
 		this.updateRendering = updateRendering
 
@@ -127,6 +137,7 @@ export class PartialRenderer {
 		// Wait for 1 frames.
 		this.quarterlyUpdateTimeout = new Timeout(this.updateQuarterly.bind(this), 17)
 	}
+
 
 	/** 
 	 * Set latest `alignDirection`.
@@ -141,12 +152,14 @@ export class PartialRenderer {
 		this.reservedPixels = reservedPixels
 	}
 
-	/** 
-	 * Set total data count before updating.
-	 * Not set data count will not update or enqueue update.
-	 */
+	/** Set total data count before updating. */
 	setDataCount(dataCount: number) {
 		this.dataCount = dataCount
+	}
+
+	/** Set `preEndPositions` before updating. */
+	setPreEndPositions(positions: number[] | null) {
+		this.measurement.setPreEndPositions(positions)
 	}
 
 	/** 
@@ -188,12 +201,14 @@ export class PartialRenderer {
 	/** After component that use this partial renderer will get disconnected. */
 	disconnect() {
 
-		// For restoring scroll position.
-		this.setRenderIndices(this.locateVisibleIndex('start'))
+		// For restoring scroll position later.
+		if (!this.asFollower) {
+			this.setRenderIndices(this.locateVisibleIndex('start'))
+		}
 
 		this.quarterlyUpdateTimeout.cancel()
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
-		ResizeWatcher.unwatch(this.scroller)
+		ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)
 	}
 
 	/** On scroller scroll event. */
@@ -228,7 +243,7 @@ export class PartialRenderer {
 
 		//// Can only write dom properties now.
 
-		let hasMeasuredBefore = this.measurement.getItemSize() > 0
+		let hasMeasuredBefore = this.measurement.hasMeasured()
 		let continuouslyUpdated: boolean = false
 		let needToApply = this.needToApply
 
@@ -275,7 +290,7 @@ export class PartialRenderer {
 	/** Update when start index specified and need to apply. */
 	private async updateWithApplyingIndices(needToApply: NeedToApply): Promise<boolean> {
 		let {startIndex, endIndex, alignDirection, tryAdjustToPersistScrollPosition} = needToApply
-		let hasMeasured = this.measurement.getItemSize() > 0
+		let hasMeasured = this.measurement.hasMeasured()
 		let renderCount = this.endIndex - this.startIndex
 	
 		// Adjust index and persist continuous.
@@ -323,7 +338,12 @@ export class PartialRenderer {
 		this.setIndices(startIndex, endIndex)
 		this.setAlignDirection(alignDirection ?? 'start')
 		this.updateRendering()
-		this.resetPositions(hasMeasured, tryAdjustToPersistScrollPosition ? undefined : startIndex, tryAdjustToPersistScrollPosition ? undefined : endIndex)
+
+		this.resetPositions(
+			hasMeasured,
+			tryAdjustToPersistScrollPosition ? undefined : startIndex,
+			 tryAdjustToPersistScrollPosition ? undefined : endIndex
+		)
 
 		return false
 	}
@@ -340,9 +360,8 @@ export class PartialRenderer {
 
 	/** Update start and end indices before rendering. */
 	private setIndices(newStartIndex: number | undefined, newEndIndex: number | undefined = undefined) {
-		let itemSize = this.measurement.getItemSize()
 		let currentRenderCount = this.endIndex - this.startIndex
-		let renderCount = this.measurement.getSafeRenderCount(itemSize, this.reservedPixels, currentRenderCount)
+		let renderCount = this.measurement.getSafeRenderCount(this.reservedPixels, currentRenderCount)
 
 		if (newStartIndex === undefined) {
 			newStartIndex = newEndIndex! - renderCount
@@ -362,22 +381,22 @@ export class PartialRenderer {
 	 * Reset slider and scroll position, make first item appear in the start edge.
 	 * `alignDirection` must have been updated.
 	 * 
-	 * `needRestScrollOffset`: specifies as `false` if current indices is calculated from current scroll offset,
+	 * `needResetScrollOffset`: specifies as `false` if current indices is calculated from current scroll offset,
 	 * 	  or for the first time rendering.
 	 * 
 	 * If `startIndex` and `endIndex` specified, will adjust scroll position to align them.
 	 */
-	private resetPositions(needRestScrollOffset: boolean, startIndex: number = this.startIndex, endIndex: number = this.endIndex) {
-		let newSliderPosition = this.measurement.calcSliderPositionByIndices(this.startIndex, this.endIndex, this.alignDirection)
+	private resetPositions(needResetScrollOffset: boolean, startIndex: number = this.startIndex, endIndex: number = this.endIndex) {
+		let newSliderPosition = this.measurement.calcSliderPosition(this.alignDirection === 'start' ? this.startIndex : this.endIndex, this.alignDirection)
 		this.setSliderPosition(newSliderPosition)
 		this.measurement.breakContinuousRenderRange()
 
-		if (needRestScrollOffset) {
+		if (needResetScrollOffset && !this.asFollower) {
 			startIndex = Math.max(startIndex, this.startIndex)
 			endIndex = Math.min(endIndex, this.endIndex)
 	
 			// Align scroller start with slider start.
-			let scrollPosition = this.measurement.calcSliderPositionByIndices(startIndex, endIndex, this.alignDirection)
+			let scrollPosition = this.measurement.calcSliderPosition(this.alignDirection === 'start' ? startIndex : endIndex, this.alignDirection)
 
 			// Align scroller end with slider end.
 			if (this.alignDirection === 'end') {
@@ -414,6 +433,10 @@ export class PartialRenderer {
 	 * No need to update when scrolling up.
 	 */
 	private updatePlaceholderSizeProgressively() {
+		if (!this.placeholder) {
+			return
+		}
+
 		let shouldUpdate = this.measurement.shouldUpdatePlaceholderSize(this.startIndex, this.endIndex, this.dataCount)
 		if (!shouldUpdate) {
 			return
@@ -425,6 +448,10 @@ export class PartialRenderer {
 
 	/** Set placeholder size. */
 	private setPlaceholderSize(size: number) {
+		if (!this.placeholder) {
+			return
+		}
+		
 		this.doa.setSize(this.placeholder, size)
 		this.measurement.cachePlaceholderProperties(this.endIndex, this.dataCount, size)
 	}
@@ -439,8 +466,8 @@ export class PartialRenderer {
 			// means have 10px higher than start,
 			// reset to start position 0 cause this 10px get removed,
 			// And we need to scroll up (element down) for 10px.
-			this.scroller.scrollTop -= this.measurement.cachedSliderStartPosition
-
+			let moreSize = -this.measurement.cachedSliderStartPosition
+			this.doa.setScrolled(this.scroller, this.doa.getScrolled(this.scroller) + moreSize)
 			this.setAlignDirection('start')
 			this.setSliderPosition(0)
 
@@ -452,10 +479,10 @@ export class PartialRenderer {
 		else if (this.startIndex > 0 && this.measurement.cachedSliderStartPosition <= 0) {
 
 			// Guess size of items before, and add missing size of current rendering.
-			let newPosition = this.measurement.getItemSize() * this.startIndex
+			let newPosition = this.measurement.calcSliderPosition(this.startIndex, 'start')
 			let moreSize = newPosition - this.measurement.cachedSliderStartPosition
 
-			this.scroller.scrollTop += moreSize
+			this.doa.setScrolled(this.scroller, this.doa.getScrolled(this.scroller) + moreSize)
 			this.setPlaceholderSize(this.measurement.cachedPlaceholderProperties.placeholderSize + moreSize)
 			this.setAlignDirection('start')
 			this.setSliderPosition(newPosition)
@@ -469,9 +496,12 @@ export class PartialRenderer {
 		// When reach scroll end but not end index.
 		// Note `scrollTop` value may be float, but two heights are int.
 		else if (this.endIndex < this.dataCount
-			&& this.scroller.scrollTop + this.scroller.clientHeight >= this.scroller.scrollHeight
+			&& this.doa.getScrolled(this.scroller) + this.doa.getClientSize(this.scroller)
+				>= this.doa.getScrollSize(this.scroller)
 		) {
-			let moreSize = this.measurement.getItemSize() * (this.dataCount - this.endIndex)
+			let moreSize = this.measurement.calcSliderPosition(this.dataCount, 'end')
+				- this.measurement.calcSliderPosition(this.endIndex, 'end')
+
 			this.setPlaceholderSize(this.measurement.cachedPlaceholderProperties.placeholderSize + moreSize)
 		}
 	}

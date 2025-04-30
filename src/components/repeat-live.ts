@@ -34,6 +34,23 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	reservedPixels: number = 200
 
 	/** 
+	 * Whether partial rendering content as follower,
+	 * so the partial renderer only renders by current scroll position,
+	 * and will never cause scroll position change.
+	 * Normally can use it at secondary columns of waterfall layout.
+	 */
+	readonly asFollower: boolean = false
+
+	/** 
+	 * If provided, it specifies the suggested end position,
+	 * to indicate the size of each item.
+	 * The size has no need to represent real size,
+	 * only represents the mutable part would be enough.
+	 * Which means: can ignores shared paddings or margins.
+	 */
+	preEndPositions: number[] | null = null
+
+	/** 
 	 * Placeholder element, sibling of slider.
 	 * Since here it renders only partial content,
 	 * slider element has no enough size to expand scrolling area,
@@ -75,6 +92,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	protected applyDataCount() {
 		this.renderer!.setDataCount(this.data.length)
 		this.willUpdate()
+	}
+
+	/** Apply `preEndPositions` to renderer. */
+	@effect
+	protected applyPreEndPositions() {
+		this.renderer!.setPreEndPositions(this.preEndPositions)
 	}
 
 	/** Update after data change. */
@@ -158,6 +181,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			slider,
 			this.el,
 			this.placeholder!,
+			this.asFollower,
 			this.doa,
 			this.updateLiveData.bind(this)
 		)
