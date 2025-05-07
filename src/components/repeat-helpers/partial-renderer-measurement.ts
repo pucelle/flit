@@ -1,5 +1,6 @@
 import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
+import {binaryFindInsertIndexWithAdditionSize} from './binary-find'
 
 
 export type UnCoveredSituation =
@@ -66,7 +67,7 @@ export class PartialRendererMeasurement {
 	private preEndPositions: number[] | null = null
 
 	/** Do additional item size statistic, guess additional item size. */
-	private preStat: PartialRendererSizeStat | null = null
+	private preAdditionalStat: PartialRendererSizeStat | null = null
 
 	/** 
 	 * Latest properties use when last time measure placeholder,
@@ -111,11 +112,21 @@ export class PartialRendererMeasurement {
 	setPreEndPositions(positions: number[] | null) {
 		this.preEndPositions = positions
 
-		if (positions && !this.preStat) {
-			this.preStat = new PartialRendererSizeStat()
+		if (positions && !this.preAdditionalStat) {
+			this.preAdditionalStat = new PartialRendererSizeStat()
 		}
-		else if (!positions && this.preStat) {
-			this.preStat = null
+		else if (!positions && this.preAdditionalStat) {
+			this.preAdditionalStat = null
+		}
+	}
+
+	/** Set new slider position. */
+	cacheSliderPosition(position: number, alignDirection: 'start' | 'end') {
+		if (alignDirection === 'start') {
+			this.cachedSliderStartPosition = position
+		}
+		else {
+			this.cachedSliderEndPosition = position
 		}
 	}
 
@@ -130,7 +141,7 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Get item size. */
-	getItemSize(): number {
+	private getItemSize(): number {
 		return this.stat.getLatestSize()
 	}
 
@@ -161,15 +172,17 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Calc new slider position by start and end indices. */
-	calcSliderPosition(startOrEndIndex: number, alignDirection: 'start' | 'end') {
+	calcSliderPositionByIndex(startOrEndIndex: number, alignDirection: 'start' | 'end') {
 		if (this.preEndPositions) {
+			let preAdditionalSize = this.preAdditionalStat!.getLatestSize()
+
 			if (alignDirection === 'start') {
 				let start = startOrEndIndex > 0 ? this.preEndPositions[startOrEndIndex - 1] : 0
-				return start + this.preStat!.getLatestSize() * startOrEndIndex
+				return start + preAdditionalSize * startOrEndIndex
 			}
 			else {
 				let end = startOrEndIndex > 0 ? this.preEndPositions[startOrEndIndex - 1] : 0
-				return end + this.preStat!.getLatestSize() * startOrEndIndex
+				return end + preAdditionalSize * startOrEndIndex
 			}
 		}
 		else {
@@ -182,13 +195,21 @@ export class PartialRendererMeasurement {
 		}
 	}
 
-	/** Set new slider position. */
-	cacheSliderPosition(position: number, alignDirection: 'start' | 'end') {
-		if (alignDirection === 'start') {
-			this.cachedSliderStartPosition = position
+	/** Calc new start index by current scrolled position. */
+	calcStartIndexByScrolled() {
+		let scrolled = this.doa.getScrolled(this.scroller)
+
+		if (this.preEndPositions) {
+			let preAdditionalSize = this.preAdditionalStat!.getLatestSize()
+			let index = binaryFindInsertIndexWithAdditionSize(this.preEndPositions, preAdditionalSize, scrolled)
+
+			return index
 		}
 		else {
-			this.cachedSliderEndPosition = position
+			let itemSize = this.getItemSize()
+			let startIndex = itemSize > 0 ? Math.floor(scrolled / itemSize) : 0
+
+			return startIndex
 		}
 	}
 
@@ -242,7 +263,7 @@ export class PartialRendererMeasurement {
 			let start = startIndex > 0 ? this.preEndPositions[startIndex - 1] : 0
 			let end = endIndex > 0 ? this.preEndPositions[endIndex - 1] : 0
 
-			this.preStat!.update(renderCount, sliderInnerSize - (end - start), false)
+			this.preAdditionalStat!.update(renderCount, sliderInnerSize - (end - start), false)
 		}
 	}
 
@@ -279,7 +300,7 @@ export class PartialRendererMeasurement {
 	calcPlaceholderSize(startIndex: number, endIndex: number, dataCount: number, alignDirection: 'start' | 'end') {
 		if (this.preEndPositions) {
 			let end = this.preEndPositions.length > 0 ? this.preEndPositions[this.preEndPositions.length - 1] : 0
-			let additionalItemSize = this.preStat!.getLatestSize()
+			let additionalItemSize = this.preAdditionalStat!.getLatestSize()
 
 			return end + additionalItemSize * dataCount
 		}

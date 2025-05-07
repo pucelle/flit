@@ -387,7 +387,7 @@ export class PartialRenderer {
 	 * If `startIndex` and `endIndex` specified, will adjust scroll position to align them.
 	 */
 	private resetPositions(needResetScrollOffset: boolean, startIndex: number = this.startIndex, endIndex: number = this.endIndex) {
-		let newSliderPosition = this.measurement.calcSliderPosition(this.alignDirection === 'start' ? this.startIndex : this.endIndex, this.alignDirection)
+		let newSliderPosition = this.measurement.calcSliderPositionByIndex(this.alignDirection === 'start' ? this.startIndex : this.endIndex, this.alignDirection)
 		this.setSliderPosition(newSliderPosition)
 		this.measurement.breakContinuousRenderRange()
 
@@ -396,7 +396,7 @@ export class PartialRenderer {
 			endIndex = Math.min(endIndex, this.endIndex)
 	
 			// Align scroller start with slider start.
-			let scrollPosition = this.measurement.calcSliderPosition(this.alignDirection === 'start' ? startIndex : endIndex, this.alignDirection)
+			let scrollPosition = this.measurement.calcSliderPositionByIndex(this.alignDirection === 'start' ? startIndex : endIndex, this.alignDirection)
 
 			// Align scroller end with slider end.
 			if (this.alignDirection === 'end') {
@@ -479,7 +479,7 @@ export class PartialRenderer {
 		else if (this.startIndex > 0 && this.measurement.cachedSliderStartPosition <= 0) {
 
 			// Guess size of items before, and add missing size of current rendering.
-			let newPosition = this.measurement.calcSliderPosition(this.startIndex, 'start')
+			let newPosition = this.measurement.calcSliderPositionByIndex(this.startIndex, 'start')
 			let moreSize = newPosition - this.measurement.cachedSliderStartPosition
 
 			this.doa.setScrolled(this.scroller, this.doa.getScrolled(this.scroller) + moreSize)
@@ -499,8 +499,8 @@ export class PartialRenderer {
 			&& this.doa.getScrolled(this.scroller) + this.doa.getClientSize(this.scroller)
 				>= this.doa.getScrollSize(this.scroller)
 		) {
-			let moreSize = this.measurement.calcSliderPosition(this.dataCount, 'end')
-				- this.measurement.calcSliderPosition(this.endIndex, 'end')
+			let moreSize = this.measurement.calcSliderPositionByIndex(this.dataCount, 'end')
+				- this.measurement.calcSliderPositionByIndex(this.endIndex, 'end')
 
 			this.setPlaceholderSize(this.measurement.cachedPlaceholderProperties.placeholderSize + moreSize)
 		}
@@ -725,10 +725,7 @@ export class PartialRenderer {
 
 	/** Reset indices by current scroll position. */
 	private resetIndicesByCurrentPosition() {
-		let itemSize = this.measurement.getItemSize()
-		let scrolled = this.doa.getScrolled(this.scroller)
-		let newStartIndex = itemSize > 0 ? Math.floor(scrolled / itemSize) : 0
-
+		let newStartIndex = this.measurement.calcStartIndexByScrolled()
 		this.setIndices(newStartIndex)
 	}
 
