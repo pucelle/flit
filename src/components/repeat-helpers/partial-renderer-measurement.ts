@@ -201,9 +201,9 @@ export class PartialRendererMeasurement {
 
 		if (this.preEndPositions) {
 			let preAdditionalSize = this.preAdditionalStat!.getLatestSize()
-			let index = binaryFindInsertIndexWithAdditionSize(this.preEndPositions, preAdditionalSize, scrolled)
+			let startIndex = binaryFindInsertIndexWithAdditionSize(this.preEndPositions, preAdditionalSize, scrolled)
 
-			return index
+			return startIndex
 		}
 		else {
 			let itemSize = this.getItemSize()
