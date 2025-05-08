@@ -1,8 +1,12 @@
 import {css, html} from '@pucelle/lupos.js'
-import {List} from './list'
+import {List, ListItem} from './list'
+import {Observed} from '@pucelle/ff'
 
 
-/** `<Navigation>` can navigate through various sections or pages. */
+/** 
+ * `<Navigation>` can navigate through various sections or pages.
+ * Supports only single item selection.
+ */
 export class Navigation<T> extends List<T> {
 
 	static style = css`
@@ -21,9 +25,6 @@ export class Navigation<T> extends List<T> {
 		}
 	`
 
-	/** Type, always be `navigation`. */
-	readonly mode: 'selection' | 'navigation' = 'navigation'
-
 	/** Navigation title. */
 	title: string = ''
 
@@ -38,5 +39,9 @@ export class Navigation<T> extends List<T> {
 				${this.renderItems(this.data)}
 			</template>
 		`
+	}
+
+	protected renderSelectedIcon(_item: Observed<ListItem<T>>) {
+		return null
 	}
 }

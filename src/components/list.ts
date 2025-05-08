@@ -83,6 +83,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		.list-item{
 			position: relative;
 			display: flex;
+			align-items: center;
 			cursor: pointer;
 			border-top: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
 
@@ -185,13 +186,6 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	size: ThemeSize = 'default'
 
-	/** List mode:
-	 * - `selection`: provide single item or multiple items selection with a check icon to indicate.
-	 * - `navigation`: provide single item navigation with a vertical line icon on the right to indicate.
-	 * Default value is `selection`.
-	 */
-	mode: 'selection' | 'navigation' = 'selection'
-
 	/** 
 	 * Whether each item is selectable, only available for `selection` mode.
 	 * Default value is `false`.
@@ -251,9 +245,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	protected render() {
 		return html`
-		<template class="list">
-			${this.renderItems(this.data)}
-		</template>
+			<template class="list">
+				${this.renderItems(this.data)}
+			</template>
 		`
 	}
 
@@ -267,59 +261,58 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	protected renderItem(item: Observed<ListItem<T>>, anySiblingHaveChildren: boolean): RenderResult {
 		let expanded = this.expanded.includes(item.value)
-
-		// tooltip and contextmenu may get from getters.
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
-		let children = item.children
 
 		return html`
 			<div
 				class="list-item"
-				:class=${this.renderActiveSelectedClassName(item)}
+				:class.selected=${this.hasSelected(item)}
 				:class.arrow-selected=${item === this.keyNavigator.current}
 				?:tooltip=${itemTooltip, itemTooltip!}
 				?:contextmenu=${itemContextmenu, itemContextmenu!}
 				@click.prevent=${() => this.onClickItem(item)}
 			>
-				<lu:if ${children && children.length > 0}>
-					<div class='list-toggle-placeholder'
-						@click.stop=${() => this.toggleExpanded(item)}
-					>
-						<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} .size="inherit" />
-					</div>
-				</lu:if>
-
-				<lu:elseif ${anySiblingHaveChildren}>
-					<div class='list-toggle-placeholder' />
-				</lu:elseif>
-
-				<lu:if ${item.icon !== undefined}>
-					<div class='list-icon'>
-						<lu:if ${item.icon}>
-							<Icon .type=${item.icon!} .size="inherit" />
-						</>
-					</div>
-				</lu:if>
-
+				${this.renderItemPlaceholder(item, expanded, anySiblingHaveChildren)}
+				${this.renderIcon(item)}
 				${this.renderItemContent(item)}
-
-				<lu:if ${this.mode === 'selection' && this.isSelected(item)}>
-					<Icon class="list-selected-icon" .type="checked" .size="inherit" />
-				</lu:if>
+				${this.renderSelectedIcon(item)}
 			</div>
 
-			<lu:if ${children && children.length > 0 && expanded}>
-				<div class="list-subsection"
-					:transition.immediate=${
-						() => item.value === this.latestExpandedOrCollapsed
-							? fold() as TransitionResult<Element, FoldTransitionOptions>
-							: null
-					}
+			${this.renderSubSection(item, expanded)}
+		`
+	}
+
+	protected renderItemPlaceholder(item: Observed<ListItem<T>>, expanded: boolean, anySiblingHaveChildren: boolean) {
+		let children = item.children
+		if (children && children.length > 0) {
+			return html`
+				<div class='list-toggle-placeholder'
+					@click.stop=${() => this.toggleExpanded(item)}
 				>
-					${this.renderItems(children!)}
+					<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} .size="inherit" />
 				</div>
-			</lu:if>
+			`
+		}
+		else if (anySiblingHaveChildren) {
+			return html`<div class='list-toggle-placeholder' />`
+		}
+		else {
+			return null
+		}
+	}
+
+	protected renderIcon(item: Observed<ListItem<T>>) {
+		if (item.icon === undefined) {
+			return null
+		}
+
+		return html`
+			<div class='list-icon'>
+				<lu:if ${item.icon}>
+					<Icon .type=${item.icon!} .size="inherit" />
+				</>
+			</div>
 		`
 	}
 
@@ -329,21 +322,6 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	protected renderContextmenu(_item: Observed<ListItem<T>>): RenderResultRenderer {
 		return null
-	}
-
-	protected renderActiveSelectedClassName(item: Observed<ListItem<T>>): string {
-		if (this.mode === 'navigation') {
-			if (this.isSelected(item)) {
-				return 'navigated'
-			}
-		}
-		else {
-			if (this.isSelected(item)) {
-				return 'selected'
-			}
-		}
-		
-		return ''
 	}
 
 	/** 
@@ -368,8 +346,37 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 	}
 
+	protected renderSelectedIcon(item: Observed<ListItem<T>>) {
+		if (!this.hasSelected(item)) {
+			return null
+		}
+
+		return html`
+			<Icon class="list-selected-icon" .type="checked" .size="inherit" />
+		`
+	}
+
+	protected renderSubSection(item: Observed<ListItem<T>>, expanded: boolean) {
+		let children = item.children
+		if (!children || children.length === 0 || !expanded) {
+			return null
+		}
+
+		return html`
+			<div class="list-subsection"
+				:transition.immediate=${
+					() => item.value === this.latestExpandedOrCollapsed
+						? fold() as TransitionResult<Element, FoldTransitionOptions>
+						: null
+				}
+			>
+				${this.renderItems(children!)}
+			</div>
+		`
+	}
+
 	/** Whether an item has been selected.  */
-	protected isSelected(item: Observed<ListItem<T>>): boolean {
+	protected hasSelected(item: Observed<ListItem<T>>): boolean {
 		return this.selected.includes(item.value)
 	}
 

@@ -172,7 +172,7 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Calc new slider position by start and end indices. */
-	calcSliderPositionByIndex(startOrEndIndex: number, alignDirection: 'start' | 'end') {
+	calcSliderPositionByIndex(startOrEndIndex: number, alignDirection: 'start' | 'end'): number {
 		if (this.preEndPositions) {
 			let preAdditionalSize = this.preAdditionalStat!.getLatestSize()
 
@@ -196,7 +196,7 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Calc new start index by current scrolled position. */
-	calcStartIndexByScrolled() {
+	calcStartIndexByScrolled(): number {
 		let scrolled = this.doa.getScrolled(this.scroller)
 
 		if (this.preEndPositions) {

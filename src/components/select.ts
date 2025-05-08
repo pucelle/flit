@@ -249,7 +249,6 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 			>
 				<List class="select-list"
 					:ref.el=${this.listEl}
-					.mode="selection"
 					.selectable
 					.data=${data}
 					.textRenderer=${this.itemTextRenderer}

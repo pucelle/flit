@@ -2,7 +2,7 @@ import {css, html, RenderResult} from '@pucelle/lupos.js'
 import {Popup} from './popup'
 
 
-/** `<Contextmenu>` to render a simple context menu with a list inside. */
+/** `<Contextmenu>` to render a simple context menu with a `<List>` or `<DropList>` inside. */
 export class ContextMenu<E = {}> extends Popup<E> {
 
 	static style = css`

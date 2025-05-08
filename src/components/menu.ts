@@ -4,7 +4,7 @@ import {Triangle} from './triangle'
 import {ThemeSize} from '../style'
 
 
-/** `<Menu>` shows a menu with a list inside. */
+/** `<Menu>` shows a menu with a `<List>` or `<DropList>` inside. */
 export class Menu<E = {}> extends Popup<E> {
 
 	static style = css`
