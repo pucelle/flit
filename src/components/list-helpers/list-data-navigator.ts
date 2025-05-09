@@ -47,7 +47,7 @@ export class ListDataNavigator<T = any> implements Observed {
 			}
 
 			// Include current item, but not descendants.
-			if (!this.expanded.includes(item.value)) {
+			if (!this.expanded.includes(item.value!)) {
 				this.path = this.path.slice(0, i + 1)
 				break
 			}

@@ -14,7 +14,7 @@ import {tooltip, contextmenu} from '../bindings'
 export type ListItem<T = any> = {
 
 	/** Unique value to identify current item. */
-	value: T
+	value?: T
 
 	/** 
 	 * List item content, can be a pre-generated template result.
@@ -34,7 +34,10 @@ export type ListItem<T = any> = {
 	 */
 	tooltip?: string
 
-	/** Child items to render subsection list. */
+	/** 
+	 * Child items to render subsection list.
+	 * Can insert an empty object `{}` to represent a splitter.
+	 */
 	children?: ListItem<T>[]
 }
 
@@ -69,7 +72,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 		if (item.children) {
 			for (let child of item.children) {
-				yield* List.walkItems(child)
+				if (child.hasOwnProperty('value')) {
+					yield* List.walkItems(child as ListItem<T>)
+				}
 			}
 		}
 	}
@@ -79,17 +84,18 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			display: block;
 			border-bottom: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
 		}
+
+		.list-splitter{
+			height: 1px;
+			background: color-mix(in srgb, var(--border-color) 50%, var(--background-color));
+			margin: 2px 0;
+		}
 		
 		.list-item{
 			position: relative;
 			display: flex;
 			align-items: center;
 			cursor: pointer;
-			border-top: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
-
-			&:first-child{
-				border-top: none;
-			}
 
 			&:hover{
 				color: var(--primary-color);
@@ -146,7 +152,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 
 		.list-selected-icon{
-			margin: 0 0.2em;
+			margin: 0 0 0 0.2em;
 		}
 
 		.list-subsection{
@@ -252,15 +258,27 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderItems(items: Observed<ListItem<T>[]>): RenderResult[] {
-		let anySiblingHaveChildren = items.some(item => item.children && item.children.length > 0)
+		let anySiblingHaveChildren = items.some(item => {
+			return (item as ListItem<T>).children
+				&& (item as ListItem<T>).children!.length > 0
+		})
 
-		return items.map((item: ListItem<T>) => {
-			return this.renderItem(item, anySiblingHaveChildren)
+		return items.map((item: ListItem<T> | {}) => {
+			return this.renderItemOrSplitter(item, anySiblingHaveChildren)
 		})
 	}
 
+	protected renderItemOrSplitter(item: Observed<ListItem<T>> | {}, anySiblingHaveChildren: boolean): RenderResult {
+		if (!item.hasOwnProperty('value')) {
+			return html`<div class="list-splitter"></div>`
+		}
+		else {
+			return this.renderItem(item as ListItem<T>, anySiblingHaveChildren)
+		}
+	}
+
 	protected renderItem(item: Observed<ListItem<T>>, anySiblingHaveChildren: boolean): RenderResult {
-		let expanded = this.expanded.includes(item.value)
+		let expanded = this.expanded.includes(item.value!)
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
 
@@ -279,7 +297,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				${this.renderSelectedIcon(item)}
 			</div>
 
-			${this.renderSubSection(item, expanded)}
+			${this.renderSubsection(item, expanded)}
 		`
 	}
 
@@ -356,7 +374,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderSubSection(item: Observed<ListItem<T>>, expanded: boolean) {
+	protected renderSubsection(item: Observed<ListItem<T>>, expanded: boolean) {
 		let children = item.children
 		if (!children || children.length === 0 || !expanded) {
 			return null
@@ -377,19 +395,19 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	/** Whether an item has been selected.  */
 	protected hasSelected(item: Observed<ListItem<T>>): boolean {
-		return this.selected.includes(item.value)
+		return this.selected.includes(item.value!)
 	}
 
 	/** Toggle expanded state. */
 	protected toggleExpanded(item: Observed<ListItem<T>>) {
-		if (this.expanded.includes(item.value)) {
-			this.expanded.splice(this.expanded.indexOf(item.value), 1)
+		if (this.expanded.includes(item.value!)) {
+			this.expanded.splice(this.expanded.indexOf(item.value!), 1)
 		}
 		else {
-			this.expanded.push(item.value)
+			this.expanded.push(item.value!)
 		}
 
-		this.latestExpandedOrCollapsed = item.value
+		this.latestExpandedOrCollapsed = item.value!
 	}
 
 	/** Do selection or navigation. */
@@ -463,10 +481,10 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			}
 
 			if (item.children) {
-				let hasActiveChildItem = this.applyExpandedRecursively(item.children, active)
+				let hasActiveChildItem = this.applyExpandedRecursively(item.children as ListItem<T>[], active)
 				if (hasActiveChildItem) {
-					if (!this.expanded.includes(item.value)) {
-						this.expanded.push(item.value)
+					if (!this.expanded.includes(item.value!)) {
+						this.expanded.push(item.value!)
 					}
 				}
 			}
@@ -521,7 +539,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else if (key === 'ArrowRight') {
 			if (this.inKeyNavigating) {
 				let item = this.keyNavigator.current
-				if (item && !this.expanded.includes(item.value) && item.children) {
+				if (item && !this.expanded.includes(item.value!) && item.children) {
 					this.toggleExpanded(item)
 					this.keyNavigator.moveRight()
 				}

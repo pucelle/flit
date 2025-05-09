@@ -38,6 +38,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 	trigger: TriggerType = 'hover'
 
+	private matchSelector: string | undefined = undefined
 	private el: Element
 	private content: Element | null = null
 	private unwatchLeave: null | (() => void) = null
@@ -62,6 +63,11 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 			this.clear()
 			this.trigger = trigger
 		}
+	}
+
+	/** If specified, only when element match this selector then triggers action. */
+	setMatchSelector(matchSelector: string | undefined) {
+		this.matchSelector = matchSelector
 	}
 
 	private mapTriggerType(trigger: TriggerType): TriggerType {
@@ -117,6 +123,11 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	}
 
 	private triggerWithoutDelay(e: Event) {
+		let target = e.target as HTMLElement
+		if (this.matchSelector && !target.closest(this.matchSelector)) {
+			return
+		}
+
 		e.preventDefault()
 		e.stopPropagation()
 		this.latestTriggerEvent = e as MouseEvent
@@ -124,6 +135,11 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	}
 
 	private triggerWithDelay(e: Event) {
+		let target = e.target as HTMLElement
+		if (this.matchSelector && !target.closest(this.matchSelector)) {
+			return
+		}
+		
 		e.stopPropagation()
 		this.latestTriggerEvent = e as MouseEvent
 		this.fire('will-show')

@@ -267,7 +267,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 
 		if (this.multiple) {
 			if (Array.isArray(this.value)) {
-				filteredData = this.data.filter(item => (this.value as T[]).includes(item.value))
+				filteredData = this.data.filter(item => (this.value as T[]).includes(item.value!))
 			}
 		}
 		else {

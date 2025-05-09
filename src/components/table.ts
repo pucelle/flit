@@ -679,7 +679,8 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		if (!this.rowSelectable) {
 			return
 		}
-
+			
+		// Prevent clicking container to cause losing selections.
 		e.stopPropagation()
 		e.preventDefault()
 

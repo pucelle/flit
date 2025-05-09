@@ -3,7 +3,7 @@ import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, Transit
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
-import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-trigger-binder'
+import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-binder'
 export {TriggerType}
 
 
@@ -104,6 +104,9 @@ export interface PopupOptions extends AnchorAlignerOptions {
 	 * Default value is `false`.
 	 */
 	keepVisible: boolean
+
+	/** If specified, only when element match this selector then trigger contextmenu action. */
+	matchSelector?: string
 }
 
 interface PopupBindingEvents {
@@ -187,6 +190,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 	afterConnectCallback() {
 		this.binder.setTriggerType(this.options.trigger)
+		this.binder.setMatchSelector(this.options.matchSelector)
 		this.binder.bindEnter()
 
 		if (this.shouldShowImmediately()) {

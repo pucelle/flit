@@ -25,7 +25,15 @@ export class DropList<T> extends List<T> {
 				padding-bottom: 0.3em;
 			}
 		}
+		
+		.drop-list-selected-icon{
+			margin: 0 -0.5em 0 0.2em;
+		}
 	`
+
+
+	/** Additional class name which will apply to popup subsection. */
+	subsectionClassName: string = ''
 
 	protected render() {
 		return html`
@@ -50,6 +58,7 @@ export class DropList<T> extends List<T> {
 				?:popup=${children && children.length > 0,
 					() => this.renderItemPopupContent(item),
 					{
+						key: 'drop-list',
 						position: 'tl-tr',
 						hideDelay: 100,
 						gaps: [2, 8],
@@ -72,7 +81,7 @@ export class DropList<T> extends List<T> {
 		}
 
 		return html`
-			<Popup class="drop-list-subsection"
+			<Popup class="drop-list-subsection ${this.subsectionClassName}"
 				.triangle=${false}
 			>
 				${this.renderItems(children!)}
@@ -87,7 +96,7 @@ export class DropList<T> extends List<T> {
 		}
 
 		return html`
-			<Icon class="list-selected-icon" .type="right" .size="inherit" />
+			<Icon class="drop-list-selected-icon" .type="right" .size="inherit" />
 		`
 	}
 }
