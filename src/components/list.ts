@@ -3,7 +3,7 @@ import {ThemeSize} from '../style'
 import {DOMEvents, EventKeys, Observed, fold, effect, DOMScroll, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/ff'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
-import {tooltip, contextmenu} from '../bindings'
+import {tooltip, contextmenu, PopupOptions} from '../bindings'
 
 
 /** 
@@ -152,7 +152,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 
 		.list-selected-icon{
-			margin: 0 0 0 0.2em;
+			margin: 0 -0.45em 0 0.2em;
 		}
 
 		.list-subsection{
@@ -288,7 +288,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				:class.selected=${this.hasSelected(item)}
 				:class.arrow-selected=${item === this.keyNavigator.current}
 				?:tooltip=${itemTooltip, itemTooltip!}
-				?:contextmenu=${itemContextmenu, itemContextmenu!}
+				?:contextmenu=${itemContextmenu, itemContextmenu!, {matchSelector: '.list-item'} as PopupOptions}
 				@click.prevent=${() => this.onClickItem(item)}
 			>
 				${this.renderItemPlaceholder(item, expanded, anySiblingHaveChildren)}

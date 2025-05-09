@@ -148,7 +148,7 @@ export const DefaultPopupOptions: PopupOptions = {
  * 
  * `:popup=${html`<Popup />`, ?{...}}`
  * `:popup=${() => html`<Popup />`, ?{...}}`
- * `:popup=${null}` can prevent popup.
+ * `:popup=${null}` or `:popup=${() => null}` can prevent popup.
  */
 export class popup extends EventFirer<PopupBindingEvents> implements Binding, Part {
 
@@ -291,10 +291,13 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		this.fire('opened-change', true)
 
-		let inDOMBefore = await this.willUpdatePopupAndUntil()
-		this.appendPopup(inDOMBefore)
-		this.alignPopup()
-		this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
+		let updateResult = await this.willUpdatePopupAndUntil()
+		
+		if (this.opened) {
+			this.appendPopup(updateResult)
+			this.alignPopup()
+			this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
+		}
 	}
 	
 	/** Do hide popup action. */
@@ -404,9 +407,9 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		// that current popup get update complete.
 		await Promise.resolve()
 
-		let inDOMBefore = await this.updatePopup()
+		let updateResult = await this.updatePopup()
 		this.updateComplete = null
-		resolve(inDOMBefore)
+		resolve(updateResult)
 
 		return promise
 	}
@@ -416,13 +419,15 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	 * Returned promise to be resolved by whether reusing popup is in document before.
 	 */
 	protected async updatePopup(): Promise<boolean> {
-		let inDOMBefore = await this.updatePopupRendering()
+		let updateResult = await this.updatePopupRendering()
 
 		// Update popup properties.
-		this.popup!.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toInsetKey()!
-		this.popup!.el.style.pointerEvents = this.options.pointable ? '' : 'none'
+		if (this.opened) {
+			this.popup!.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toInsetKey()!
+			this.popup!.el.style.pointerEvents = this.options.pointable ? '' : 'none'
+		}
 
-		return inDOMBefore
+		return updateResult
 	}
 
 	/** 
@@ -464,6 +469,12 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 
 		// Wait for child Popup component get initialized.
 		await untilUpdateComplete()
+
+		// Has nothing rendered, close immediately.
+		if (!rendered.hasContentRendered()) {
+			this.hidePopup()
+			return false
+		}
 
 		// Pick newly rendered element after rendered result can't match.
 		let firstElement = rendered!.el.firstElementChild!
