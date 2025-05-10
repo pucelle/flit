@@ -51,7 +51,7 @@ export class DropList<T> extends List<T> {
 		return html`
 			<div
 				class="list-item"
-				:class.selected=${this.hasSelected(item)}
+				:class.selected=${this.hasSelected(item) || this.hasExpanded(item)}
 				:class.arrow-selected=${item === this.keyNavigator.current}
 				?:tooltip=${itemTooltip, itemTooltip!}
 				?:contextmenu=${itemContextmenu, itemContextmenu!}
@@ -62,6 +62,9 @@ export class DropList<T> extends List<T> {
 						position: 'tl-tr',
 						hideDelay: 100,
 						gaps: [2, 8],
+						onOpenedChange: (opened: boolean) => {
+							this.onPopupOpenedChange(item, opened)
+						},
 					} as Partial<PopupOptions>
 				}
 				@click.prevent=${() => this.onClickItem(item)}
@@ -98,5 +101,17 @@ export class DropList<T> extends List<T> {
 		return html`
 			<Icon class="drop-list-selected-icon" .type="right" .size="inherit" />
 		`
+	}
+
+	protected onPopupOpenedChange(item: ListItem<T>, opened: boolean) {
+		if (opened) {
+			this.expanded.push(item.value!)
+		}
+		else {
+			let index = this.expanded.indexOf(item.value!)
+			if (index > -1) {
+				this.expanded.splice(index, 1)
+			}
+		}
 	}
 }

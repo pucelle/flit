@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, EventFirer, TransitionResult, fade, Transition, IntersectionWatcher, untilUpdateComplete, promiseWithResolves} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, TransitionResult, fade, Transition, IntersectionWatcher, untilUpdateComplete, promiseWithResolves} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -107,15 +107,12 @@ export interface PopupOptions extends AnchorAlignerOptions {
 
 	/** If specified, only when element match this selector then trigger contextmenu action. */
 	matchSelector?: string
-}
 
-interface PopupBindingEvents {
-	
 	/** Fire after `opened` state of popup binding changed. */
-	'opened-change': (opened: boolean) => void
+	onOpenedChange?: (opened: boolean) => void
 
 	/** Fire before align popup content with trigger element. */
-	'will-align': (content: Popup) => void
+	onWillAlign?: (content: Popup) => void
 }
 
 
@@ -150,7 +147,7 @@ export const DefaultPopupOptions: PopupOptions = {
  * `:popup=${() => html`<Popup />`, ?{...}}`
  * `:popup=${null}` or `:popup=${() => null}` can prevent popup.
  */
-export class popup extends EventFirer<PopupBindingEvents> implements Binding, Part {
+export class popup implements Binding, Part {
 
 	readonly el: HTMLElement
 	readonly context: any
@@ -162,6 +159,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected options: PopupOptions = DefaultPopupOptions
 	protected renderer: RenderResultRenderer | null = null
 	protected updateComplete: Promise<boolean> | null = null
+	protected persistVisible: boolean = false
 
 	/** Help to update popup content by newly rendered result. */
 	protected rendered: RenderedComponentLike | null = null
@@ -173,8 +171,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	protected aligner: AnchorAligner | null = null
 
 	constructor(el: Element, context: any) {
-		super()
-
 		this.el = el as HTMLElement
 		this.context = context
 		this.binder = new PopupTriggerBinder(this.el)
@@ -289,7 +285,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			return
 		}
 
-		this.fire('opened-change', true)
+		this.options.onOpenedChange?.(true)
 
 		let updateResult = await this.willUpdatePopupAndUntil()
 		
@@ -301,20 +297,22 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	}
 	
 	/** Do hide popup action. */
-	protected async doHidePopup() {
-		this.fire('opened-change', false)
+	protected async doHidePopup(forReuse: boolean = false) {
+		this.options.onOpenedChange?.(false)
 
 		// Play leave transition if need.
-		if (this.options.transition && this.transition) {
+		if (!forReuse && this.options.transition && this.transition) {
 			await this.transition.leave(this.options.transition)
 	
 			if (this.opened) {
 				return
 			}
-			
-			// Only remove popup is not enough.
-			// Rendered content to be referenced as a slot content by popup,
-			// it's as part of `rendered`, not `popup`.
+		}
+
+		// Only remove popup is not enough.
+		// Rendered content to be referenced as a slot content by popup,
+		// it's as part of `rendered`, not `popup`.
+		if (!forReuse) {
 			this.popup?.remove()
 			this.rendered?.remove()
 		}
@@ -324,6 +322,27 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 		this.binder.unbindLeave()
 	}
 
+	update(renderer: RenderResultRenderer | null, options: Partial<PopupOptions> = {}) {
+		this.renderer = renderer
+		this.options = {...DefaultPopupOptions, ...options} as PopupOptions
+
+		// If should show immediately and haven't shown.
+		if (!this.opened && this.shouldKeepVisible()) {
+			this.persistVisible = true
+			this.showPopup()
+		}
+
+		// Options changes and no need to persist visible, or renderer becomes null.
+		else if (this.opened && this.persistVisible && !this.shouldKeepVisible()) {
+			this.persistVisible = false
+			this.hidePopup()
+		}
+		
+		// If popup has popped-up, should update it.
+		else if (this.opened && renderer) {
+			this.willUpdatePopupAndUntil()
+		}
+	}
 
 	/** Show popup content after a short time out. */
 	showPopupLater() {
@@ -368,26 +387,6 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 	/** Send a request to hide popup content, can be called repeatedly. */
 	hidePopup() {
 		this.state.hide()
-	}
-
-	update(renderer: RenderResultRenderer | null, options: Partial<PopupOptions> = {}) {
-		this.renderer = renderer
-		this.options = {...DefaultPopupOptions, ...options} as PopupOptions
-
-		// If should show immediately and haven't shown.
-		if (!this.opened && this.shouldKeepVisible()) {
-			this.showPopup()
-		}
-
-		// Options changes and no need to persist visible, or renderer becomes null.
-		else if (this.opened && !this.shouldKeepVisible()) {
-			this.hidePopup()
-		}
-		
-		// If popup has popped-up, should update it.
-		else if (this.opened && renderer) {
-			this.willUpdatePopupAndUntil()
-		}
 	}
 
 	/** 
@@ -542,7 +541,7 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			return
 		}
 
-		this.fire('will-align', this.popup!)
+		this.options.onWillAlign?.(this.popup!)
 
 		let anchor = this.getAlignAnchorElement()
 	
@@ -623,14 +622,15 @@ export class popup extends EventFirer<PopupBindingEvents> implements Binding, Pa
 			SharedPopups.clearUser(this.popup)
 		}
 
-		IntersectionWatcher.unwatch(this.el)
-		this.binder.unbindLeave()
+		if (this.opened) {
+			this.doHidePopup(true)
+		}
+
+		this.transition?.cancel()
+		this.transition = null
 		this.state.clear()
 		this.rendered = null
 		this.popup = null
-		this.transition?.cancel()
-		this.transition = null
-		this.aligner?.stop()
 		this.aligner = null
 	}
 }

@@ -15,6 +15,20 @@ export class Navigation<T> extends List<T> {
 			border-bottom: none;
 			background: color-mix(in srgb, var(--background-color) 90%, var(--text-color));
 			overflow-y: auto;
+
+			.list-item{
+				&.selected{
+					&::after{
+						content: '';
+						position: absolute;
+						top: 3px;
+						bottom: 3px;
+						right: 0;
+						width: 2px;
+						background: color-mix(in srgb, var(--primary-color) 80%, var(--background-color));
+					}
+				}
+			}
 		}
 
 		.navigation-title{

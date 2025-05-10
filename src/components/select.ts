@@ -108,7 +108,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	trigger: 'click' | 'contextmenu' | undefined = 'click'
 	showDelay: number | undefined = 0
 	hideDelay: number | undefined = 0
-	gap: number | number[] | undefined = 0
+	gaps: number | number[] | undefined = 0
 	
 	/** Whether shows triangle. Default value is `false`. */
 	triangle: boolean = false
@@ -160,8 +160,8 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	protected editing: boolean = false
 
 
-	protected async onOpenedChange(opened: boolean) {
-		super.onOpenedChange(opened)
+	protected async onPopupOpenedChange(opened: boolean) {
+		super.onPopupOpenedChange(opened)
 
 		// End editing after closed popup.
 		if (!opened && this.editing) {
@@ -194,7 +194,6 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 				:class.opened=${this.opened}
 				:class.cant-input=${!this.searchable}
 				:popup=${this.renderPopup, this.popupOptions}
-				:ref.binding=${this.refBinding}
 				@click=${this.onClick}
 			>
 				${this.renderDisplayOrInput()}

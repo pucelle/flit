@@ -19,11 +19,10 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	// When these options are undefined, use default `:popup` options.
 
 	position: AnchorPosition | undefined = undefined
-	gap: number | number[] | undefined = undefined
+	gaps: number | number[] | undefined = undefined
 	stickToEdges: boolean | undefined = undefined
-	canSwapPosition: boolean | undefined = undefined
-	canShrinkOnY: boolean | undefined = undefined
-	fixTriangle: boolean | undefined = undefined
+	flipDirection: HVDirection | 'auto' | undefined = undefined
+	fixedTriangle: boolean | undefined = undefined
 
 	key: string | undefined = undefined
 	alignTo: string | ((trigger: Element) => Element) | undefined = undefined
@@ -74,7 +73,6 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 			<template class="dropdown"
 				:class.opened=${this.opened}
 				:popup=${this.renderPopup, this.popupOptions}
-				:ref.binding=${this.refBinding}
 			>
 				<slot />
 				<Icon class="dropdown-icon" .type="down" .size="inherit" />
@@ -87,11 +85,10 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	protected get popupOptions(): Partial<PopupOptions> {
 		return ObjectUtils.cleanEmptyValues({
 			position: this.position,
-			gap: this.gap,
+			gaps: this.gaps,
 			stickToEdges: this.stickToEdges,
-			canSwapPosition: this.canSwapPosition,
-			canShrinkOnY: this.canShrinkOnY,
-			fixTriangle: this.fixTriangle,
+			flipDirection: this.flipDirection,
+			fixedTriangle: this.fixedTriangle,
 
 			key: this.key,
 			alignTo: this.alignTo,
@@ -104,6 +101,8 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 			pointable: this.pointable,
 			cacheable: this.cacheable,
 			keepVisible: this.keepVisible,
+			onOpenedChange: this.onPopupOpenedChange.bind(this),
+			onWillAlign: this.onPopupWillAlign.bind(this),
 		})
 	}
 
@@ -121,18 +120,11 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 		}
 	}
 
-	/** Ref popup binding and bind events. */
-	protected refBinding(binding: popup) {
-		this.binding = binding
-		this.binding.on('opened-change', this.onOpenedChange, this)
-		this.binding.on('will-align', this.onWillAlign, this)
-	}
-
 	/** After popup binding opened state change. */
-	protected onOpenedChange(opened: boolean) {
+	protected onPopupOpenedChange(opened: boolean) {
 		this._opened = opened
 	}
 
 	/** Before will align popup content. */
-	protected onWillAlign(_content: Popup) {}
+	protected onPopupWillAlign(_content: Popup) {}
 }

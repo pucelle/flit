@@ -105,20 +105,6 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				color: var(--primary-color);
 			}
 
-			&.navigated{
-				color: var(--primary-color);
-
-				&::after{
-					content: '';
-					position: absolute;
-					top: 3px;
-					bottom: 3px;
-					right: 0;
-					width: 2px;
-					background: color-mix(in srgb, var(--primary-color) 80%, var(--background-color));
-				}
-			}
-
 			&.arrow-selected{
 				background-color: color-mix(in srgb, var(--primary-color) 10%, var(--background-color));
 			}
@@ -278,7 +264,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderItem(item: Observed<ListItem<T>>, anySiblingHaveChildren: boolean): RenderResult {
-		let expanded = this.expanded.includes(item.value!)
+		let expanded = this.hasExpanded(item)
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
 
@@ -398,9 +384,14 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		return this.selected.includes(item.value!)
 	}
 
+	/** Whether an item has been expanded.  */
+	protected hasExpanded(item: Observed<ListItem<T>>): boolean {
+		return this.expanded.includes(item.value!)
+	}
+
 	/** Toggle expanded state. */
 	protected toggleExpanded(item: Observed<ListItem<T>>) {
-		if (this.expanded.includes(item.value!)) {
+		if (this.hasExpanded(item)) {
 			this.expanded.splice(this.expanded.indexOf(item.value!), 1)
 		}
 		else {
@@ -438,7 +429,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * Must after update complete.
 	 */
 	async scrollSelectedToStart(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		let el = this.el.querySelector('.list-item.navigated, .list-item.selected') as HTMLElement | null
+		let el = this.el.querySelector('.list-item.selected') as HTMLElement | null
 		if (!el) {
 			return false
 		}
@@ -453,7 +444,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * Must after update complete.
 	 */
 	async scrollSelectedToView(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		let el = this.el.querySelector('.list-item.navigated, .list-item.selected') as HTMLElement | null
+		let el = this.el.querySelector('.list-item.selected') as HTMLElement | null
 		if (!el) {
 			return false
 		}
@@ -483,7 +474,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			if (item.children) {
 				let hasActiveChildItem = this.applyExpandedRecursively(item.children as ListItem<T>[], active)
 				if (hasActiveChildItem) {
-					if (!this.expanded.includes(item.value!)) {
+					if (!this.hasExpanded(item)) {
 						this.expanded.push(item.value!)
 					}
 				}
@@ -539,7 +530,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else if (key === 'ArrowRight') {
 			if (this.inKeyNavigating) {
 				let item = this.keyNavigator.current
-				if (item && !this.expanded.includes(item.value!) && item.children) {
+				if (item && !this.hasExpanded(item) && item.children) {
 					this.toggleExpanded(item)
 					this.keyNavigator.moveRight()
 				}
