@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, TransitionResult, fade, Transition, IntersectionWatcher, untilUpdateComplete, promiseWithResolves} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, TransitionResult, fade, Transition, IntersectionWatcher, untilUpdateComplete, promiseWithResolves, MouseLeaveControl} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -287,8 +287,11 @@ export class popup implements Binding, Part {
 
 		this.options.onOpenedChange?.(true)
 
-		let updateResult = await this.willUpdatePopupAndUntil()
+		// Must lock before requesting to find cache in update process.
+		MouseLeaveControl.lock(this.el)
 		
+		let updateResult = await this.updatePopupAndUntil()
+
 		if (this.opened) {
 			this.appendPopup(updateResult)
 			this.alignPopup()
@@ -296,7 +299,10 @@ export class popup implements Binding, Part {
 		}
 	}
 	
-	/** Do hide popup action. */
+	/** 
+	 * Do hide popup action.
+	 * If `forReuse`, will leave element in document.
+	 */
 	protected async doHidePopup(forReuse: boolean = false) {
 		this.options.onOpenedChange?.(false)
 
@@ -340,7 +346,7 @@ export class popup implements Binding, Part {
 		
 		// If popup has popped-up, should update it.
 		else if (this.opened && renderer) {
-			this.willUpdatePopupAndUntil()
+			this.updatePopupAndUntil()
 		}
 	}
 
@@ -393,7 +399,7 @@ export class popup implements Binding, Part {
 	 * Merge several update request, e.g., from enter event and renderer update.
 	 * Returned promise to be resolved after updated, by whether reusing popup is in document before.
 	 */
-	protected async willUpdatePopupAndUntil(): Promise<boolean> {
+	protected async updatePopupAndUntil(): Promise<boolean> {
 		if (this.updateComplete) {
 			return this.updateComplete
 		}
