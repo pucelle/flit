@@ -13,7 +13,7 @@
 ::-webkit-scrollbar{
 	height: 8px;
 	width: 8px;
-	background: color-mix(in srgb, var(--background-color) 90%, var(--text-color));
+	background: color-mix(in srgb, var(--background-color) 95%, var(--text-color));
 }
 
 ::-webkit-scrollbar-thumb{

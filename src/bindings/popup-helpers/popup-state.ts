@@ -111,11 +111,4 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 			this.fire('do-hide')
 		}
 	}
-
-	/** Clear and restore to start state. */
-	clear() {
-		this.willNotShow()
-		this.willNotHide()
-		this.opened = false
-	}
 }

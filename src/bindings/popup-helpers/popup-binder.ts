@@ -267,7 +267,6 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		else if (this.trigger === 'click' || this.trigger === 'contextmenu') {
 			DOMEvents.off(document, 'mousedown', this.onDocMouseDownOrTouch, this)
 			DOMEvents.off(document, 'wheel', this.onDocMouseWheel, this)
-			MouseLeaveControl.unlock(this.el)
 		}
 		else if (this.trigger === 'focus') {
 			DOMEvents.off(this.el, 'blur', this.hidePopupLater, this)
