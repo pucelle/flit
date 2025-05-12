@@ -70,6 +70,7 @@ function findCache(key: string): RenderedComponentLike | null {
 	for (let cache of caches) {
 		let popup = cache.getAs(Popup)
 		if (!popup) {
+			others = others ?? cache
 			continue
 		}
 

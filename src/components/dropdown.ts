@@ -103,7 +103,7 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 			keepVisible: this.keepVisible,
 			onOpenedChange: this.onPopupOpenedChange.bind(this),
 			onWillAlign: this.onPopupWillAlign.bind(this),
-		})
+		} as PopupOptions)
 	}
 
 	/** 

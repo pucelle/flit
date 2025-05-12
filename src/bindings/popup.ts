@@ -337,6 +337,11 @@ export class popup implements Binding, Part {
 	/** Send a request to hide popup content, can be called repeatedly. */
 	hidePopup() {
 		this.state.hide()
+
+		let popupEl = this.rendered?.getAs(Popup)?.el
+		if (popupEl) {
+			MouseLeaveControl.releaseAllOf(popupEl)
+		}
 	}
 
 	/** 
