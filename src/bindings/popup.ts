@@ -475,7 +475,8 @@ export class popup implements Binding, Part {
 		}
 
 		// Although in document, need append too.
-		// This can ensure it re-connect.
+		// This can ensure it re-connect,
+		// but transition will stop playing.
 		let alreadyInDOM = document.body.contains(this.popup!.el)
 		let playTransition = !alreadyInDOM
 		this.popup!.appendTo(document.body, playTransition)
