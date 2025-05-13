@@ -8,7 +8,7 @@ const DefaultContextMenuOptions: Partial<PopupOptions> = {
 	trigger: 'contextmenu',
 	position: 'br',
 	showDelay: 0,
-	hideDelay: 0,
+	hideDelay: 100,
 }
 
 

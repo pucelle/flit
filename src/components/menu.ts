@@ -2,6 +2,7 @@ import {css, html} from '@pucelle/lupos.js'
 import {Popup} from './popup'
 import {Triangle} from './triangle'
 import {ThemeSize} from '../style'
+import {fade} from '@pucelle/ff'
 
 
 /** `<Menu>` shows a menu with a `<List>` or `<DropList>` inside. */
@@ -50,7 +51,9 @@ export class Menu<E = {}> extends Popup<E> {
 
 	protected render() {
 		return html`
-			<template class="popup menu size-${this.size}">
+			<template class="popup menu size-${this.size}"
+				:transition=${fade()}
+			>
 				<lu:if ${this.triangle}>
 					<Triangle class="menu-triangle" .direction=${this.triangleDirection} />
 				</lu:if>

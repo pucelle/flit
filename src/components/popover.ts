@@ -3,6 +3,7 @@ import {ThemeSize} from '../style/'
 import {Popup} from './popup'
 import {Triangle} from './triangle'
 import {Icon} from './icon'
+import {fade} from '@pucelle/ff'
 
 
 /** 
@@ -87,7 +88,9 @@ export class Popover<E = {}> extends Popup<E> {
 
 	protected render() {
 		return html`
-			<template class="popup popover size-${this.size}">
+			<template class="popup popover size-${this.size}"
+				:transition=${fade()}
+			>
 				<lu:if ${this.triangle}>
 					<Triangle class="popover-triangle" .direction=${this.triangleDirection} />
 				</lu:if>

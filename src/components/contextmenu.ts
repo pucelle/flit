@@ -1,5 +1,6 @@
 import {css, html, RenderResult} from '@pucelle/lupos.js'
 import {Popup} from './popup'
+import {fade} from '@pucelle/ff'
 
 
 /** `<Contextmenu>` to render a simple context menu with a `<List>` or `<DropList>` inside. */
@@ -25,7 +26,9 @@ export class ContextMenu<E = {}> extends Popup<E> {
 
 	protected render(): RenderResult {
 		return html`
-			<template class="popup contextmenu" tabindex="0">
+			<template class="popup contextmenu" tabindex="0"
+				:transition=${fade()}
+			>
 				<slot />
 			</template>
 		`

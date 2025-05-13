@@ -3,7 +3,7 @@ import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'
 import {TriggerType} from '../bindings'
-import {AnchorPosition, computed, ObjectUtils, TransitionResult} from '@pucelle/ff'
+import {AnchorPosition, computed, ObjectUtils} from '@pucelle/ff'
 
 
 /** `<Dropdown>` for containing both trigger element and popup content.  */
@@ -29,7 +29,6 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	trigger: TriggerType | undefined = undefined
 	showDelay: number | undefined = undefined
 	hideDelay: number | undefined = undefined
-	transition: TransitionResult | undefined = undefined
 	showImmediately: boolean | undefined = undefined
 	autoFocus: boolean | undefined = undefined
 	pointable: boolean | undefined = undefined
@@ -95,7 +94,6 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 			trigger: this.trigger,
 			showDelay: this.showDelay,
 			hideDelay: this.hideDelay,
-			transition: this.transition,
 			showImmediately: this.showImmediately,
 			autoFocus: this.autoFocus,
 			pointable: this.pointable,

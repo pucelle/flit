@@ -1,4 +1,4 @@
-import {DOMScroll, untilUpdateComplete} from '@pucelle/ff'
+import {DOMScroll, fade, untilUpdateComplete} from '@pucelle/ff'
 import {css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
@@ -245,6 +245,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 			<Popup class="select-popup"
 				.triangle=${false}
 				:ref.el=${this.popupEl}
+				:transition=${fade()}
 			>
 				<List class="select-list"
 					:ref.el=${this.listEl}

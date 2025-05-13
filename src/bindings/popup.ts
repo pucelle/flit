@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, TransitionResult, fade, Transition, IntersectionWatcher, untilUpdateComplete, promiseWithResolves, MouseLeaveControl} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, IntersectionWatcher, untilUpdateComplete, promiseWithResolves, MouseLeaveControl} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -55,14 +55,11 @@ export interface PopupOptions extends AnchorAlignerOptions {
 	/** 
 	 * Delay hiding in milliseconds, such that mouse hover from `el` to `layer` will not cause it flush.
 	 * Default value is `100`.
+	 * 
+	 * Note if this value is too small, and popup element has no transition set,
+	 * will cause click event on popup descendant element not fired.
 	 */
 	hideDelay: number
-
-	/** 
-	 * Transition options to play transition when popup hiding and showing.
-	 * Default value is `fade()`.
-	 */
-	transition: TransitionResult
 
 	/** 
 	 * If specified as `true`, will show popup immediately.
@@ -129,8 +126,7 @@ export const DefaultPopupOptions: PopupOptions = {
 	followEvents: false, 
 	trigger: 'hover',
 	showDelay: 0,
-	hideDelay: 0,
-	transition: fade(),
+	hideDelay: 100,
 	showImmediately: false,
 	autoFocus: false,
 	pointable: true,
@@ -155,7 +151,6 @@ export class popup implements Binding, Part {
 	protected readonly state: PopupState
 	protected readonly binder: PopupTriggerBinder
 
-	protected transition: Transition | null = null
 	protected options: PopupOptions = DefaultPopupOptions
 	protected renderer: RenderResultRenderer | null = null
 	protected updateComplete: Promise<void> | null = null
@@ -320,9 +315,10 @@ export class popup implements Binding, Part {
 		// Must lock before requesting to find cache in update process.
 		MouseLeaveControl.lock(this.el)
 		
-		let inDOMAlready = await this.createPopupAndUntilUpdated()
+		await this.createPopupAndUntilUpdated()
+		
 		if (this.opened) {
-			this.appendPopup(inDOMAlready)
+			this.appendPopup()
 			this.alignPopup()
 			this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
 		}
@@ -337,40 +333,24 @@ export class popup implements Binding, Part {
 	/** Send a request to hide popup content, can be called repeatedly. */
 	hidePopup() {
 		this.state.hide()
-
-		let popupEl = this.rendered?.getAs(Popup)?.el
-		if (popupEl) {
-			MouseLeaveControl.releaseAllOf(popupEl)
-		}
 	}
 
 	/** 
 	 * Do hide popup action.
 	 * If `forReuse`, will leave element in document.
 	 */
-	protected async doHidePopup() {
+	protected doHidePopup() {
 		this.options.onOpenedChange?.(false)
 		this.aligner?.stop()
 		this.binder.unbindLeave()
 
 		IntersectionWatcher.unwatch(this.el)
-
-		// Must unlock before playing transition.
 		MouseLeaveControl.unlock(this.el)
-
-		// Play leave transition if need.
-		if (this.options.transition && this.transition) {
-			await this.transition.leave(this.options.transition)
-	
-			if (this.opened) {
-				return
-			}
-		}
 
 		// Only remove popup is not enough.
 		// Rendered content to be referenced as a slot content by popup,
 		// it's as part of `rendered`, not `popup`.
-		this.popup?.remove()
+		this.popup?.remove(true)
 		this.rendered?.remove()
 	}
 
@@ -445,9 +425,6 @@ export class popup implements Binding, Part {
 		// Update popup property and related transition.
 		if (popup !== this.popup) {
 			this.popup = popup
-			this.transition?.cancel()
-			this.transition = new Transition(popup.el)
-
 			SharedPopups.setUser(popup, this)
 		}
 
@@ -462,7 +439,7 @@ export class popup implements Binding, Part {
 	 * Create rendered and popup property, and wait for it update complete.
 	 * Returned promise to be resolved by whether reusing popup is in document before.
 	 */
-	protected async createPopupAndUntilUpdated(): Promise<boolean> {
+	protected async createPopupAndUntilUpdated() {
 		let rendered = this.rendered
 
 		// Find cache, even if current rendered and popup existing, still needs to clear existing cache.
@@ -487,38 +464,24 @@ export class popup implements Binding, Part {
 			SharedPopups.clearCache(this.options.key, this)
 		}
 
-		// Whether in document already, if yes, will not play enter transition.
-		let popup = rendered.getAs(Popup)
-		let inDOMAlready = !!popup && document.contains(popup.el)
-
 		// Wait until update complete
 		await this.updatePopupAndUntil()
-
-		return inDOMAlready
 	}
 
 	/** Append popup element into document. */
-	protected appendPopup(inDOMAlready: boolean) {
+	protected appendPopup() {
 		if (!this.opened) {
 			return
 		}
 
 		// Although in document, need append too.
 		// This can ensure it re-connect.
-		this.popup!.appendTo(document.body)
+		let alreadyInDOM = document.body.contains(this.popup!.el)
+		let playTransition = !alreadyInDOM
+		this.popup!.appendTo(document.body, playTransition)
 
 		// Get focus if needed.
 		this.mayGetFocus()
-
-		// Play enter transition.
-		if (!inDOMAlready && this.options.transition) {
-			this.transition!.enter(this.options.transition)
-		}
-
-		// May playing leave transition.
-		else {
-			this.transition!.cancel()
-		}
 	}
 
 	/** After trigger element position changed. */
@@ -622,8 +585,6 @@ export class popup implements Binding, Part {
 			this.hidePopup()
 		}
 
-		this.transition?.cancel()
-		this.transition = null
 		this.rendered = null
 		this.popup = null
 		this.aligner = null

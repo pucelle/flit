@@ -3,6 +3,7 @@ import {ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Icon} from './icon'
 import {Triangle} from './triangle'
+import {fade} from '@pucelle/ff'
 
 
 /** 
@@ -91,7 +92,9 @@ export class Tooltip<E = {}> extends Popup<E> {
 
 	protected render() {
 		return html`
-			<template class="popup tooltip size-${this.size} type-${this.type}">
+			<template class="popup tooltip size-${this.size} type-${this.type}"
+				:transition=${fade()}
+			>
 				<lu:if ${this.triangle}>
 					<Triangle .direction=${this.triangleDirection} />
 				</lu:if>

@@ -68,17 +68,14 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 			return false
 		}
 
-		if (hideDelay > 0) {
-			this.hideTimeout = new Timeout(() => {
-				this.hide()
-			}, hideDelay)
-
-			this.hideTimeout.start()
-			this.willHideSoon = true
-		}
-		else {
+		// Even 0, will start a timeout,
+		// Or hide immediately by mousedown will cause click event not handing.
+		this.hideTimeout = new Timeout(() => {
 			this.hide()
-		}
+		}, hideDelay)
+
+		this.hideTimeout.start()
+		this.willHideSoon = true
 
 		return true
 	}

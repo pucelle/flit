@@ -1,6 +1,6 @@
 import {css, html, RenderResult} from '@pucelle/lupos.js'
 import {List, ListItem} from './list'
-import {Observed} from '@pucelle/ff'
+import {fade, Observed} from '@pucelle/ff'
 import {tooltip, contextmenu, popup, PopupOptions} from '../bindings'
 import {Popup} from './popup'
 import {Icon} from './icon'
@@ -85,6 +85,7 @@ export class DropList<T> extends List<T> {
 
 		return html`
 			<Popup class="drop-list-subsection ${this.subsectionClassName}"
+				:transition=${fade()}
 				.triangle=${false}
 			>
 				${this.renderItems(children!)}

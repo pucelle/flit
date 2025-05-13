@@ -1,6 +1,7 @@
 import {css, Component, html, RenderResult} from '@pucelle/lupos.js'
 import {SharedPopups} from '../bindings'
 import {Triangle} from './triangle'
+import {fade} from '@pucelle/ff'
 
 
 /** 
@@ -60,7 +61,9 @@ export class Popup<E = {}> extends Component<E> {
 
 	protected render(): RenderResult {
 		return html`
-			<template class="popup" tabindex="0">
+			<template class="popup" tabindex="0"
+				:transition=${fade()}
+			>
 				<lu:if ${this.triangle}>
 					<Triangle .direction=${this.triangleDirection} />
 				</lu:if>
