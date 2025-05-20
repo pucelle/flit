@@ -243,15 +243,18 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderItems(items: Observed<ListItem<T>[]>): RenderResult[] {
+	protected renderItems(items: Observed<ListItem<T>[]>): RenderResult {
 		let anySiblingHaveChildren = items.some(item => {
 			return (item as ListItem<T>).children
 				&& (item as ListItem<T>).children!.length > 0
 		})
 
-		return items.map((item: ListItem<T> | {}) => {
-			return this.renderItemOrSplitter(item, anySiblingHaveChildren)
-		})
+		return html`
+			<lu:for ${items}>${(item: ListItem<T> | {}) => {
+				return this.renderItemOrSplitter(item, anySiblingHaveChildren)
+			}
+		}</lu:for>
+		`
 	}
 
 	protected renderItemOrSplitter(item: Observed<ListItem<T>> | {}, anySiblingHaveChildren: boolean): RenderResult {
