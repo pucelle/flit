@@ -1,6 +1,6 @@
 import {css, html} from '@pucelle/lupos.js'
 import {Popup} from './popup'
-import {DOMEvents, EventKeys, Inset} from '@pucelle/ff'
+import {DOMEvents, EventKeys, Inset, RectWatcher} from '@pucelle/ff'
 import {tooltip, TooltipOptions} from '../bindings'
 
 
@@ -9,8 +9,11 @@ export interface InputEditorEvents {
 	/** After cancel editing. */
 	cancel: () => void
 
-	/** After commit editing. */
-	commit: (value: string) => void
+	/** 
+	 * After commit editing.
+	 * Calls refocus to do focus again.
+	 */
+	commit: (value: string, refocus: () => void) => void
 }
 
 
@@ -61,13 +64,14 @@ export class InputEditor extends Popup<InputEditorEvents> {
 	protected errorMessage: string | null = null
 	protected inputRef!: HTMLInputElement
 	protected endedInputting: boolean = false
+	protected inputStyle: Partial<CSSStyleDeclaration> = {}
 
 	protected render() {
 		let text = this.value ?? this.editing.textContent
 
 		return html`
 			<template class="input-editor"
-				:style=${this.getStyle()}
+				:style=${this.inputStyle}
 				:tooltip=${this.errorMessage, {position: 'b', type: 'error'} as Partial<TooltipOptions>}
 			>
 				<input type="text" class="input-editor-input"
@@ -79,25 +83,6 @@ export class InputEditor extends Popup<InputEditorEvents> {
 				/>
 			</template>
 		`
-	}
-
-	protected getStyle() {
-		let style = getComputedStyle(this.editing)
-		let textAlignRate = style.textAlign === 'center' ? 0.5 : style.textAlign === 'right' ? 1 : 0
-		let paddingList = Array.isArray(this.padding) ? this.padding : [this.padding]
-		let padding = paddingList.map(v => v + 'px').join(' ')
-		let editingRect = this.editing.getBoundingClientRect()
-		let elWidth = this.width || editingRect.width
-		let left = editingRect.left + (editingRect.width - elWidth) * textAlignRate
-		let top = editingRect.top
-		let edges = new Inset(...paddingList)
-
-		return {
-			left: left - edges.left + 'px',
-			top: top - edges.top + 'px',
-			width: elWidth + 'px',
-			padding,
-		}
 	}
 
 	protected getTextStyle() {
@@ -123,12 +108,33 @@ export class InputEditor extends Popup<InputEditorEvents> {
 
 	protected onConnected() {
 		super.onConnected()
+		this.updatePosition()
+		RectWatcher.watch(this.editing, this.updatePosition, this)
 		DOMEvents.on(document, 'mousedown', this.onDOMMouseDown, this)
 	}
 
 	protected onWillDisconnect() {
 		super.onWillDisconnect()
+		RectWatcher.unwatch(this.editing, this.updatePosition, this)
 		DOMEvents.off(document, 'mousedown', this.onDOMMouseDown, this)
+	}
+
+	protected updatePosition(rect: DOMRect = this.editing.getBoundingClientRect()) {
+		let style = getComputedStyle(this.editing)
+		let textAlignRate = style.textAlign === 'center' ? 0.5 : style.textAlign === 'right' ? 1 : 0
+		let paddingList = Array.isArray(this.padding) ? this.padding : [this.padding]
+		let padding = paddingList.map(v => v + 'px').join(' ')
+		let elWidth = this.width || rect.width
+		let left = rect.left + (rect.width - elWidth) * textAlignRate
+		let top = rect.top
+		let edges = new Inset(...paddingList)
+
+		this.inputStyle = {
+			left: left - edges.left + 'px',
+			top: top - edges.top + 'px',
+			width: elWidth + 'px',
+			padding,
+		}
 	}
 
 	protected onInput(e: KeyboardEvent) {
@@ -149,6 +155,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 			}
 		}
 	}
+
 	protected onDOMMouseDown(e: MouseEvent) {
 		if (this.endedInputting) {
 			return
@@ -156,9 +163,14 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		
 		let target = e.target as HTMLElement
 		if (!this.el.contains(target)) {
-			this.fire('commit', this.inputRef.value)
+			this.fire('commit', this.inputRef.value, () => this.refocus())
 			this.endedInputting = true
 		}
+	}
+
+	protected refocus() {
+		this.inputRef.focus()
+		this.endedInputting = false
 	}
 
 	protected onKeyDown(e: KeyboardEvent) {
@@ -166,7 +178,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 
 		let key = EventKeys.getShortcutKey(e)
 		if (key === 'Enter') {
-			this.fire('commit', this.inputRef.value)
+			this.fire('commit', this.inputRef.value, () => this.refocus())
 			this.endedInputting = true
 		}
 		else if (key === 'Escape') {
