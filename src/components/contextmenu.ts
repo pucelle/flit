@@ -27,7 +27,7 @@ export class ContextMenu<E = {}> extends Popup<E> {
 	protected render(): RenderResult {
 		return html`
 			<template class="popup contextmenu" tabindex="0"
-				:transition=${fade()}
+				:transition.immediate=${fade()}
 			>
 				<slot />
 			</template>

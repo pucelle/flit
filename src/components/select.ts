@@ -159,7 +159,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	/** Whether in editing mode, in which mode you can input text to filter list items. */
 	protected editing: boolean = false
 
-
+	
 	protected async onPopupOpenedChange(opened: boolean) {
 		super.onPopupOpenedChange(opened)
 
@@ -176,7 +176,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 		}
 	}
 
-	protected onWillAlign() {
+	protected onPopupWillAlign() {
 		this.syncPopupWidth()
 	}
 
@@ -186,7 +186,6 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 			this.popupEl.style.minWidth = String(this.el.offsetWidth) + 'px'
 		}
 	}
-
 
 	protected render() {
 		return html`
@@ -245,7 +244,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 			<Popup class="select-popup"
 				.triangle=${false}
 				:ref.el=${this.popupEl}
-				:transition=${fade()}
+				:transition.immediate=${fade()}
 			>
 				<List class="select-list"
 					:ref.el=${this.listEl}
@@ -257,7 +256,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					.keyComeFrom=${this.inputEl}
 					@select=${this.onSelected}
 				/>
-			</Popup>
+			</>
 		`
 	}
 

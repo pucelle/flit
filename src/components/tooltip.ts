@@ -93,7 +93,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 	protected render() {
 		return html`
 			<template class="popup tooltip size-${this.size} type-${this.type}"
-				:transition=${fade()}
+				:transition.immediate=${fade()}
 			>
 				<lu:if ${this.triangle}>
 					<Triangle .direction=${this.triangleDirection} />

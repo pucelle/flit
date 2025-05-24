@@ -89,7 +89,7 @@ export class Popover<E = {}> extends Popup<E> {
 	protected render() {
 		return html`
 			<template class="popup popover size-${this.size}"
-				:transition=${fade()}
+				:transition.immediate=${fade()}
 			>
 				<lu:if ${this.triangle}>
 					<Triangle class="popover-triangle" .direction=${this.triangleDirection} />

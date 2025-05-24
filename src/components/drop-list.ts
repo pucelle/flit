@@ -85,7 +85,7 @@ export class DropList<T> extends List<T> {
 
 		return html`
 			<Popup class="drop-list-subsection ${this.subsectionClassName}"
-				:transition=${fade()}
+				:transition.immediate=${fade()}
 				.triangle=${false}
 			>
 				${this.renderItems(children!)}
