@@ -102,7 +102,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 	protected async onReady() {
 		super.onReady()
 	
-		// Select all after updated.
+		// Select all after ready.
 		this.inputRef.select()
 	}
 

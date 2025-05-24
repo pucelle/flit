@@ -9,6 +9,10 @@ import {Input} from './input'
 export class Textarea extends Input {
 
 	static style = css`
+		.textarea{
+			height: auto;
+		}
+
 		.textarea-field{
 			height: auto;
 		}

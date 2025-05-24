@@ -10,8 +10,12 @@ interface InputEvents {
 	/** Triggers after input every character. */
 	input: (value: string) => void
 
-	/** Triggers after input value changed. */
-	change: (value: string, valid: boolean | null) => void
+	/** 
+	 * Triggers after input value changed.
+	 * `valid` indicates whether inputted value is valid, only `false` means not valid.
+	 * Calls `refocus` can cause input field get focus.
+	 */
+	change: (value: string, valid: boolean | null, refocus: () => void) => void
 }
 
 
@@ -23,19 +27,20 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 
 	static style = css`
 		.input{
-			display: inline-block;
-			vertical-align: top;
+			display: inline-flex;
+			align-items: stretch;
 			position: relative;
 			width: 15em;
-			padding-bottom: 1px solid none;
+			height: 2em;
+			padding: 0.2em 0.6em;
+			padding-bottom: 0;
 			background: var(--field-color);
 			box-shadow: inset 0 -1px 0 0 var(--border-color);
 		}
 
 		.input-field{
-			width: 100%;
-			height: 2em;
-			padding: 0.2em 0.6em;
+			flex: 1;
+			min-width: 0;
 			border: none;
 			background: none;
 		}
@@ -46,25 +51,15 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 
 		.input-valid{
 			box-shadow: inset 0 -1px 0 0 var(--success-color);
-
-			input, textarea{
-				padding-right: 2em;
-			}
 		}
 
 		.input-invalid{
 			box-shadow: inset 0 -1px 0 0 var(--error-color);
-
-			input, textarea{
-				padding-right: 2em;
-			}
 		}
 
 		.input-valid-icon{
-			position: absolute;
-			top: 0;
-			bottom: 0;
-			right: 6px;
+			align-items: center;
+			margin-right: 0.2em;
 			color: var(--success-color);
 		}
 
@@ -108,12 +103,15 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	 * To validate current value, returns error message or `null` if valid.
 	 * Can also returns `null` and later set `error` asynchronously.
 	 */
-	validator: ((value: string) => Promise<string | null>) | null = null
+	validator: ((value: string) => string | null) | null = null
 
 	/** Show custom error message. */
 	errorMessage: string | null = ''
 
-	/** Whether show error on a tooltip, so it doesn't need to leave a space for error message. */
+	/** 
+	 * Whether show error on a tooltip, so it doesn't need to leave a space for error message.
+	 * Default value is `false`.
+	 */
 	errorOnTooltip: boolean = false
 
 	/** Input field element reference. */
@@ -125,6 +123,11 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 				:class.input-focus=${this.focusGot}
 				:class.input-valid=${this.touched && this.valid}
 				:class.input-invalid=${this.touched && this.valid === false}
+				?:tooltip=${
+					this.touched && this.errorMessage && this.errorOnTooltip,
+					this.errorMessage,
+					{type: 'error'} as Partial<TooltipOptions>
+				}
 			>
 				${this.renderField()}
 
@@ -150,7 +153,6 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			.placeholder=${this.placeholder || ''}
 			.value=${this.value}
 			:ref=${this.fieldRef}
-			?:tooltip=${this.touched && this.errorMessage && this.errorOnTooltip, this.errorMessage, {type: 'error'} as Partial<TooltipOptions>}
 			@focus=${this.onFocus}
 			@blur=${this.onBlur}
 			@input=${this.onInput}
@@ -200,7 +202,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		let value = this.value = this.fieldRef.value
 
 		this.validate()
-		this.fire('change', value, this.valid)
+		this.fire('change', value, this.valid, () => this.fieldRef.focus())
 	}
 
 	@watch('touched')
@@ -210,15 +212,20 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		}
 	}
 
-	protected async validate() {
+	protected validate() {
 		if (this.validator) {
 			let value = this.value
-			let error = await this.validator(this.value)
+			let error = this.validator(this.value)
 
 			if (value === this.value) {
 				this.errorMessage = error
 				this.valid = !error
 			}
 		}
+	}
+
+	/** Select all text. */
+	select() {
+		this.fieldRef.select()
 	}
 }
