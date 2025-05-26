@@ -29,6 +29,7 @@ export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 		.resizer{
 			flex: none;
 			position: relative;
+			will-change: true;
 			z-index: 100;
 		}
 
