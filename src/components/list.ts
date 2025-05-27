@@ -511,8 +511,12 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	/** Moves arrow selected by a keyboard event. */
-	protected keyNavigateByEvent(event: KeyboardEvent) {
-		let key = EventKeys.getShortcutKey(event)
+	protected keyNavigateByEvent(e: KeyboardEvent) {
+
+		// Prevent being captured by outer component.
+		e.stopPropagation()
+
+		let key = EventKeys.getShortcutKey(e)
 
 		// Active key navigation if not yet.
 		if (key === 'ArrowUp' || key === 'ArrowDown') {
