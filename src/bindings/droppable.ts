@@ -7,7 +7,7 @@ import {draggable} from './draggable'
 export interface DroppableOptions<T> {
 
 	/** `name` for droppable, can drop draggable to droppable only when name match. */
-	name: string
+	name: string | string[]
 
 	/** Add this class name after mouse enter, and remove it after mouse leave. */
 	enterClassName?: string
@@ -47,7 +47,7 @@ export class droppable<T = any> implements Binding, Part {
 
 	options: DroppableOptions<T> = {name: ''}
 
-	private onDrop!: (data: T, toIndex: number) => void
+	private dropCallback!: (data: T, toIndex: number) => void
 	private connected: boolean = false
 
 	constructor(el: Element, context: any) {
@@ -78,7 +78,7 @@ export class droppable<T = any> implements Binding, Part {
 	}
 
 	update(ondrop: (data: T, toIndex: number) => void, options: DroppableOptions<T>) {
-		this.onDrop = ondrop
+		this.dropCallback = ondrop
 		this.options = {...DefaultDroppableOptions, ...options}
 	}
 
@@ -118,8 +118,8 @@ export class droppable<T = any> implements Binding, Part {
 	 * `insertIndex` indicates at which index should insert into on 'reorder' mode.
 	 */
 	fireDrop(dragging: draggable<T>, insertIndex: number) {
-		if (this.onDrop) {
-			this.onDrop.call(this.context, dragging.data as T, insertIndex)
+		if (this.dropCallback) {
+			this.dropCallback.call(this.context, dragging.data as T, insertIndex)
 		}
 	}
 }

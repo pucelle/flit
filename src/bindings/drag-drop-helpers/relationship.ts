@@ -46,7 +46,9 @@ class DragDropRelationship {
 				this.enteredDroppable.delete(drop)
 			}
 
-			else if (drop.options.name === dragging.options.name) {
+			else if (drop.options.name === dragging.options.name
+				|| Array.isArray(dragging.options.name) && dragging.options.name.includes(drop.options.name)
+			) {
 				activeDrop = drop
 				break
 			}
@@ -123,7 +125,10 @@ class DragDropRelationship {
 	/** Whether dragging can drop to a droppable. */
 	private canDropTo(drop: droppable) {
 		return this.dragging
-			&& this.dragging.options.name === drop.options.name
+			&& (
+				this.dragging.options.name === drop.options.name
+				|| Array.isArray(this.dragging.options.name) && this.dragging.options.name.includes(drop.options.name)
+			)
 			&& this.dragging.el !== drop.el
 	}
 
