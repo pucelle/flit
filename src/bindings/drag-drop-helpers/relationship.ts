@@ -63,16 +63,21 @@ class DragDropRelationship {
 		}
 		else {
 			let followElCloned = !this.dragging.options.followElementRenderer
-			let followEl: HTMLElement
+			let followEl: HTMLElement | null = null
 			let position = DOMEvents.getPagePosition(e)
 
 			if (this.dragging.options.followElementRenderer) {
 				let rendered = this.followElementRendered = render(this.dragging.options.followElementRenderer)
 				await rendered.connectManually()
-				followEl = rendered.el.firstElementChild as HTMLElement
+				followEl = rendered.el.firstElementChild as HTMLElement | null
 			}
 			else {
 				followEl = this.dragging!.el.cloneNode(true) as HTMLElement
+			}
+
+			// No dragging followed element.
+			if (!followEl) {
+				return
 			}
 
 			if (dragging.options.draggingClassName) {
@@ -99,7 +104,7 @@ class DragDropRelationship {
 	/** When dragging and enter a draggable. */
 	enterDrag(drag: draggable) {
 		if (this.canEnterToSwapWith(drag)) {
-			this.movement!.onEnterDrag(drag)
+			this.movement?.onEnterDrag(drag)
 		}
 	}
 
@@ -118,7 +123,7 @@ class DragDropRelationship {
 		if (this.canDropTo(dropping)) {
 			dropping.fireEnter(this.dragging!)
 			this.activeDrop = dropping
-			this.movement!.onEnterDrop(dropping)
+			this.movement?.onEnterDrop(dropping)
 		}
 	}
 
@@ -145,7 +150,7 @@ class DragDropRelationship {
 		if (this.activeDrop === dropping) {
 			dropping.fireLeave(this.dragging!)
 			this.activeDrop = null
-			this.movement!.onLeaveDrop(dropping)
+			this.movement?.onLeaveDrop(dropping)
 		}
 	}
 
@@ -156,14 +161,14 @@ class DragDropRelationship {
 		}
 
 		let dragging = this.dragging
-		let movement = this.movement!
+		let movement = this.movement
 		let activeDrop = this.activeDrop
 
 		if (activeDrop) {
 			this.leaveDrop(activeDrop)
 		}
 
-		movement.endDragging().then(() => {
+		movement?.endDragging().then(() => {
 			if (movement.canDrop()) {
 				activeDrop?.fireDrop(dragging, movement.getInsertIndex())
 			}

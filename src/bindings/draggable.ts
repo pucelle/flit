@@ -49,6 +49,9 @@ export interface DraggableOptions {
 	 */
 	followElementRenderer?: RenderResultRenderer
 
+	/** On dragging start. */
+	onStart?: () => void
+
 	/** 
 	 * On dragging end.
 	 * If dragging canceled, `drop` is null.
@@ -74,6 +77,7 @@ const DefaultDraggableOptions: DraggableOptions = {
 export class draggable<T = any> implements Binding, Part {
 
 	readonly el: HTMLElement
+	readonly context: any
 
 	options: DraggableOptions = DefaultDraggableOptions
 
@@ -85,8 +89,9 @@ export class draggable<T = any> implements Binding, Part {
 
 	private connected: boolean = false
 
-	constructor(el: Element) {
+	constructor(el: Element, context: any) {
 		this.el = el as HTMLElement
+		this.context = context
 	}
 
 	afterConnectCallback() {
@@ -144,6 +149,7 @@ export class draggable<T = any> implements Binding, Part {
 				GlobalDragDropRelationship.startDragging(this, e)
 				startPosition = currentPosition
 				moves.reset()
+				this.options.onStart?.call(this.context)
 				inDragging = true
 			}
 			
@@ -163,7 +169,7 @@ export class draggable<T = any> implements Binding, Part {
 					this.el.classList.remove(this.options.draggingClassName)
 				}
 
-				this.options.onEnd?.(activeDroppable)
+				this.options.onEnd?.call(this.context, activeDroppable)
 			}
 		}
 
