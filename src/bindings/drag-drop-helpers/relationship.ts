@@ -69,15 +69,12 @@ class DragDropRelationship {
 			if (this.dragging.options.followElementRenderer) {
 				let rendered = this.followElementRendered = render(this.dragging.options.followElementRenderer)
 				await rendered.connectManually()
+
 				followEl = rendered.el.firstElementChild as HTMLElement | null
+					?? this.dragging!.el.cloneNode(true) as HTMLElement
 			}
 			else {
 				followEl = this.dragging!.el.cloneNode(true) as HTMLElement
-			}
-
-			// No dragging followed element.
-			if (!followEl) {
-				return
 			}
 
 			if (dragging.options.draggingClassName) {

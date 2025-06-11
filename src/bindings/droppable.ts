@@ -9,8 +9,14 @@ export interface DroppableOptions<T> {
 	/** `name` for droppable, can drop draggable to droppable only when name match. */
 	name: string | string[]
 
+	/** Whether can drop files on. */
+	readonly fileDroppable: boolean
+
+	/** Drop effect for file dropping. */
+	readonly fileDropEffect: 'none' | 'copy' | 'link' | 'move'
+
 	/** Add this class name after mouse enter, and remove it after mouse leave. */
-	enterClassName?: string
+	readonly enterClassName?: string
 
 	/** 
 	 * The align direction of child draggable elements.
@@ -19,16 +25,24 @@ export interface DroppableOptions<T> {
 	 */
 	itemsAlignDirection?: HVDirection
 
-	/** Get called after mouse enter into a droppable area. */
+	/** 
+	 * Get called after mouse enter into a droppable area.
+	 * If `fileDroppable`, will accept `DataTransfer` as drop data.
+	 */
 	onEnter?: (data: T, toIndex: number) => void
 
-	/** Get called after mouse leave from a droppable area. */
+	/** 
+	 * Get called after mouse leave from a droppable area.
+	 * If `fileDroppable`, will accept `DataTransfer` as drop data.
+	 */
 	onLeave?: (data: T, toIndex: number) => void
 }
 
 
 const DefaultDroppableOptions: DroppableOptions<any> = {
-	name: ''
+	name: '',
+	fileDroppable: false,
+	fileDropEffect: 'copy',
 }
 
 
@@ -37,7 +51,7 @@ const DefaultDroppableOptions: DroppableOptions<any> = {
  * A `:droppable` element should normally contains several `:draggable`.
  * 
  * :droppable=${onDrop, ?options}
- * - onDrop: `(dropData, dragIndex) => void`
+ * - onDrop: `(dropData, dragIndex) => void`, if `fileDroppable`, will accept `DataTransfer` as drop data.
  * - options: droppable options.
  */
 export class droppable<T = any> implements Binding, Part {
@@ -45,7 +59,7 @@ export class droppable<T = any> implements Binding, Part {
 	readonly el: HTMLElement
 	readonly context: any
 
-	options: DroppableOptions<T> = {name: ''}
+	options: DroppableOptions<T> = DefaultDroppableOptions
 
 	private dropCallback!: (data: T, toIndex: number) => void
 	private connected: boolean = false
@@ -61,9 +75,12 @@ export class droppable<T = any> implements Binding, Part {
 		}
 
 		DOMEvents.on(this.el, 'mouseenter', this.onMouseEnter, this)
-		
-		// To avoid image dragging handled be HTML5 drag & drop
-		this.el.setAttribute('draggable', 'false')
+
+		if (this.options.fileDroppable) {
+			DOMEvents.on(this.el, 'dragover', this.onDragOver, this)
+			DOMEvents.on(this.el, 'dragenter', this.onDragEnter, this)
+			DOMEvents.on(this.el, 'drop', this.onDrop, this)
+		}
 
 		this.connected = true
 	}
@@ -74,10 +91,17 @@ export class droppable<T = any> implements Binding, Part {
 		}
 
 		DOMEvents.off(this.el, 'mouseenter', this.onMouseEnter, this)
+
+		if (this.options.fileDroppable) {
+			DOMEvents.off(this.el, 'dragover', this.onDragOver, this)
+			DOMEvents.off(this.el, 'dragenter', this.onDragEnter, this)
+			DOMEvents.off(this.el, 'drop', this.onDrop, this)
+		}
+
 		this.connected = false
 	}
 
-	update(ondrop: (data: T, toIndex: number) => void, options: DroppableOptions<T>) {
+	update(ondrop: (data: T, toIndex: number) => void, options: Partial<DroppableOptions<T>> = {}) {
 		this.dropCallback = ondrop
 		this.options = {...DefaultDroppableOptions, ...options}
 	}
@@ -85,6 +109,63 @@ export class droppable<T = any> implements Binding, Part {
 	private onMouseEnter() {
 		GlobalDragDropRelationship.enterDrop(this)
 		DOMEvents.once(this.el, 'mouseleave', this.onMouseLeave, this)
+	}
+
+	private onDragEnter(e: DragEvent) {
+		if (!this.isFileItemExisting(e)) {
+			return
+		}
+
+		if (this.options.enterClassName) {
+			this.el.classList.add(this.options.enterClassName)
+		}
+
+		if (this.options.onEnter) {
+			this.options.onEnter(e.dataTransfer as T, 0)
+		}
+
+		DOMEvents.once(this.el, 'dragleave', this.onDragLeave, this)
+	}
+
+	private isFileItemExisting(e: DragEvent): boolean {
+		if (!e.dataTransfer?.items) {
+			return false
+		}
+		
+		for (let item of e.dataTransfer.items) {
+			if (item.kind === 'file') {
+				return true
+			}
+		}
+
+		return false
+	}
+
+	private onDragOver(e: DragEvent) {
+
+		// Allow files drop here.
+		if (this.isFileItemExisting(e)) {
+			e.preventDefault()
+			e.dataTransfer!.dropEffect = this.options.fileDropEffect
+		}
+	}
+
+	private onDragLeave(e: DragEvent) {
+		if (this.options.enterClassName) {
+			this.el.classList.remove(this.options.enterClassName)
+		}
+
+		if (this.options.onLeave) {
+			this.options.onLeave(e.dataTransfer as T, 0)
+		}
+	}
+
+	private onDrop(e: DragEvent) {
+
+		// Prevent file from being opened.
+		e.preventDefault()
+
+		this.dropCallback.call(this.context, e.dataTransfer as T, 0)
 	}
 
 	/** After draggable enter current droppable. */
@@ -118,8 +199,6 @@ export class droppable<T = any> implements Binding, Part {
 	 * `insertIndex` indicates at which index should insert into on 'reorder' mode.
 	 */
 	fireDrop(dragging: draggable<T>, insertIndex: number) {
-		if (this.dropCallback) {
-			this.dropCallback.call(this.context, dragging.data as T, insertIndex)
-		}
+		this.dropCallback.call(this.context, dragging.data as T, insertIndex)
 	}
 }
