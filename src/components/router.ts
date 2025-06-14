@@ -1,38 +1,9 @@
 import {Component, RenderResult} from '@pucelle/lupos.js'
-import {computed, DOMEvents} from '@pucelle/ff'
+import {DOMEvents} from '@pucelle/ff'
 import {getPathMatcher} from './router-helpers/path-match'
 import {PathMatcher} from './router-helpers/path-matcher'
+import {Popup} from './popup'
 
-
-/** Options of each route. */
-export interface RouteItem {
-
-	/** 
-	 * Path, can be a wild match string like `/user/:id`,
-	 * or `*` to match some characters exclude `/`.
-	 * Can also be a regexp.
-	 */
-	path: string | RegExp
-
-	/** 
-	 * If provided, will update `document.title` if associated route path match.
-	 * For complex title, may choose to replace in route component.
-	 */
-	title?: string
-
-	/** 
-	 * Either be a template result 'html`...`',
-	 * or a render function like '(params) => html`...`'.
-	 * 
-	 * If wanting to render sub routers, just render a sub `<Router>` here,
-	 * passes `restPath` as it's path. Such as `/user/123/doc/456 `,
-	 * after match `/user/:userId`, * rest path is `/doc/456`.
-	 */
-	render?: RenderResult | ((params: Record<string | number, string>, restPath: string) => RenderResult)
-
-	/** If specified, and route path match, will redirect to this path. */
-	redirect?: string
-}
 
 export interface RouterEvents {
 
@@ -44,7 +15,7 @@ export interface RouterEvents {
 export interface RouterHistoryState {
 
 	/** An unique auto increment id. */
-	id: number
+	index: number
 
 	/** State path, normally starts with `/`. */
 	path: string
@@ -58,9 +29,7 @@ type RouterChangeType = 'redirect' | 'goto'
 /** 
  * `<Router>` can be used as topmost container to contains everything that should be routed, 
  * it chooses to render depends on current path.
- * 
- * You will need initialize start path by `this.push(...)` or this.replace(...).
- * 
+ *
  * ```ts
  *   this.route('/user:id', ({id}) => {
  *     return html`User Id: ${id}`
@@ -68,6 +37,33 @@ type RouterChangeType = 'redirect' | 'goto'
  * ```
  */
 export class Router<E = {}> extends Component<RouterEvents & E> {
+
+	/** `Router.fromClosest` can locate original component when within popup content. */
+	static fromClosest<C extends {new(...args: any): any}>(this: C, element: Element, searchDepth: number = 50): InstanceType<C> | null {
+		let parent: Element | null = element
+		let depth = 0
+
+		while (parent) {
+			let com = Component.from(parent) as Component
+
+			if (com && com instanceof Router) {
+				return com as InstanceType<C>
+			}
+			else if (com && com instanceof Popup) {
+				parent = com.getTriggerElement()
+			}
+			else {
+				parent = parent.parentElement
+			}
+
+			if (depth >= searchDepth) {
+				break
+			}
+		}
+
+		return null
+	}
+
 
 	/** 
 	 * Current path, no matter normal path or popup path.
@@ -77,80 +73,37 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 	path: string = ''
 
 	/** 
-	 * Route match items.
-	 * It's order is matters, will match each from front to end.
+	 * If in hash mode, will apply hash instead of applying pathname.
+	 * Use this if there is only a single page.
 	 */
-	routes: RouteItem[] = []
+	hashMode: boolean = false
 
-	/** Auto increment id. */
-	protected incrementId: number = 0
+	/** Current history state. */
+	protected state!: RouterHistoryState
 
-	/** 
-	 * Current history state.
-	 * Readonly outside.
-	 */
-	protected state: RouterHistoryState | null = null
-
-	/** All the route matchers. */
-	@computed
-	protected get matchers(): PathMatcher[] {
-		return this.routes.map(route => {
-			return getPathMatcher(route.path) 
-		})
-	}
+	/** To indicate latest state index. */
+	protected latestStateIndex: number = 0
 
 	protected onConnected() {
 		super.onConnected()
 
 		if (!this.path) {
-			this.path = location.pathname
+			if (this.hashMode) {
+				this.path = location.hash.slice(1) || '/'
+			}
+			else {
+				this.path = location.pathname || '/'
+			}
 		}
 
-		let route = this.findRoute()
-		if (route && route.redirect) {
-			this.redirectTo(route.redirect)
-		}
-
+		this.state = {index: 0, path: this.path}
+		this.replaceHistoryState(this.state)
 		DOMEvents.on(window, 'popstate', this.onWindowPopState as (e: Event) => void, this)
 	}
 
 	protected onWillDisconnect() {
 		super.onWillDisconnect()
 		DOMEvents.off(window, 'popstate', this.onWindowPopState as (e: Event) => void, this)
-	}
-
-	protected findRoute(): RouteItem | null {
-		let index = this.findRouteIndex()
-		if (index === -1) {
-			return null
-		} 
-
-		return this.routes[index]
-	}
-
-	protected findRouteIndex(): number {
-		return this.routes.findIndex((_r, index) => {
-			let matcher = this.matchers[index]
-			return matcher.test(this.path)
-		})
-	}
-
-	protected render(): RenderResult {
-		let index = this.findRouteIndex()
-		let item = index === -1 ? null : this.routes[index]
-		if (!item || !item.render) {
-			return null
-		}
-
-		if (typeof item.render === 'function') {
-			let matcher = this.matchers[index]
-			let params = matcher.match(this.path)!
-
-			return item.render(params, this.path.slice(params[0].length))
-		}
-		else {
-			return item.render
-		}
 	}
 
 	protected onWindowPopState(e: PopStateEvent) {
@@ -167,7 +120,8 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 			return
 		}
 
-		let state = {id: this.incrementId++, path}
+		let newIndex = this.latestStateIndex = this.state.index + 1
+		let state = {index: newIndex, path}
 		this.handleGotoState(state)
 	}
 
@@ -182,17 +136,18 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 	}
 
 	protected pushHistoryState(state: RouterHistoryState) {
-		let uri = state.path
+		let uri = this.getHistoryURI(state.path)
 		history.pushState(state, '', uri)
 	}
 
-	/** 
-	 * Use this to push a history state separately without affecting rendering.
-	 * So later can navigate back to this state.
-	 */
-	pushHistoryOnly(path: string) {
-		let state = {id: this.incrementId++, path}
-		this.pushHistoryState(state)
+	protected getHistoryURI(path: string) {
+		let uri = path
+
+		if (this.hashMode) {
+			uri = location.pathname + location.search + '#' + path
+		}
+
+		return uri
 	}
 
 	/** Redirect to a new path and update render result, replace current history state. */
@@ -201,7 +156,9 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 			return
 		}
 
-		let state = {id: this.incrementId++, path}
+		let newIndex = this.latestStateIndex = this.state.index
+		let state = {index: newIndex, path}
+
 		this.handleRedirectToState(state)
 	}
 
@@ -216,7 +173,7 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 	}
 
 	protected replaceHistoryState(state: RouterHistoryState) {
-		let uri = state.path
+		let uri = this.getHistoryURI(state.path)
 		history.replaceState(state, '', uri)
 	}
 
@@ -224,9 +181,53 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 		this.fire('change', type, newState, oldState)
 	}
 
+	/** `isRedirection` determines redirect or go to a path.  */
+	navigateTo(path: string, isRedirection: boolean) {
+		if (isRedirection) {
+			this.redirectTo(path)
+		}
+		else {
+			this.goto(path)
+		}
+	}
+
+	/** 
+	 * Use this to push a history state separately without affecting rendering.
+	 * So later can navigate back to this path.
+	 */
+	pushHistoryOnly(path: string) {
+		let newIndex = this.latestStateIndex = this.state.index + 1
+		let state = {index: newIndex, path}
+		this.pushHistoryState(state)
+	}
+
+	/** Check whether can go back. */
+	canGoBack() {
+		return this.state && this.state.index > 0
+	}
+
+	/** Check whether can go back. */
+	canGoForward() {
+		return this.state && this.state.index < this.latestStateIndex
+	}
+
 	/** Test whether current path match specified route path. */
 	test(routePath: string | RegExp): boolean {
 		let matcher = new PathMatcher(routePath)
 		return matcher.test(this.path)
+	}
+
+	/** 
+	 * Render content if route path match.
+	 * `renderFn` receives:
+	 *  - `{id: '12345'}` for router paths like `/user/:id`,
+	 *  - `{0: '12345'}` for router regexps like `/\/user\/(\d+)/`,
+	 *  - `{id: '12345'}` for router regexps like `/\/user\/(?<id>\d+)/`.
+	 */
+	route(path: string | RegExp, renderFn: (params: Record<string | number, string>) => RenderResult): RenderResult {
+		let matcher =  getPathMatcher(path)
+		let params = matcher.match(this.path)!
+
+		return renderFn(params)
 	}
 }

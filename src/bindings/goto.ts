@@ -1,5 +1,4 @@
-import {Binding, Component} from '@pucelle/lupos.js'
-import {Popup} from '../components/popup'
+import {Binding} from '@pucelle/lupos.js'
 import {DOMEvents} from '@pucelle/ff'
 import {Router} from '../components'
 
@@ -31,7 +30,7 @@ export class goto implements Binding {
 	}
 	
 	protected findRouter() {
-		let router = findClosestRouter(this.el.parentElement!)
+		let router = Router.fromClosest(this.el.parentElement!)
 		if (!router) {
 			console.error(`":goto" must be contained in "<Router>"!`)
 		}
@@ -55,24 +54,3 @@ export class redirectTo extends goto{
 	}
 }
 
-
-/** Get closest router by walking ancestor element. */
-export function findClosestRouter(el: Element): Router | null {
-	let parent: Element | null = el
-
-	while (parent) {
-		let com = Component.from(parent) as Component
-
-		if (com && com instanceof Router) {
-			return com
-		}
-		else if (com && com instanceof Popup) {
-			parent = com.getTriggerElement()
-		}
-		else {
-			parent = parent.parentElement
-		}
-	}
-
-	return null
-}

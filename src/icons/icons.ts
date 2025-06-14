@@ -9,6 +9,7 @@ import confirm from '../../icons/confirm.svg'
 import down from '../../icons/down.svg'
 import error from '../../icons/error.svg'
 import info from '../../icons/info.svg'
+import left from '../../icons/left.svg'
 import love from '../../icons/love.svg'
 import orderAsc from '../../icons/order-asc.svg'
 import orderDefault from '../../icons/order-default.svg'
@@ -82,6 +83,7 @@ icons.add(
 	error,
 	info,
 	love,
+	left,
 	orderAsc,
 	orderDefault,
 	orderDesc,
