@@ -24,6 +24,7 @@ import triangleDown from '../../icons/triangle-down.svg'
 import triangleRight from '../../icons/triangle-right.svg'
 import warning from '../../icons/warning.svg'
 import refresh from '../../icons/refresh.svg'
+import up from '../../icons/up.svg'
 
 
 interface IconItem {
@@ -97,4 +98,5 @@ icons.add(
 	triangleRight,
 	warning,
 	refresh,
+	up,
 )
