@@ -318,7 +318,9 @@ export class Notification<E = {}> extends Component<E> {
 				let item: NotificationItem = {
 					...options,
 					hovering: false,
-					timeout: null,
+
+					// Can release previous timeout.
+					timeout: this.items[itemIndex].timeout,
 				} as NotificationItem
 
 				this.items[itemIndex] = item
