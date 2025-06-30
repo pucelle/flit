@@ -259,7 +259,8 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		if (!this.isIndexRendered(index)) {
-			await this.toRenderItemAtIndex(index, 'start')
+			let alignDirection: 'start' | 'end' = index >= this.startIndex ? 'start' : 'end'
+			await this.toRenderItemAtIndex(index, alignDirection)
 		}
 
 		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)

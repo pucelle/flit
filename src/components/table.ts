@@ -51,6 +51,19 @@ export interface TableColumn<T = any> {
 	 */
 	orderBy?: ((item: T) => string | number | null | undefined) | string
 
+	/**
+     * Whether enables numeric sorting.
+     * Can only apply on string type data value.
+     * Default value is false.
+     */
+	orderNumeric?: boolean
+
+	/**
+	  * Whether disables case sensitivity.
+	  * Can only apply on string type data value.
+	  */
+	orderIgnoreCase?: boolean
+
 	/** If specified as `true`, will use `desc` order ahead of `asc` when doing ordering. */
 	descFirst?: boolean
 
@@ -370,13 +383,23 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		let column = this.columns.find((c, index) => this.getColumnName(c, index) === this.orderName)
 
 		if (this.store instanceof RemoteStore) {
-			this.store.orderName = this.orderName
+			if (this.orderName && this.orderDirection) {
+				this.store.orderName = this.orderName
+				this.store.orderDirection = this.orderDirection
+			}
+			else {
+				this.store.orderName = null
+				this.store.orderDirection = null
+			}
 		}
 		else {
-			this.store.order = column?.orderBy ?? this.orderName
+			this.store.setOrder(
+				column?.orderBy ?? this.orderName,
+				this.orderDirection,
+				column?.orderNumeric,
+				column?.orderIgnoreCase
+			)
 		}
-
-		this.store.orderDirection = this.orderDirection
 	}
 
 	/** The start index of the first item. */

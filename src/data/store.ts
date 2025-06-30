@@ -7,10 +7,7 @@ export interface StoreOptions<T> {
 	filter: ((item: T) => boolean) | null
 
 	/** Order rule, can include several column keys and direction. */
-	order:keyof T | ListUtils.OrderRule<T> | null
-
-	/** Additional order direction overlay with order. */
-	orderDirection: ListUtils.OrderDirection | null
+	order: ListUtils.OrderRule<T> | null
 
 	/** Full data before filtering or ordering. */
 	data: T[]
@@ -24,19 +21,38 @@ export interface StoreOptions<T> {
 export class Store<T = any> implements StoreOptions<T>, Observed {
 	
 	filter: ((item: T) => boolean) | null = null
-	order: keyof T | ListUtils.OrderRule<T> | null = null
-	orderDirection: ListUtils.OrderDirection | null = null
+	order: ListUtils.OrderRule<T> | null = null
 	data: T[] = []
 
 	constructor(options: Partial<StoreOptions<T>> = {}) {
 		Object.assign(this, options)
 	}
 
+	/** Set new order rule. */
+	setOrder(
+		by: ListUtils.OrderKey<T> | ListUtils.OrderFunction<T> | null,
+		direction: ListUtils.OrderDirection | null = null,
+		numeric: boolean = false,
+		ignoreCase: boolean = false
+	) {
+		if (!by || direction === null) {
+			this.order = null
+		}
+		else {
+			this.order = {
+				by,
+				direction: direction!,
+				numeric,
+				ignoreCase,
+			}
+		}
+	}
+
 	/** To do data items ordering. */
 	@computed
 	get listOrder(): ListUtils.Order<T> | null {
 		if (this.order !== null) {
-			return new ListUtils.Order(this.order as ListUtils.OrderRule<T>)
+			return new ListUtils.Order(this.order)
 		}
 		else {
 			return null
@@ -52,12 +68,12 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 			data = data.filter(this.filter)
 		}
 		
-		if (this.listOrder && this.orderDirection !== null) {
+		if (this.listOrder) {
 			if (this.filter) {
-				this.listOrder.sort(data, this.orderDirection)
+				this.listOrder.sort(data)
 			}
 			else {
-				data = this.listOrder.toSorted(data, this.orderDirection)
+				data = this.listOrder.toSorted(data)
 			}
 		}
 
