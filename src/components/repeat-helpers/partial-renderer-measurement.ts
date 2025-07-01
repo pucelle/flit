@@ -24,6 +24,27 @@ interface LatestPlaceholderProperties {
 	placeholderSize: number
 }
 
+interface LatestSliderPositionProperties {
+
+	/** Latest start index when last time updating. */
+	startIndex: number
+
+	/** Latest end index when last time updating. */
+	endIndex: number
+
+	/** 
+	 * Latest top/left position of slider, update it before or after every time rendered.
+	 * Readonly outside.
+	 */
+	startPosition: number
+
+	/** 
+	 * Latest bottom/right position of slider, update it before or after every time rendered.
+	 * Readonly outside.
+	 */
+	endPosition: number
+}
+
 
 /** Indicates a continuous render range. */
 interface ContinuousRenderRange {
@@ -68,10 +89,16 @@ export class PartialRendererMeasurement {
 	private preAdditionalStat: PartialRendererSizeStat | null = null
 
 	/** 
-	 * Latest properties use when last time measure placeholder,
+	 * Latest scroller size.
+	 * Readonly outside.
+	 */
+	scrollerSize: number = 0
+
+	/** 
+	 * Latest placeholder properties use when last time measure placeholder,
 	 * thus, can avoid update placeholder when scrolling up.
 	 */
-	cachedPlaceholderProperties: LatestPlaceholderProperties = {
+	latestPlaceholderProperties: LatestPlaceholderProperties = {
 		endIndex: 0,
 		itemSize: 0,
 		dataCount: 0,
@@ -79,22 +106,15 @@ export class PartialRendererMeasurement {
 	}
 
 	/** 
-	 * Latest scroller size.
-	 * Readonly outside.
+	 * Latest slider position properties use when last time updating,
+	 * thus, can reuse it to do continuous layout measurement.
 	 */
-	cachedScrollerSize: number = 0
-
-	/** 
-	 * Latest top/left position of slider, update it before or after every time rendered.
-	 * Readonly outside.
-	 */
-	cachedSliderStartPosition: number = 0
-
-	/** 
-	 * Latest bottom/right position of slider, update it before or after every time rendered.
-	 * Readonly outside.
-	 */
-	cachedSliderEndPosition: number = 0
+	latestSliderPositionProperties: LatestSliderPositionProperties = {
+		startIndex: 0,
+		endIndex: 0,
+		startPosition: 0,
+		endPosition: 0,
+	}
 
 	constructor(
 		scroller: HTMLElement,
@@ -119,18 +139,20 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Set new slider position. */
-	cacheSliderPosition(position: number, alignDirection: 'start' | 'end') {
+	cacheSliderPosition(index: number, position: number, alignDirection: 'start' | 'end') {
 		if (alignDirection === 'start') {
-			this.cachedSliderStartPosition = position
+			this.latestSliderPositionProperties.startIndex = index
+			this.latestSliderPositionProperties.startPosition = position
 		}
 		else {
-			this.cachedSliderEndPosition = position
+			this.latestSliderPositionProperties.endIndex = index
+			this.latestSliderPositionProperties.endPosition = position
 		}
 	}
 
 	/** Read new scroller size. */
 	readScrollerSize() {
-		this.cachedScrollerSize = this.doa.getClientSize(this.scroller)
+		this.scrollerSize = this.doa.getClientSize(this.scroller)
 	}
 
 	/* Whether has measured. */
@@ -148,7 +170,7 @@ export class PartialRendererMeasurement {
 	 * If `proposed` specified, and finally render count close to it, will use it.
 	 */
 	getSafeRenderCount(reservedPixels: number, proposed: number): number {
-		if (this.cachedScrollerSize === 0) {
+		if (this.scrollerSize === 0) {
 			return 1
 		}
 
@@ -158,8 +180,8 @@ export class PartialRendererMeasurement {
 		}
 
 		// Because normally can scroll twice per frame.
-		let totalSize = this.cachedScrollerSize + reservedPixels
-		let minimumCount = this.cachedScrollerSize / itemSize
+		let totalSize = this.scrollerSize + reservedPixels
+		let minimumCount = this.scrollerSize / itemSize
 		let count = totalSize / itemSize
 
 		if (Math.abs(count - proposed) < 0.5 && proposed > minimumCount) {
@@ -188,7 +210,7 @@ export class PartialRendererMeasurement {
 				return this.getItemSize() * startOrEndIndex
 			}
 			else {
-				return this.getItemSize() * startOrEndIndex + this.cachedScrollerSize
+				return this.getItemSize() * startOrEndIndex + this.scrollerSize
 			}
 		}
 	}
@@ -222,30 +244,33 @@ export class PartialRendererMeasurement {
 		let sliderClientSize = this.doa.getClientSize(this.slider)
 		let paddingSize = sliderClientSize - sliderInnerSize
 
+		// Measure for unknown end position.
 		if (alignDirection === 'start') {
-			this.cachedSliderEndPosition = this.cachedSliderStartPosition + sliderClientSize
+			this.latestSliderPositionProperties.endIndex = endIndex
+			this.latestSliderPositionProperties.endPosition = this.latestSliderPositionProperties.startPosition + sliderClientSize
 		}
 		else {
-			this.cachedSliderStartPosition = this.cachedSliderEndPosition - sliderClientSize
+			this.latestSliderPositionProperties.startIndex = startIndex
+			this.latestSliderPositionProperties.startPosition = this.latestSliderPositionProperties.endPosition - sliderClientSize
 		}
 
 		if (this.continuousRenderRange) {
 			if (startIndex <= this.continuousRenderRange.startIndex) {
 				this.continuousRenderRange.startIndex = startIndex
-				this.continuousRenderRange.startPosition = this.cachedSliderStartPosition
+				this.continuousRenderRange.startPosition = this.latestSliderPositionProperties.startPosition
 			}
 
 			if (endIndex >= this.continuousRenderRange.endIndex) {
 				this.continuousRenderRange.endIndex = endIndex
-				this.continuousRenderRange.endPosition = this.cachedSliderEndPosition
+				this.continuousRenderRange.endPosition = this.latestSliderPositionProperties.endPosition
 			}
 		}
 		else {
 			this.continuousRenderRange = {
 				startIndex,
 				endIndex,
-				startPosition: this.cachedSliderStartPosition,
-				endPosition: this.cachedSliderEndPosition
+				startPosition: this.latestSliderPositionProperties.startPosition,
+				endPosition: this.latestSliderPositionProperties.endPosition
 			}
 		}
 
@@ -269,22 +294,22 @@ export class PartialRendererMeasurement {
 	 * Whether should update placeholder size.
 	 * When scrolling down and item size changed much, need to update.
 	 */
-	shouldUpdatePlaceholderSize(startIndex: number, endIndex: number, dataCount: number): boolean {
+	shouldUpdatePlaceholderSize(endIndex: number, dataCount: number): boolean {
 
 		// Data count get changed.
-		if (dataCount !== this.cachedPlaceholderProperties.dataCount) {
+		if (dataCount !== this.latestPlaceholderProperties.dataCount) {
 			return true
 		}
 
 		// When scrolling up, not update.
-		let scrollingDown = endIndex > this.cachedPlaceholderProperties.endIndex
+		let scrollingDown = endIndex > this.latestPlaceholderProperties.endIndex
 		if (!scrollingDown) {
 			return false
 		}
 
-		let newPlaceholderSize = this.calcPlaceholderSize(startIndex, endIndex, dataCount, 'start')
-		let guessSizeAfterEnd = newPlaceholderSize - this.cachedSliderEndPosition
-		let currentSizeAfterEnd = this.cachedPlaceholderProperties.placeholderSize - this.cachedSliderEndPosition
+		let newPlaceholderSize = this.calcPlaceholderSize(dataCount)
+		let guessSizeAfterEnd = newPlaceholderSize - this.latestSliderPositionProperties.endPosition
+		let currentSizeAfterEnd = this.latestPlaceholderProperties.placeholderSize - this.latestSliderPositionProperties.endPosition
 		let sizeChangedMuch = Math.abs(guessSizeAfterEnd - currentSizeAfterEnd) / Math.max(guessSizeAfterEnd, currentSizeAfterEnd) > 0.333
 
 		return sizeChangedMuch
@@ -295,34 +320,39 @@ export class PartialRendererMeasurement {
 	 * When scrolling down, and will render more items in the end, update size.
 	 * No need to update when scrolling up.
 	 */
-	calcPlaceholderSize(startIndex: number, endIndex: number, dataCount: number, alignDirection: 'start' | 'end') {
+	calcPlaceholderSize(dataCount: number) {
 		if (this.preEndPositions) {
 			let end = this.preEndPositions.length > 0 ? this.preEndPositions[this.preEndPositions.length - 1] : 0
 			let additionalItemSize = this.preAdditionalStat!.getLatestSize()
 
 			return end + additionalItemSize * dataCount
 		}
-		else {
-			let itemSize = this.getItemSize()
-	
-			// If has measured before.
-			if (this.cachedPlaceholderProperties.itemSize > 0) {
-				if (alignDirection === 'start') {
-					return itemSize * (dataCount - startIndex) + this.cachedSliderStartPosition
-				}
-				else {
-					return itemSize * (dataCount - endIndex) + this.cachedSliderEndPosition
-				}
-			}
-			else {
-				return itemSize * dataCount
-			}
+
+		let itemSize = this.getItemSize()
+		let positionProperties = this.latestSliderPositionProperties
+
+		// Can reuse previous measured end slider position properties.
+		if (positionProperties.endIndex <= dataCount
+			&& positionProperties.endIndex > 0
+			&& positionProperties.endPosition > 0
+		) {
+			return this.latestSliderPositionProperties.endPosition + itemSize * (dataCount - positionProperties.endIndex)
 		}
+
+		// Can reuse previous measured start slider position properties.
+		if (positionProperties.startIndex <= dataCount
+			&& positionProperties.startIndex > 0
+			&& positionProperties.startPosition > 0
+		) {
+			return this.latestSliderPositionProperties.startPosition + itemSize * (dataCount - positionProperties.startIndex)
+		}
+
+		return itemSize * dataCount
 	}
 
 	/** Cache placeholder size and other properties. */
 	cachePlaceholderProperties(endIndex: number, dataCount: number, placeholderSize: number) {
-		this.cachedPlaceholderProperties = {
+		this.latestPlaceholderProperties = {
 			endIndex,
 			itemSize: this.stat.getLatestSize(),
 			dataCount,
@@ -331,11 +361,11 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Check cover situation and decide where to render more contents. */
-	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number, _scrollDirection: 'start' | 'end' | null): UnCoveredSituation | null {
+	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number): UnCoveredSituation | null {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)
 		let scrolled = this.doa.getScrolled(this.scroller)
-		let sliderStart = this.cachedSliderStartPosition - scrolled
+		let sliderStart = this.latestSliderPositionProperties.startPosition - scrolled
 		let sliderEnd = sliderStart + sliderSize
 		let unexpectedScrollStart = scrolled === 0 && startIndex > 0
 

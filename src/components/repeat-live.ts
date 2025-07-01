@@ -212,7 +212,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
-			this.renderer!.measurement.cachedSliderStartPosition,
+			this.renderer!.measurement.latestSliderPositionProperties.startPosition,
 			offset
 		)
 		
@@ -248,8 +248,27 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	/** To ensure item at index get rendered. */
-	protected async toRenderItemAtIndex(startIndex: number | undefined, alignDirection: 'start' | 'end') {
-		this.renderer!.setRenderIndices(startIndex, undefined, alignDirection, true)
+	protected async toRenderItemAtIndex(index: number, alignDirection: 'start' | 'end') {
+		let startIndex: number | undefined
+		let endIndex: number | undefined
+		let renderCount = this.endIndex - this.startIndex
+
+		if (alignDirection === 'start') {
+			startIndex = index
+		}
+		else {
+			let endVisibleIndex = this.getEndVisibleIndex()
+
+			// Can't persist continuous.
+			if (endVisibleIndex - index > renderCount) {
+				startIndex = index
+			}
+			else {
+				endIndex = endVisibleIndex
+			}
+		}
+
+		this.renderer!.setRenderIndices(startIndex, endIndex, alignDirection, true)
 		this.willUpdate()
 
 		// Wait for two loops, may check after first rendering and re-render.
