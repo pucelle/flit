@@ -85,7 +85,7 @@ export class Dialog<E = {}> extends Component<E> {
 	static style = css`
 		.dialog{
 			z-index: 1000;
-			width: 25em;
+			width: 30em;
 			position: fixed;
 			border-radius: var(--popup-border-radius);
 			box-shadow: 0 0 var(--popup-shadow-blur-radius) var(--popup-shadow-color);
@@ -141,6 +141,7 @@ export class Dialog<E = {}> extends Component<E> {
 			min-width: 0;
 			line-height: 1.4;
 			padding: 0.2em 0;
+			word-break: break-word;
 		}
 
 		.dialog-list{
