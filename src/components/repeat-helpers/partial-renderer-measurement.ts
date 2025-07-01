@@ -6,8 +6,6 @@ import {binaryFindInsertIndexWithAdditionSize} from './binary-find'
 export type UnCoveredSituation =
 	'start'				// Not fully covered at start
 	| 'end'				// Not fully covered at end
-	| 'quarterly-start'	// Has less than 1/4 rest at start
-	| 'quarterly-end'	// Has less than 1/4 rest at end
 	| 'break'			// Have no intersection, ust re-render totally by current scroll position.
 
 
@@ -333,7 +331,7 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Check cover situation and decide where to render more contents. */
-	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number, scrollDirection: 'start' | 'end' | null): UnCoveredSituation | null {
+	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number, _scrollDirection: 'start' | 'end' | null): UnCoveredSituation | null {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)
 		let scrolled = this.doa.getScrolled(this.scroller)
@@ -358,20 +356,6 @@ export class PartialRendererMeasurement {
 		// Can't cover and need to render more items at bottom/right.
 		else if (sliderEnd + 1 < scrollerSize || unexpectedScrollEnd) {
 			return 'end'
-		}
-
-		// Has less than 1/4 rest at start
-		else if (-sliderStart * 4 < sliderSize - scrollerSize) {
-			if (scrollDirection === 'start' && startIndex > 0) {
-				return 'quarterly-start'
-			}
-		}
-
-		// Has less than 1/4 rest at end
-		else if ((sliderEnd - scrollerSize) * 4 < sliderSize - scrollerSize) {
-			if (scrollDirection === 'end' && endIndex < dataCount) {
-				return 'quarterly-end'
-			}
 		}
 
 		// No need to render more.

@@ -1,4 +1,4 @@
-import {AsyncTaskQueue, DOMEvents, ResizeWatcher, Timeout, untilUpdateComplete} from '@pucelle/ff'
+import {AsyncTaskQueue, DOMEvents, ResizeWatcher, untilUpdateComplete} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialRendererMeasurement, UnCoveredSituation} from './partial-renderer-measurement'
@@ -92,9 +92,6 @@ export class PartialRenderer {
 	/** Cache latest scroll direction. */
 	private latestScrollDirection: 'start' | 'end' | null = null
 
-	/** Timeout for quarterly update. */
-	private quarterlyUpdateTimeout!: Timeout
-
 	/** 
 	 * The start index of the first item in the whole data.
 	 * Readonly outside.
@@ -133,9 +130,6 @@ export class PartialRenderer {
 		this.updateRendering = updateRendering
 
 		this.measurement = new PartialRendererMeasurement(scroller, slider, doa)
-
-		// Wait for 1 frames.
-		this.quarterlyUpdateTimeout = new Timeout(this.updateQuarterly.bind(this), 17)
 	}
 
 
@@ -206,7 +200,6 @@ export class PartialRenderer {
 			this.setRenderIndices(this.locateVisibleIndex('start'))
 		}
 
-		this.quarterlyUpdateTimeout.cancel()
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
 		ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)
 	}
@@ -232,7 +225,6 @@ export class PartialRenderer {
 
 	/** Update from applying start index or updating data. */
 	async update() {
-		this.quarterlyUpdateTimeout.cancel()
 		await this.renderQueue.enqueue(() => this.doNormalUpdate())
 
 		// If item size become smaller much, may cause can't fully covered.
@@ -511,7 +503,6 @@ export class PartialRenderer {
 	 * and update if can't, and will also persist content continuous if possible.
 	 */
 	private async checkCoverage() {
-		this.quarterlyUpdateTimeout.cancel()
 
 		// Reach both start and end edge.
 		if (this.startIndex === 0 && this.endIndex === this.dataCount) {
@@ -551,11 +542,6 @@ export class PartialRenderer {
 			}
 
 			await this.updateContinuously(alignDirection, newStartIndex, newEndIndex)
-		}
-
-		// Rerender to get closer to next un-covered after idle.
-		else if (unCoveredSituation === 'quarterly-start' || unCoveredSituation === 'quarterly-end') {
-			this.quarterlyUpdateTimeout.reset()
 		}
 
 		// No intersection, reset indices by current scroll position.
@@ -663,39 +649,6 @@ export class PartialRenderer {
 
 		this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 		this.checkEdgeCasesAfterMeasured()
-	}
-
-	/** Update only a little after scrolling. */
-	private async updateQuarterly() {
-		let scrollDirection = this.latestScrollDirection
-		if (scrollDirection === null) {
-			return
-		}
-
-		await this.renderQueue.enqueue(() => this.doQuarterlyUpdate(scrollDirection))
-	}
-
-	private async doQuarterlyUpdate(scrollDirection: 'start' | 'end') {
-		let alignDirection: 'start' | 'end' = scrollDirection === 'end' ? 'start' : 'end'
-		let visibleIndex = this.locateVisibleIndex(alignDirection)
-		let newStartIndex: number
-		let newEndIndex: number | undefined = undefined
-
-		// Scrolling down, render more at end.
-		if (alignDirection === 'start') {
-			let oldStartIndex = this.startIndex
-			newStartIndex = Math.floor((oldStartIndex  + visibleIndex * 2) / 3)
-		}
-
-		// Scrolling up, render more at end.
-		else {
-			let oldEndIndex = this.endIndex
-
-			newEndIndex = Math.floor((oldEndIndex  + visibleIndex * 2) / 3)
-			newStartIndex = this.startIndex - this.endIndex + newEndIndex
-		}
-
-		await this.updateContinuously(alignDirection, newStartIndex, newEndIndex)
 	}
 
 	/** 
