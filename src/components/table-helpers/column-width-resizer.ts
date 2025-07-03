@@ -1,4 +1,4 @@
-import {DOMEvents, DOMUtils, ListUtils, Observed, untilUpdateComplete, ValueListUtils} from '@pucelle/ff'
+import {DOMEvents, DOMUtils, ListUtils,  untilUpdateComplete, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
 import {html, render} from '@pucelle/lupos.js'
 
@@ -16,7 +16,7 @@ export class ColumnWidthResizer {
 	readonly colgroup: HTMLTableColElement
 	
 	/** Table column configuration. */
-	columns!: Observed<TableColumn[]>
+	columns!: TableColumn[]
 
 	/** Minimum column width in pixels. */
 	minColumnWidth!: number

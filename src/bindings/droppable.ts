@@ -18,12 +18,18 @@ export interface DroppableOptions<T> {
 	/** Add this class name after mouse enter, and remove it after mouse leave. */
 	readonly enterClassName?: string
 
+	/** A class name to find closest ancestor, the found element will be applied `enterClassName`. */
+	readonly enterClassNameApplyTo?: string
+
 	/** 
 	 * The align direction of child draggable elements.
 	 * It indices in which direction an appended draggable element will align.
 	 * It's default value is `vertical`.
 	 */
 	itemsAlignDirection?: HVDirection
+
+	/** Determines whether specified dragging data can drop to current droppable. */
+	canDrop?: (data: T, toIndex: number) => boolean
 
 	/** 
 	 * Get called after mouse enter into a droppable area.
@@ -116,15 +122,39 @@ export class droppable<T = any> implements Binding, Part {
 			return
 		}
 
-		if (this.options.enterClassName) {
-			this.el.classList.add(this.options.enterClassName)
-		}
+		e.preventDefault()
+		e.dataTransfer!.dropEffect = this.options.fileDropEffect
+		this.mayAddEnterClassName()
 
 		if (this.options.onEnter) {
 			this.options.onEnter(e.dataTransfer as T, 0)
 		}
 
-		DOMEvents.once(this.el, 'dragleave', this.onDragLeave, this)
+		DOMEvents.on(this.el, 'dragleave', this.onDragLeave, this)
+	}
+
+	private mayAddEnterClassName() {
+		if (this.options.enterClassName) {
+			let el = this.getElementToApplyEnterStyle()
+			el?.classList.add(this.options.enterClassName)
+		}
+	}
+
+	private mayRemoveEnterClassName() {
+		if (this.options.enterClassName) {
+			let el = this.getElementToApplyEnterStyle()
+			el?.classList.remove(this.options.enterClassName)
+		}
+	}
+
+	private getElementToApplyEnterStyle(): HTMLElement | null {
+		let el: HTMLElement | null = this.el
+
+		if (this.options.enterClassNameApplyTo) {
+			el = el.closest(this.options.enterClassNameApplyTo)
+		}
+
+		return el
 	}
 
 	private isFileItemExisting(e: DragEvent): boolean {
@@ -151,9 +181,15 @@ export class droppable<T = any> implements Binding, Part {
 	}
 
 	private onDragLeave(e: DragEvent) {
-		if (this.options.enterClassName) {
-			this.el.classList.remove(this.options.enterClassName)
+
+		// `relatedTarget` is the element that leaves.
+		if (this.el.contains(e.relatedTarget as Element)
+			&& this.el !== e.relatedTarget
+		) {
+			return
 		}
+		
+		this.mayRemoveEnterClassName()
 
 		if (this.options.onLeave) {
 			this.options.onLeave(e.dataTransfer as T, 0)
@@ -161,18 +197,18 @@ export class droppable<T = any> implements Binding, Part {
 	}
 
 	private onDrop(e: DragEvent) {
-
+	
 		// Prevent file from being opened.
 		e.preventDefault()
+		this.mayRemoveEnterClassName()
 
 		this.dropCallback.call(this.context, e.dataTransfer as T, 0)
+		DOMEvents.off(this.el, 'dragleave', this.onDragLeave, this)
 	}
 
 	/** After draggable enter current droppable. */
 	fireEnter(dragging: draggable<T>) {
-		if (this.options.enterClassName) {
-			this.el.classList.add(this.options.enterClassName)
-		}
+		this.mayAddEnterClassName()
 
 		if (this.options.onEnter) {
 			this.options.onEnter(dragging.data as T, dragging.index)
@@ -185,9 +221,7 @@ export class droppable<T = any> implements Binding, Part {
 
 	/** After draggable leave current droppable. */
 	fireLeave(dragging: draggable<T>) {
-		if (this.options.enterClassName) {
-			this.el.classList.remove(this.options.enterClassName)
-		}
+		this.mayRemoveEnterClassName()
 
 		if (this.options.onLeave) {
 			this.options.onLeave(dragging.data as T, dragging.index)
@@ -199,6 +233,7 @@ export class droppable<T = any> implements Binding, Part {
 	 * `insertIndex` indicates at which index should insert into on 'reorder' mode.
 	 */
 	fireDrop(dragging: draggable<T>, insertIndex: number) {
+		this.mayRemoveEnterClassName()
 		this.dropCallback.call(this.context, dragging.data as T, insertIndex)
 	}
 }

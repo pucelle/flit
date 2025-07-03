@@ -20,7 +20,7 @@ export interface TableEvents {
 }
 
 
-export interface TableColumn<T = any> {
+export interface TableColumn<T = any> extends Observed {
 
 	/** 
 	 * Give a unique name to each column can help to identify current column.
@@ -523,7 +523,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		return this.columns.map((column, index) => this.renderColumn(column, index))
 	}
 
-	protected renderColumn(column: Observed<TableColumn>, index: number) {
+	protected renderColumn(column: TableColumn, index: number) {
 		let orderName = this.getColumnName(column, index)
 		let hasOrdered = this.orderName === orderName
 		let flexAlign = column.align === 'right' ? 'flex-end' : column.align === 'center' ? 'center' : ''

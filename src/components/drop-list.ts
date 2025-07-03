@@ -1,6 +1,6 @@
 import {css, html, RenderResult} from '@pucelle/lupos.js'
 import {List, ListItem} from './list'
-import {fade, Observed} from '@pucelle/ff'
+import {fade} from '@pucelle/ff'
 import {tooltip, contextmenu, popup, PopupOptions} from '../bindings'
 import {Popup} from './popup'
 import {Icon} from './icon'
@@ -43,7 +43,7 @@ export class DropList<T> extends List<T> {
 		`
 	}
 
-	protected renderItem(item: Observed<ListItem<T>>): RenderResult {
+	protected renderItem(item: ListItem<T>): RenderResult {
 		let children = item.children
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
@@ -77,7 +77,7 @@ export class DropList<T> extends List<T> {
 		`
 	}
 
-	protected renderItemPopupContent(item: Observed<ListItem<T>>) {
+	protected renderItemPopupContent(item: ListItem<T>) {
 		let children = item.children
 		if (!children || children.length === 0) {
 			return null
@@ -93,7 +93,7 @@ export class DropList<T> extends List<T> {
 		`
 	}
 
-	protected renderExpandedIcon(item: Observed<ListItem<T>>) {
+	protected renderExpandedIcon(item: ListItem<T>) {
 		let children = item.children
 		if (!children || children.length === 0) {
 			return null

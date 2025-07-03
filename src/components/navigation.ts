@@ -1,6 +1,5 @@
 import {css, html} from '@pucelle/lupos.js'
 import {List, ListItem} from './list'
-import {Observed} from '@pucelle/ff'
 
 
 /** 
@@ -55,7 +54,7 @@ export class Navigation<T> extends List<T> {
 		`
 	}
 
-	protected renderSelectedIcon(_item: Observed<ListItem<T>>) {
+	protected renderSelectedIcon(_item: ListItem<T>) {
 		return null
 	}
 }

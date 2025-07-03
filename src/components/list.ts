@@ -11,7 +11,7 @@ import {tooltip, contextmenu, PopupOptions} from '../bindings'
  * If data struct you have is absolutely different with this,
  * you may declare a class to implement this.
  */
-export type ListItem<T = any> = {
+export interface ListItem<T = any> extends Observed {
 
 	/** Unique value to identify current item. */
 	value?: T
@@ -243,7 +243,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderItems(items: Observed<ListItem<T>[]>): RenderResult {
+	protected renderItems(items: ListItem<T>[]): RenderResult {
 		let anySiblingHaveChildren = items.some(item => {
 			return (item as ListItem<T>).children
 				&& (item as ListItem<T>).children!.length > 0
@@ -257,7 +257,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderItemOrSplitter(item: Observed<ListItem<T>> | {}, anySiblingHaveChildren: boolean): RenderResult {
+	protected renderItemOrSplitter(item: ListItem<T> | {}, anySiblingHaveChildren: boolean): RenderResult {
 		if (!item.hasOwnProperty('value')) {
 			return html`<div class="list-splitter"></div>`
 		}
@@ -266,7 +266,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 	}
 
-	protected renderItem(item: Observed<ListItem<T>>, anySiblingHaveChildren: boolean): RenderResult {
+	protected renderItem(item: ListItem<T>, anySiblingHaveChildren: boolean): RenderResult {
 		let expanded = this.hasExpanded(item)
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
@@ -290,7 +290,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderItemPlaceholder(item: Observed<ListItem<T>>, expanded: boolean, anySiblingHaveChildren: boolean) {
+	protected renderItemPlaceholder(item: ListItem<T>, expanded: boolean, anySiblingHaveChildren: boolean) {
 		let children = item.children
 		if (children && children.length > 0) {
 			return html`
@@ -309,7 +309,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 	}
 
-	protected renderIcon(item: Observed<ListItem<T>>) {
+	protected renderIcon(item: ListItem<T>) {
 		if (item.icon === undefined) {
 			return null
 		}
@@ -323,11 +323,11 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderTooltip(item: Observed<ListItem<T>>): RenderResultRenderer | undefined {
+	protected renderTooltip(item: ListItem<T>): RenderResultRenderer | undefined {
 		return item.tooltip
 	}
 
-	protected renderContextmenu(_item: Observed<ListItem<T>>): RenderResultRenderer {
+	protected renderContextmenu(_item: ListItem<T>): RenderResultRenderer {
 		return null
 	}
 
@@ -335,7 +335,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * Render item content, can be overwritten for sub classes
 	 * who know about more details about data items.
 	 */
-	protected renderItemContent(item: Observed<ListItem<T>>): RenderResult {
+	protected renderItemContent(item: ListItem<T>): RenderResult {
 		return html`
 			<div class="list-content">
 				${this.renderText(item)}
@@ -344,7 +344,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	/** Render text content within each list item. */
-	protected renderText(item: Observed<ListItem<T>>): RenderResult | undefined {
+	protected renderText(item: ListItem<T>): RenderResult | undefined {
 		if (this.textRenderer) {
 			return this.textRenderer(item)
 		}
@@ -353,7 +353,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 	}
 
-	protected renderSelectedIcon(item: Observed<ListItem<T>>) {
+	protected renderSelectedIcon(item: ListItem<T>) {
 		if (!this.hasSelected(item)) {
 			return null
 		}
@@ -363,7 +363,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderSubsection(item: Observed<ListItem<T>>, expanded: boolean) {
+	protected renderSubsection(item: ListItem<T>, expanded: boolean) {
 		let children = item.children
 		if (!children || children.length === 0 || !expanded) {
 			return null
@@ -383,17 +383,17 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	/** Whether an item has been selected.  */
-	protected hasSelected(item: Observed<ListItem<T>>): boolean {
+	protected hasSelected(item: ListItem<T>): boolean {
 		return this.selected.includes(item.value!)
 	}
 
 	/** Whether an item has been expanded.  */
-	protected hasExpanded(item: Observed<ListItem<T>>): boolean {
+	protected hasExpanded(item: ListItem<T>): boolean {
 		return this.expanded.includes(item.value!)
 	}
 
 	/** Toggle expanded state. */
-	protected toggleExpanded(item: Observed<ListItem<T>>) {
+	protected toggleExpanded(item: ListItem<T>) {
 		if (this.hasExpanded(item)) {
 			this.expanded.splice(this.expanded.indexOf(item.value!), 1)
 		}
@@ -405,7 +405,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	/** Do selection or navigation. */
-	protected onClickItem(this: List, item: Observed<ListItem<T>>) {
+	protected onClickItem(this: List, item: ListItem<T>) {
 		if (this.selectable && (this.dirSelectable || !item.children)) {
 			if (this.multipleSelect) {
 				if (this.selected.includes(item.value)) {
