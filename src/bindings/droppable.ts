@@ -13,7 +13,7 @@ export interface DroppableOptions<T> {
 	readonly fileDroppable: boolean
 
 	/** Drop effect for file dropping. */
-	readonly fileDropEffect: 'none' | 'copy' | 'link' | 'move'
+	readonly fileDropEffect?: 'none' | 'copy' | 'link' | 'move'
 
 	/** Add this class name after mouse enter, and remove it after mouse leave. */
 	readonly enterClassName?: string
@@ -48,7 +48,6 @@ export interface DroppableOptions<T> {
 const DefaultDroppableOptions: DroppableOptions<any> = {
 	name: '',
 	fileDroppable: false,
-	fileDropEffect: 'copy',
 }
 
 
@@ -118,12 +117,18 @@ export class droppable<T = any> implements Binding, Part {
 	}
 
 	private onDragEnter(e: DragEvent) {
-		if (!this.isFileItemExisting(e)) {
+		e.stopPropagation()
+
+		if (!this.canDropByDragEvent(e)) {
 			return
 		}
 
 		e.preventDefault()
-		e.dataTransfer!.dropEffect = this.options.fileDropEffect
+
+		if (this.options.fileDropEffect) {
+			e.dataTransfer!.dropEffect = this.options.fileDropEffect
+		}
+
 		this.mayAddEnterClassName()
 
 		if (this.options.onEnter) {
@@ -131,6 +136,32 @@ export class droppable<T = any> implements Binding, Part {
 		}
 
 		DOMEvents.on(this.el, 'dragleave', this.onDragLeave, this)
+	}
+
+	private canDropByDragEvent(e: DragEvent): boolean {
+		if (!this.isFileItemExisting(e)) {
+			return false
+		}
+
+		if (this.options.canDrop && !this.options.canDrop(e.dataTransfer as T, 0)) {
+			return false
+		}
+
+		return true
+	}
+
+	private isFileItemExisting(e: DragEvent): boolean {
+		if (!e.dataTransfer?.items) {
+			return false
+		}
+		
+		for (let item of e.dataTransfer.items) {
+			if (item.kind === 'file') {
+				return true
+			}
+		}
+
+		return false
 	}
 
 	private mayAddEnterClassName() {
@@ -157,30 +188,23 @@ export class droppable<T = any> implements Binding, Part {
 		return el
 	}
 
-	private isFileItemExisting(e: DragEvent): boolean {
-		if (!e.dataTransfer?.items) {
-			return false
-		}
-		
-		for (let item of e.dataTransfer.items) {
-			if (item.kind === 'file') {
-				return true
-			}
-		}
-
-		return false
-	}
-
 	private onDragOver(e: DragEvent) {
+		e.stopPropagation()
+
+		if (!this.canDropByDragEvent(e)) {
+			return
+		}
 
 		// Allow files drop here.
-		if (this.isFileItemExisting(e)) {
-			e.preventDefault()
+		e.preventDefault()
+		
+		if (this.options.fileDropEffect) {
 			e.dataTransfer!.dropEffect = this.options.fileDropEffect
 		}
 	}
 
 	private onDragLeave(e: DragEvent) {
+		e.stopPropagation()
 
 		// `relatedTarget` is the element that leaves.
 		if (this.el.contains(e.relatedTarget as Element)
@@ -197,7 +221,7 @@ export class droppable<T = any> implements Binding, Part {
 	}
 
 	private onDrop(e: DragEvent) {
-	
+
 		// Prevent file from being opened.
 		e.preventDefault()
 		this.mayRemoveEnterClassName()

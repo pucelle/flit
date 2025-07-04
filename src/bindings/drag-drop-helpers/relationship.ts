@@ -125,13 +125,35 @@ class DragDropRelationship {
 	}
 
 	/** Whether dragging can drop to a droppable. */
-	private canDropTo(drop: droppable) {
-		return this.dragging
-			&& (
-				this.dragging.options.name === drop.options.name
-				|| Array.isArray(this.dragging.options.name) && this.dragging.options.name.includes(drop.options.name)
-			)
-			&& this.dragging.el !== drop.el
+	private canDropTo(drop: droppable): boolean {
+		let dragging = this.dragging
+
+		if (!dragging) {
+			return false
+		}
+
+		if (Array.isArray(dragging.options.name)) {
+			if (!dragging.options.name.includes(drop.options.name)) {
+				return false
+			}
+		}
+		else {
+			if (dragging.options.name !== drop.options.name) {
+				return false
+			}
+		}
+
+		if (dragging.el !== drop.el) {
+			return false
+		}
+
+		if (drop.options.canDrop) {
+			if (!drop.options.canDrop(dragging.data, dragging.index)) {
+				return false
+			}
+		}
+
+		return true
 	}
 
 	/** When dragging and leave a droppable. */
