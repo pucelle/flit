@@ -1,14 +1,14 @@
 import {DOMScroll, DOMUtils, Point, Vector} from '@pucelle/ff'
-import type {draggable} from '../draggable'
+import {DraggableBase} from '../draggable'
 import {droppable} from '../droppable'
 import {EdgeMovementTimer} from '../../components/rect-selection-helpers/edge-movement-timer'
 
 
-/** To handle dragging element movements */
-export class DragOnlyMovement {
+/** To handle draggable element movements. */
+export class DragMovement {
 	
 	/** Dragging draggable. */
-	protected readonly dragging: draggable
+	protected readonly dragging: DraggableBase
 
 	/** Dragging element. */
 	protected readonly draggingEl: HTMLElement
@@ -32,7 +32,7 @@ export class DragOnlyMovement {
 	protected edgeTimer: EdgeMovementTimer | null = null
 
 	constructor(
-		dragging: draggable,
+		dragging: DraggableBase,
 		draggingEl: HTMLElement,
 		applyDraggingStyle: boolean,
 		mousePosition: Point
@@ -43,7 +43,7 @@ export class DragOnlyMovement {
 		this.setBaseDraggingStyle(mousePosition)
 
 		if (applyDraggingStyle) {
-			if (dragging.options.mode === 'reorder') {
+			if (dragging.mode === 'reorder') {
 				this.startStyleText = this.draggingEl.style.cssText
 			}
 
@@ -101,7 +101,7 @@ export class DragOnlyMovement {
 	onEnterDrop(_drop: droppable) {}
 	
 	/** When mouse enter draggable. */
-	onEnterDrag(_drag: draggable) {}
+	onEnterDrag(_drag: DraggableBase) {}
 
 	/** When mouse leaves drop area. */
 	onLeaveDrop(_drop: droppable) {}

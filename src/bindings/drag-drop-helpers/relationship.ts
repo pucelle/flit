@@ -1,19 +1,20 @@
 import {DOMEvents, DOMUtils, Vector} from '@pucelle/ff'
-import type {draggable} from '../draggable'
-import type {droppable} from '../droppable'
-import {DragDropMovement} from './movement-drag-drop'
-import {DragOnlyMovement} from './movement-drag-only'
+import {DraggableBase} from '../draggable'
+import {droppable} from '../droppable'
+import {OrderMovement} from './movement-of-order'
+import {DragMovement} from './movement-of-drag'
 import {render, RenderedComponentLike} from '@pucelle/lupos.js'
+import {orderable} from '../orderable'
 
 
 /** Global manager to relate current dragging and it's droppable.  */
 class DragDropRelationship {
 
 	/** Currently dragging draggable. */
-	private dragging: draggable | null = null
+	private dragging: DraggableBase | null = null
 
 	/** Help to manage movement. */
-	private movement: DragOnlyMovement | DragDropMovement | null = null
+	private movement: DragMovement | OrderMovement | null = null
 
 	/** 
 	 * May mouse enter in several drop areas, and start dragging,
@@ -34,7 +35,7 @@ class DragDropRelationship {
 	activeDrop: droppable | null = null
 
 	/** When start dragging a draggable. */
-	async startDragging(dragging: draggable, e: MouseEvent) {
+	async startDragging(dragging: DraggableBase, e: MouseEvent) {
 		this.dragging = dragging
 
 		let activeDrop: droppable | null = null
@@ -58,8 +59,8 @@ class DragDropRelationship {
 
 		this.activeDrop = activeDrop
 
-		if (this.dragging.options.mode === 'reorder') {
-			this.movement = new DragDropMovement(this.dragging!, activeDrop)
+		if (this.dragging.mode === 'reorder') {
+			this.movement = new OrderMovement(this.dragging as orderable, activeDrop)
 		}
 		else {
 			let followElCloned = !this.dragging.options.followElementRenderer
@@ -89,7 +90,7 @@ class DragDropRelationship {
 
 			document.body.append(followEl)
 			this.followElement = followEl
-			this.movement = new DragOnlyMovement(this.dragging!, followEl, followElCloned, position)
+			this.movement = new DragMovement(this.dragging!, followEl, followElCloned, position)
 		}
 	}
 
@@ -99,18 +100,20 @@ class DragDropRelationship {
 	}
 
 	/** When dragging and enter a draggable. */
-	enterDrag(drag: draggable) {
+	enterDrag(drag: DraggableBase) {
 		if (this.canEnterToSwapWith(drag)) {
 			this.movement?.onEnterDrag(drag)
 		}
 	}
 
 	/** Whether dragging can swap with draggable. */
-	private canEnterToSwapWith(drag: draggable) {
-		return this.dragging
-			&& !this.dragging.options.slideOnly
-			&& this.dragging.options.name === drag.options.name
-			&& this.dragging !== drag
+	private canEnterToSwapWith(drag: DraggableBase): drag is orderable {
+		return !!(
+			this.dragging
+				&& this.dragging.mode === 'reorder' && (this.dragging as orderable).options.slideOnly
+				&& this.dragging.options.name === drag.options.name
+				&& this.dragging !== drag
+		)
 	}
 
 	/** When dragging and enter a droppable. */
@@ -148,7 +151,7 @@ class DragDropRelationship {
 		}
 
 		if (drop.options.canDrop) {
-			if (!drop.options.canDrop(dragging.data, dragging.index)) {
+			if (!drop.options.canDrop(dragging.data)) {
 				return false
 			}
 		}
@@ -160,7 +163,7 @@ class DragDropRelationship {
 	leaveDrop(dropping: droppable) {
 
 		// Always in same drop for slide only mode.
-		if (this.dragging?.options.slideOnly) {
+		if (this.dragging?.mode === 'reorder' && (this.dragging as orderable)?.options.slideOnly) {
 			return
 		}
 		

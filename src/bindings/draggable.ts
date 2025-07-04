@@ -7,23 +7,16 @@ import {droppable} from './droppable'
 
 export interface DraggableOptions {
 	
-	/** 
-	 * If `as-sibling` by default, will move droppable elements to give a space to
-	 * indicate draggable element's position after dropping.
-	 * Can't 
-	 */
-	readonly mode: 'reorder' | 'nest'
-
 	/** `name` for draggable, can drop to droppable only when name match. */
 	name: string
 
 	/** 
 	 * By default, dragging will be started if drag start from the element bounded.
-	 * By specifying `filterSelector`, can limit from only the element match this selector.
+	 * By specifying `matchSelector`, can limit from only the element match this selector.
 	 */
 	matchSelector?: string
 
-	/** The class name to apply when start dragging. */
+	/** The class name to apply after start dragging. */
 	draggingClassName?: string
 
 	/** Which style value should be persisted, like width, height. */
@@ -34,12 +27,6 @@ export interface DraggableOptions {
 
 	/** Transition easing when playing dragging movement. */
 	transitionEasing?: WebTransitionEasingName
-
-	/** 
-	 * Whether can slider only in x/y axis.
-	 * If specifies as `true`, means can only swap with dragging element siblings.
-	 */
-	slideOnly?: boolean
 
 	/** Can cause nearest scroller to scroll when touch edges of scroll area. */
 	canCauseScrolling?: boolean
@@ -65,31 +52,26 @@ export interface DraggableOptions {
 
 const DefaultDraggableOptions: DraggableOptions = {
 	name: '',
-	mode: 'reorder',
-	slideOnly: false,
 	canCauseScrolling: false,
 }
 
 
+
 /** 
- * Make current element draggable.
- * :draggable=${data, index, ?options}
- * - `data`: Data item to identify current dragging item.
- * - `index`: Data item index within it's siblings, required for `reorder` mode.
- * - `options` Draggable options.
+ * Base class of `draggable` and `orderable`.
  */
-export class draggable<T = any> implements Binding, Part {
+export abstract class DraggableBase<T = any> implements Part {
+
+	abstract readonly mode: string
 
 	readonly el: HTMLElement
 	readonly context: any
 
+	/** Draggable options. */
 	options: DraggableOptions = DefaultDraggableOptions
 
 	/** Data can be passed to droppable. */
 	data: T | null = null
-
-	/** Data item index within it's siblings. */
-	index: number = -1
 
 	private connected: boolean = false
 	private inHanding: boolean = false
@@ -127,12 +109,6 @@ export class draggable<T = any> implements Binding, Part {
 		this.endDragging()
 		this.el.removeAttribute('draggable')
 		this.connected = false
-	}
-
-	update(data: T, index: number, options: Partial<DraggableOptions> = {}) {
-		this.data = data
-		this.index = index
-		this.options = {...DefaultDraggableOptions, ...options}
 	}
 
 	private onMouseDown(e: MouseEvent) {
@@ -206,3 +182,21 @@ export class draggable<T = any> implements Binding, Part {
 		GlobalDragDropRelationship.enterDrag(this)
 	}
 }
+
+
+/** 
+ * Make current element draggable.
+ * :draggable=${data, ?options}
+ * - `data`: Data item to identify current dragging item.
+ * - `options` Draggable options.
+ */
+export class draggable<T = any> extends DraggableBase<T> implements Binding, Part {
+
+	readonly mode: string = 'nest'
+	
+	update(data: T, options: Partial<DraggableOptions> = {}) {
+		this.data = data
+		this.options = {...DefaultDraggableOptions, ...options}
+	}
+}
+

@@ -1,7 +1,7 @@
 import {DOMEvents} from '@pucelle/ff'
 import {Binding, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
-import {draggable} from './draggable'
+import {DraggableBase} from './draggable'
 
 
 export interface DroppableOptions<T> {
@@ -29,19 +29,19 @@ export interface DroppableOptions<T> {
 	itemsAlignDirection?: HVDirection
 
 	/** Determines whether specified dragging data can drop to current droppable. */
-	canDrop?: (data: T, toIndex: number) => boolean
+	canDrop?: (data: T) => boolean
 
 	/** 
 	 * Get called after mouse enter into a droppable area.
 	 * If `fileDroppable`, will accept `DataTransfer` as drop data.
 	 */
-	onEnter?: (data: T, toIndex: number) => void
+	onEnter?: (data: T) => void
 
 	/** 
 	 * Get called after mouse leave from a droppable area.
 	 * If `fileDroppable`, will accept `DataTransfer` as drop data.
 	 */
-	onLeave?: (data: T, toIndex: number) => void
+	onLeave?: (data: T) => void
 }
 
 
@@ -132,7 +132,7 @@ export class droppable<T = any> implements Binding, Part {
 		this.mayAddEnterClassName()
 
 		if (this.options.onEnter) {
-			this.options.onEnter(e.dataTransfer as T, 0)
+			this.options.onEnter(e.dataTransfer as T)
 		}
 
 		DOMEvents.on(this.el, 'dragleave', this.onDragLeave, this)
@@ -143,7 +143,7 @@ export class droppable<T = any> implements Binding, Part {
 			return false
 		}
 
-		if (this.options.canDrop && !this.options.canDrop(e.dataTransfer as T, 0)) {
+		if (this.options.canDrop && !this.options.canDrop(e.dataTransfer as T)) {
 			return false
 		}
 
@@ -216,7 +216,7 @@ export class droppable<T = any> implements Binding, Part {
 		this.mayRemoveEnterClassName()
 
 		if (this.options.onLeave) {
-			this.options.onLeave(e.dataTransfer as T, 0)
+			this.options.onLeave(e.dataTransfer as T)
 		}
 	}
 
@@ -231,11 +231,11 @@ export class droppable<T = any> implements Binding, Part {
 	}
 
 	/** After draggable enter current droppable. */
-	fireEnter(dragging: draggable<T>) {
+	fireEnter(dragging: DraggableBase<T>) {
 		this.mayAddEnterClassName()
 
 		if (this.options.onEnter) {
-			this.options.onEnter(dragging.data as T, dragging.index)
+			this.options.onEnter(dragging.data as T)
 		}
 	}
 
@@ -244,11 +244,11 @@ export class droppable<T = any> implements Binding, Part {
 	}
 
 	/** After draggable leave current droppable. */
-	fireLeave(dragging: draggable<T>) {
+	fireLeave(dragging: DraggableBase) {
 		this.mayRemoveEnterClassName()
 
 		if (this.options.onLeave) {
-			this.options.onLeave(dragging.data as T, dragging.index)
+			this.options.onLeave(dragging.data as T)
 		}
 	}
 
@@ -256,7 +256,7 @@ export class droppable<T = any> implements Binding, Part {
 	 * After draggable drop to current droppable.
 	 * `insertIndex` indicates at which index should insert into on 'reorder' mode.
 	 */
-	fireDrop(dragging: draggable<T>, insertIndex: number) {
+	fireDrop(dragging: DraggableBase, insertIndex: number) {
 		this.mayRemoveEnterClassName()
 		this.dropCallback.call(this.context, dragging.data as T, insertIndex)
 	}

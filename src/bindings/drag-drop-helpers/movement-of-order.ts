@@ -1,12 +1,15 @@
 import {Box, DOMUtils, Point, Vector, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
-import type {draggable} from '../draggable'
 import {droppable} from '../droppable'
 import {getDraggableByElement} from './all-draggable'
-import {DragOnlyMovement} from './movement-drag-only'
+import {DragMovement} from './movement-of-drag'
+import {orderable} from '../orderable'
 
 
-/** To handle dragging element movements */
-export class DragDropMovement extends DragOnlyMovement {
+/** To handle orderable element movements */
+export class OrderMovement extends DragMovement {
+
+	declare protected readonly dragging: orderable
+
 
 	/** `true` means after `el` removed, followed elements will move and take it's place. */
 	private readonly autoLayout: boolean
@@ -30,7 +33,7 @@ export class DragDropMovement extends DragOnlyMovement {
 	private readonly startDrop: droppable | null
 
 	/** Currently mouse entered draggable. */
-	private draggingTo: draggable | null = null
+	private draggingTo: orderable | null = null
 
 	/** 
 	 * Currently mouse entered drop area.
@@ -49,12 +52,12 @@ export class DragDropMovement extends DragOnlyMovement {
 	private itemsAlignDirection: HVDirection = 'vertical'
 
 	/** Siblings, only prepare it when `sliderOnly`. */
-	private slideOnlySiblings: draggable[] | null = null
+	private slideSiblings: orderable[] | null = null
 
 	/** Recently entering sibling, only exist when `sliderOnly` */
-	private slideOnlyEnteringSiblingData: draggable | null = null
+	private slideOnlyEnteringSiblingData: orderable | null = null
 
-	constructor(drag: draggable, drop: droppable | null) {
+	constructor(drag: orderable, drop: droppable | null) {
 		let elRect = drag.el.getBoundingClientRect()
 
 		super(
@@ -100,7 +103,7 @@ export class DragDropMovement extends DragOnlyMovement {
 					&& getDraggableByElement(el as HTMLElement)
 			})
 
-		this.slideOnlySiblings = siblingEls.map(el => getDraggableByElement(el as HTMLElement)!)
+		this.slideSiblings = siblingEls.map(el => getDraggableByElement(el as HTMLElement)!) as orderable[]
 	}
 
 	/** Create a placeholder having same size with dragging element and insert into drop element. */
@@ -205,7 +208,7 @@ export class DragDropMovement extends DragOnlyMovement {
 		this.insertPlaceholder(drop, true)
 	}
 	
-	onEnterDrag(drag: draggable) {
+	onEnterDrag(drag: orderable) {
 		if (!this.activeDrop) {
 			return
 		}
@@ -239,7 +242,7 @@ export class DragDropMovement extends DragOnlyMovement {
 		this.draggingToIndex = this.calcDraggingToIndex(drag, willMoveElements.has(drag.el))
 	}
 
-	private calcDraggingToIndex(drag: draggable, beenMoved: boolean): number {
+	private calcDraggingToIndex(drag: orderable, beenMoved: boolean): number {
 		let isInSameDropArea = this.startDrop === this.activeDrop
 		let index = drag.index
 
@@ -309,7 +312,7 @@ export class DragDropMovement extends DragOnlyMovement {
 	/** Test which sibling get entered by current position. */
 	private testForEnteringSibling() {
 		let rect = Box.fromLike(this.draggingEl.getBoundingClientRect())
-		let siblings = this.slideOnlySiblings!
+		let siblings = this.slideSiblings!
 		let found = false
 
 		for (let sibling of siblings) {
@@ -401,7 +404,7 @@ export class DragDropMovement extends DragOnlyMovement {
 		if (this.itemsAlignDirection === 'horizontal') {
 
 			// Move from left to right, align at right.
-			if (this.dragging.index < this.draggingToIndex) {
+			if ((this.dragging as orderable).index < this.draggingToIndex) {
 				x = toRect.right - fromRect.right + this.translate.x
 			}
 
@@ -411,7 +414,7 @@ export class DragDropMovement extends DragOnlyMovement {
 		}
 		else {
 			// Move from top to bottom, align at bottom.
-			if (this.dragging.index < this.draggingToIndex) {
+			if ((this.dragging as orderable).index < this.draggingToIndex) {
 				y = toRect.bottom - fromRect.bottom + this.translate.y
 			}
 
