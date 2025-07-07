@@ -217,10 +217,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			&.selected{
 				background: color-mix(in srgb, var(--primary-color) 10%, var(--background-color));
 			}
-
-			&:last-child .table-cell{
-				border-bottom-color: transparent;
-			}
 		}
 
 		.table-cell{
