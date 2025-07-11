@@ -1,5 +1,6 @@
-import {css, html, Component, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
-import {AnchorAligner, DOMEvents, fade, translations, promiseWithResolves, untilUpdateComplete} from '@pucelle/ff'
+import {css, html, Component, fade, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
+import {AnchorAligner, t, translations} from '@pucelle/ff'
+import {DOMEvents, promiseWithResolves, untilUpdateComplete} from '@pucelle/lupos'
 import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
@@ -397,7 +398,7 @@ export class TypedDialog {
 	show(message: RenderResultRenderer, options: DialogOptions = {}): Promise<string | undefined> {
 		return this.addOptions({
 			message,
-			actions: [{value: 'ok', text: translations.get('ok')}],
+			actions: [{value: 'ok', text: t('ok')}],
 			...options,
 		})
 	}
@@ -408,8 +409,8 @@ export class TypedDialog {
 			icon: 'confirm',
 			message,
 			actions: [
-				{value: 'cancel', text: translations.get('cancel')},
-				{value: 'ok', text: translations.get('ok'), primary: true},
+				{value: 'cancel', text: t('cancel')},
+				{value: 'ok', text: t('ok'), primary: true},
 			],
 			... options,
 		})
@@ -448,8 +449,8 @@ export class TypedDialog {
 		let btn = await this.addOptions({
 			message: messageOverwritten,
 			actions: [
-				{value: 'cancel', text: translations.get('cancel')},
-				{value: 'ok', text: translations.get('ok'), primary: true, handler() {
+				{value: 'cancel', text: t('cancel')},
+				{value: 'ok', text: t('ok'), primary: true, handler() {
 					if (!input!.touched || !input!.valid) {
 						input!.touched = true
 						return true
@@ -475,7 +476,7 @@ export const dialog = new TypedDialog()
 
 
 /** Default transitions for `<Dialog>`. */
-translations.add('en-us', {
+translations.add('en', {
 	ok: 'OK',
 	cancel: 'Cancel',
 	yes: 'Yes',

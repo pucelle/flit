@@ -1,4 +1,4 @@
-import {DOMEvents, DOMUtils, Vector} from '@pucelle/ff'
+import {DOMUtils, EventUtils} from '@pucelle/ff'
 import {DraggableBase} from '../draggable'
 import {droppable} from '../droppable'
 import {OrderMovement} from './movement-of-order'
@@ -65,7 +65,7 @@ class DragDropRelationship {
 		else {
 			let followElCloned = !this.dragging.options.followElementRenderer
 			let followEl: HTMLElement | null = null
-			let position = DOMEvents.getPagePosition(e)
+			let position = EventUtils.getPagePosition(e)
 
 			if (this.dragging.options.followElementRenderer) {
 				let rendered = this.followElementRendered = render(this.dragging.options.followElementRenderer)
@@ -95,7 +95,7 @@ class DragDropRelationship {
 	}
 
 	/** Translate dragging element to keep follows with mouse. */
-	translateDraggingElement(moves: Vector, e: MouseEvent) {
+	translateDraggingElement(moves: Coord, e: MouseEvent) {
 		this.movement?.translateDraggingElement(moves, e)
 	}
 

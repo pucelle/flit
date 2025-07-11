@@ -1,4 +1,5 @@
-import {Box, DOMUtils, Point, Vector, WebTransition, WebTransitionKeyFrame} from '@pucelle/ff'
+import {Box, DOMUtils} from '@pucelle/ff'
+import {WebTransition, WebTransitionKeyFrame} from '@pucelle/lupos.js'
 import {droppable} from '../droppable'
 import {getDraggableByElement} from './all-draggable'
 import {DragMovement} from './movement-of-drag'
@@ -64,7 +65,7 @@ export class OrderMovement extends DragMovement {
 			drag,
 			drag.el,
 			true,
-			Point.from(elRect)
+			elRect
 		)
 
 		this.startDrop = this.activeDrop = drop
@@ -289,8 +290,8 @@ export class OrderMovement extends DragMovement {
 		}
 	}
 
-	translateDraggingElement(moves: Vector) {
-		this.translate.copyFrom(moves)
+	translateDraggingElement(moves: Coord) {
+		this.translate = moves
 
 		if (this.dragging.options.slideOnly) {
 			if (this.itemsAlignDirection === 'vertical') {

@@ -2,7 +2,7 @@ import {Component, html, css} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Icon} from './icon'
 import {RadioGroup} from './radio-group'
-import {DOMEvents, DOMModifiableEvents} from '@pucelle/ff'
+import {DOMEvents, DOMModifiableEvents} from '@pucelle/lupos'
 
 
 interface RadioEvents {

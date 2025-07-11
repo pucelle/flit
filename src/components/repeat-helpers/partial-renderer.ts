@@ -1,7 +1,8 @@
-import {AsyncTaskQueue, DOMEvents, ResizeWatcher, untilUpdateComplete} from '@pucelle/ff'
+import {AsyncTaskQueue, ResizeWatcher} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialRendererMeasurement, UnCoveredSituation} from './partial-renderer-measurement'
+import {DOMEvents, untilUpdateComplete} from '@pucelle/lupos'
 
 
 /** Function for doing updating. */

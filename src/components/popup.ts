@@ -1,7 +1,6 @@
-import {css, Component, html, RenderResult} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, fade} from '@pucelle/lupos.js'
 import {SharedPopups} from '../bindings'
 import {Triangle} from './triangle'
-import {fade} from '@pucelle/ff'
 
 
 /** 
@@ -50,7 +49,7 @@ export class Popup<E = {}> extends Component<E> {
 	 * Only exist after current popup get popped-up.
 	 */
 	getTriggerElement(): HTMLElement | null {
-		let binding = SharedPopups.getUser(this)
+		let binding = SharedPopups.getPopupUser(this)
 		if (binding) {
 			return binding.el
 		}
@@ -74,7 +73,7 @@ export class Popup<E = {}> extends Component<E> {
 
 	/** Close current popup. */
 	close() {
-		let binding = SharedPopups.getUser(this)
+		let binding = SharedPopups.getPopupUser(this)
 		if (binding) {
 			binding.hidePopup()
 		}

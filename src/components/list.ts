@@ -1,6 +1,6 @@
-import {css, Component, html, RenderResult, RenderResultRenderer} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, RenderResultRenderer, fold, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions, DOMScroll} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, Observed, fold, effect, DOMScroll, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/ff'
+import {DOMEvents, EventKeys, Observed, effect} from '@pucelle/lupos'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
@@ -18,7 +18,7 @@ export interface ListItem<T = any> extends Observed {
 
 	/** 
 	 * List item content, can be a pre-generated template result.
-	 * If wanting to render template result, overwrite `List.renderText`.
+	 * If wanting to render template result, overwrite `List.renderText` or specifies `textRenderer`.
 	 */
 	text?: string
 
@@ -82,7 +82,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	static style = css`
 		.list{
 			display: block;
-			border-bottom: 1px solid color-mix(in srgb, var(--border-color) 50%, var(--background-color));
+			border-bottom: 1px solid color-mix(in srgb, var(--border-color) 30%, var(--background-color));
 		}
 
 		.list-splitter{
@@ -95,7 +95,12 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			position: relative;
 			display: flex;
 			align-items: center;
+			border-bottom: 1px solid color-mix(in srgb, var(--border-color) 30%, var(--background-color));
 			cursor: pointer;
+
+			&:last-child{
+				border-bottom: none;
+			}
 
 			&:hover{
 				color: var(--primary-color);
@@ -138,7 +143,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 
 		.list-selected-icon{
-			margin: 0 -0.45em 0 0.2em;
+			margin: 0 0 0 0.2em;
 		}
 
 		.list-subsection{

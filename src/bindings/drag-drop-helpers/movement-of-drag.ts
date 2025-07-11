@@ -1,4 +1,4 @@
-import {DOMScroll, DOMUtils, Point, Vector} from '@pucelle/ff'
+import {DOMUtils, ScrollUtils} from '@pucelle/ff'
 import {DraggableBase} from '../draggable'
 import {droppable} from '../droppable'
 import {EdgeMovementTimer} from '../../components/rect-selection-helpers/edge-movement-timer'
@@ -13,11 +13,11 @@ export class DragMovement {
 	/** Dragging element. */
 	protected readonly draggingEl: HTMLElement
 
-	/** Dragging element translate. */
-	protected readonly translate: Vector = new Vector()
-
 	/** Keeps original style text for dragging element and restore it after dragging end. */
 	protected readonly startStyleText: string | null = null
+
+	/** Dragging element translate. */
+	protected translate: Coord = {x: 0, y: 0}
 
 	/** Scroll wrapper. */
 	protected scroller: HTMLElement | null = null
@@ -35,7 +35,7 @@ export class DragMovement {
 		dragging: DraggableBase,
 		draggingEl: HTMLElement,
 		applyDraggingStyle: boolean,
-		mousePosition: Point
+		mousePosition: Coord
 	) {
 		this.dragging = dragging
 		this.draggingEl = draggingEl
@@ -56,14 +56,14 @@ export class DragMovement {
 	}
 
 	/** Apply mouse position to dragging followed. */
-	protected setBaseDraggingStyle(mousePosition: Point) {
+	protected setBaseDraggingStyle(mousePosition: Coord) {
 		document.body.style.cursor = 'grabbing'
 		document.body.style.userSelect = 'none'
 		
-		let elMarginVector = new Vector(
-			DOMUtils.getNumericStyleValue(this.draggingEl, 'marginLeft'),
-			DOMUtils.getNumericStyleValue(this.draggingEl, 'marginTop')
-		)
+		let elMarginVector = {
+			x: DOMUtils.getNumericStyleValue(this.draggingEl, 'marginLeft'),
+			y: DOMUtils.getNumericStyleValue(this.draggingEl, 'marginTop'),
+		}
 
 		this.draggingEl.style.left = mousePosition.x - elMarginVector.x + 'px'
 		this.draggingEl.style.top = mousePosition.y - elMarginVector.y + 'px'
@@ -83,10 +83,11 @@ export class DragMovement {
 
 	/** Init scroller if need. */
 	protected initScroller() {
-		this.scroller = DOMScroll.findClosestCSSScrollWrapper(this.dragging.el)
+		let wrapperAndDirection = ScrollUtils.findClosestCSSScrollWrapper(this.dragging.el)
 
-		if (this.scroller) {
-			this.scrollDirection = DOMScroll.getCSSOverflowDirection(this.scroller)
+		if (wrapperAndDirection) {
+			this.scroller = wrapperAndDirection.wrapper
+			this.scrollDirection = wrapperAndDirection.direction
 
 			this.scrollerPosition = this.scrollDirection === 'vertical' ? this.scroller.scrollTop
 				: this.scrollDirection === 'horizontal' ? this.scroller.scrollLeft
@@ -107,8 +108,8 @@ export class DragMovement {
 	onLeaveDrop(_drop: droppable) {}
 
 	/** Translate dragging element follow mouse. */
-	translateDraggingElement(moves: Vector, e: MouseEvent) {
-		this.translate.copyFrom(moves)
+	translateDraggingElement(moves: Coord, e: MouseEvent) {
+		this.translate = moves
 		this.draggingEl.style.transform = `translate(${moves.x}px, ${moves.y}px)`
 		this.edgeTimer?.updateEvent(e)
 	}
@@ -123,7 +124,7 @@ export class DragMovement {
 		return -1
 	}
 
-	protected onEdgeTimerUpdate(movements: Vector, frameTime: number) {
+	protected onEdgeTimerUpdate(movements: Coord, frameTime: number) {
 		if (!this.scroller) {
 			return
 		}

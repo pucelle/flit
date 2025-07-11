@@ -1,6 +1,7 @@
-import {DOMEvents, DOMUtils, ListUtils,  untilUpdateComplete, ValueListUtils} from '@pucelle/ff'
+import {DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
 import {html, render} from '@pucelle/lupos.js'
+import {DOMEvents, untilUpdateComplete} from '@pucelle/lupos'
 
 
 /** For `<f-table>` to resize column widths. */

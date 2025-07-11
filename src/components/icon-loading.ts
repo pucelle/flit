@@ -1,4 +1,5 @@
-import {effect, WebTransition} from '@pucelle/ff'
+import {effect} from '@pucelle/lupos'
+import {WebTransition} from '@pucelle/lupos.js'
 import {Icon} from './icon'
 
 

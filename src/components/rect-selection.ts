@@ -1,6 +1,7 @@
-import {Box, DOMEvents, DOMScroll, NumberUtils, Point, Vector} from '@pucelle/ff'
+import {Box, EventUtils, NumberUtils, ScrollUtils} from '@pucelle/ff'
 import {Component, css, html, RenderResult} from '@pucelle/lupos.js'
 import {EdgeMovementTimer} from './rect-selection-helpers/edge-movement-timer'
+import {DOMEvents} from '@pucelle/lupos'
 
 
 export interface RectSelectionEvents {
@@ -10,14 +11,14 @@ export interface RectSelectionEvents {
 	 * `startOffset` is the offset position
 	 * relative to scroller, it's not affected by scrolled value.
 	 */
-	'select-started': (startOffset: Point, e: MouseEvent) => void
+	'select-started': (startOffset: DOMPoint, e: MouseEvent) => void
 
 	/** 
 	 * After selection range change.
 	 * `endOffset` and `startOffset` are the offset position
 	 * relative to scroller, they are not affected by scrolled value.
 	 */
-	'select-update': (endOffset: Point, startOffset: Point) => void
+	'select-update': (endOffset: DOMPoint, startOffset: DOMPoint) => void
 
 	/** After ended selecting. */
 	'select-ended': (e: MouseEvent) => void
@@ -76,10 +77,10 @@ export class RectSelection extends Component<RectSelectionEvents> {
 	protected startEvent: MouseEvent | null = null
 
 	/** Start client point, add scroll position of scroller. */
-	protected startScrollPoint: Point | null = null
+	protected startScrollPoint: DOMPoint | null = null
 
 	/** End client point, add scroll position of scroller. */
-	protected endScrollPoint: Point | null = null
+	protected endScrollPoint: DOMPoint | null = null
 
 	/** Scroll direction. */
 	protected scrollDirection: HVDirection | null = null
@@ -103,7 +104,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 			return
 		}
 		
-		let scrollDirection = DOMScroll.getSizedOverflowDirection(this.scroller!)
+		let scrollDirection = ScrollUtils.getSizedOverflowDirection(this.scroller!)
 		this.scrollDirection = scrollDirection
 
 		this.scrollerRect = this.scroller!.getBoundingClientRect()
@@ -112,7 +113,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 			: scrollDirection === 'horizontal' ? this.scroller!.scrollLeft
 			: 0
 
-		let point = DOMEvents.getClientPosition(e)
+		let point = EventUtils.getClientPosition(e)
 		this.startScrollPoint = this.clientPointToLocal(point)
 
 		this.edgeTimer = new EdgeMovementTimer(this.scroller!, {padding: this.edgePadding})
@@ -139,18 +140,19 @@ export class RectSelection extends Component<RectSelectionEvents> {
 	}
 
 	/** `point` is based on client origin. */
-	protected clientPointToLocal(point: Point): Point {
-		point.translateSelf(-this.scrollerRect!.x, -this.scrollerRect!.y)
+	protected clientPointToLocal(point: DOMPoint): DOMPoint {
+		point.x -= this.scrollerRect!.x
+		point.y -= this.scrollerRect!.y
 
 		// Limit within local range.
 		point.x = NumberUtils.clamp(point.x, 0, this.scrollerRect!.width)
 		point.y = NumberUtils.clamp(point.y, 0, this.scrollerRect!.height)
 	
 		if (this.scrollDirection === 'vertical') {
-			point.translateSelf(0, this.scrollerPosition)
+			point.y += this.scrollerPosition
 		}
 		else if (this.scrollDirection === 'horizontal') {
-			point.translateSelf(this.scrollerPosition, 0)
+			point.x += this.scrollerPosition
 		}
 
 		return point
@@ -159,12 +161,17 @@ export class RectSelection extends Component<RectSelectionEvents> {
 	protected onMouseMove(e: MouseEvent) {
 		this.edgeTimer!.updateEvent(e)
 
-		let point = DOMEvents.getClientPosition(e)
+		let point = EventUtils.getClientPosition(e)
 		this.endScrollPoint = this.clientPointToLocal(point)
 
 		if (!this.inSelecting) {
-			let moves = this.endScrollPoint.diff(this.startScrollPoint!)
-			if (moves.getLength() > this.minimumMove) {
+			let moves: Coord = {
+				x: this.endScrollPoint.x - this.startScrollPoint!.x,
+				y: this.endScrollPoint.y - this.startScrollPoint!.y,
+			}
+
+			let movesLength = Math.sqrt(moves.x ** 2 + moves.y ** 2)
+			if (movesLength > this.minimumMove) {
 				this.startSelection()
 			}
 		}
@@ -191,7 +198,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 		this.endSelection(e)
 	}
 
-	protected onEdgeTimerUpdate(movements: Vector, frameTime: number) {
+	protected onEdgeTimerUpdate(movements: Coord, frameTime: number) {
 		if (!this.inSelecting) {
 			return
 		}

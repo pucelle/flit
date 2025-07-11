@@ -1,6 +1,7 @@
-import {Component, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
+import {Component, css, html, RenderResult, TemplateResult, PerFrameTransitionEasingName, TransitionResult} from '@pucelle/lupos.js'
 import {Store} from '../data'
-import {DOMEvents, effect, Observed, PerFrameTransitionEasingName, Point, ResizeWatcher, Selections, sleep, TransitionResult} from '@pucelle/ff'
+import {DOMEvents, effect, Observed} from '@pucelle/lupos'
+import {ResizeWatcher, Selections, sleep} from '@pucelle/ff'
 import {ColumnWidthResizer} from './table-helpers/column-width-resizer'
 import {RemoteStore} from '../data/remote-store'
 import {LiveRepeat} from './repeat-live'
@@ -720,7 +721,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		}
 	}
 
-	protected onRectSelectStarted(startOffset: Point, e: MouseEvent) {
+	protected onRectSelectStarted(startOffset: DOMPoint, e: MouseEvent) {
 		this.rectSelectionStartRowIndex = this.repeatRef.getIndexAtOffset(startOffset.y)
 
 		if (e.ctrlKey || e.shiftKey) {
@@ -741,7 +742,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		})
 	}
 
-	protected onRectSelectUpdate(endOffset: Point) {
+	protected onRectSelectUpdate(endOffset: DOMPoint) {
 		let startRowIndex = this.rectSelectionStartRowIndex
 		let endRowIndex = this.repeatRef.getIndexAtOffset(endOffset.y)
 

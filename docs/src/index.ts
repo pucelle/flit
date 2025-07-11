@@ -1,5 +1,6 @@
 import * as ff from '@pucelle/ff'
 import {html, Component, render} from '@pucelle/lupos.js'
+import {watch} from '@pucelle/lupos'
 import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
@@ -8,9 +9,10 @@ import {
 	ParentalResizer,
 	DroppableOptions,
 	TooltipOptions,
-	PopupOptions
+	PopupOptions,
+	ListItem
 } from '../../out'
-import {range, watch} from '@pucelle/ff'
+import {range} from '@pucelle/ff'
 
 
 declare global {
@@ -289,11 +291,11 @@ class Preview extends Component {
 					</Col>
 					<Col .span=${6}>
 						<header>Invalid Input</header>
-						<Input .type="text" style="width: 100%;" .touched .valid=${false} .placeholder="Invalid Input" .error="Error Message" />
+						<Input .type="text" style="width: 100%;" .touched .valid=${false} .placeholder="Invalid Input" .errorMessage="Error Message" />
 					</Col>
 					<Col .span=${6}>
 						<header>Error message on tooltip</header>
-						<Input .type="text" style="width: 100%;" .errorOnTooltip .touched .valid=${false} .placeholder="Invalid Input" .error="Error Message" />
+						<Input .type="text" style="width: 100%;" .errorOnTooltip .touched .valid=${false} .placeholder="Invalid Input" .errorMessage="Error Message" />
 					</Col>
 				</Row>
 			</section>
@@ -486,7 +488,7 @@ class Preview extends Component {
 					</Col>
 
 					<Col .span=${4}>
-						<header style="margin-bottom: 8px;">:loading=\${...}</header>
+						<header style="margin-bottom: 8px;">:loading</header>
 						<div style="position: relative; width: 100px; height: 100px" :loading=${true}></div>
 					</Col>
 				</Row>
@@ -515,11 +517,6 @@ class Preview extends Component {
 						<header style="margin-bottom: 8px;">Multiple Selection</header>
 						<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} .selectable .multipleSelect .selected=${[1, 2]} />
 					</Col>
-
-					<Col .span=${6}>
-						<header style="margin-bottom: 8px;">Navigation Type</header>
-						<List .data=${[...range(1, 6)].map(value => ({value, text: 'Option ' + value}))} .mode="navigation" .selectable .selected=${[1]} />
-					</Col>
 				</Row>
 
 				<Row style="margin: 32px 0 8px 0;" .gutter=${24}>
@@ -530,7 +527,7 @@ class Preview extends Component {
 
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">With Subsection</header>
-						<List .mode="navigation" .data=${[
+						<List .data=${[
 							{value: 1, text: 'Folder A', children:
 								[
 									{value: 11, text: 'Sub Folder a', children: [
@@ -720,15 +717,21 @@ class Preview extends Component {
 				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">Default</header>
-						<Button :tooltip=${'Tooltip text', {type: 'default'} as Partial<TooltipOptions>}>Hover for Tooltip</Button>
+						<Button :tooltip=${
+							'Tooltip text',
+							{type: 'default'} as Partial<TooltipOptions>
+						}>Hover for Tooltip</Button>
 					</Col>
 
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">Prompt</header>
-						<Button :tooltip=${'Add some items to your list by clicking this button.', {type: 'prompt'} as Partial<TooltipOptions>}>Add Items</Button>
+						<Button :tooltip=${
+							'Add some items to your list by clicking this button.',
+							{type: 'prompt'} as Partial<TooltipOptions>
+						}>Add Items</Button>
 					</Col>
 				</Row>
-
+				
 				<Row style="margin: 16px 0 8px 0;" .gutter=${24}>
 					<Col .span=${6}>
 						<header style="margin-bottom: 8px;">Error</header>
@@ -1182,17 +1185,19 @@ class Preview extends Component {
 class MainColorSelect extends Select<string> {
 
 	data = [
-		{value: 'ActiveText', text: html`<div style="color: ActiveText;">Auto</div>`},
-		{value: '#3a6cf6', text: html`<div style="color: #3a6cf6;">Blue</div>`},
-		{value: '#0077cf', text: html`<div style="color: #0077cf;">Darkblue</div>`},
-		{value: '#4eb2ea', text: html`<div style="color: #4eb2ea;">Skyblue</div>`},
-		{value: '#48c7c7', text: html`<div style="color: #48c7c7;">Cyan</div>`},
-		{value: '#be66cc', text: html`<div style="color: #be66cc;">Purple</div>`},
-		{value: '#ff6666', text: html`<div style="color: #ff6666;">Red</div>`},
-		{value: '#ff8095', text: html`<div style="color: #ff8095;">Pink</div>`},
-		{value: '#15af78', text: html`<div style="color: #15af78;">Green</div>`},
-		{value: '#888888', text: html`<div style="color: #888888;">Grey</div>`},
+		{value: 'ActiveText', text: `Auto`},
+		{value: '#3a6cf6', text: `Blue`},
+		{value: '#0077cf', text: `Darkblue`},
+		{value: '#4eb2ea', text: `Skyblue`},
+		{value: '#48c7c7', text: `Cyan`},
+		{value: '#be66cc', text: `Purple`},
+		{value: '#ff6666', text: `Red`},
+		{value: '#ff8095', text: `Pink`},
+		{value: '#15af78', text: `Green`},
+		{value: '#888888', text: `Grey`},
 	]
+
+	textRenderer = (item: ListItem<string>) => html`<div style="color: ${item.value};">${item.text}</div>`
 
 	value: string = 'ActiveText'
 
@@ -1223,6 +1228,6 @@ class ExampleRemoteStore extends RemoteStore {
 }
 
 
-ff.DOMEvents.untilWindowLoaded().then(() => {
+ff.EventUtils.untilWindowLoaded().then(() => {
 	new Preview().appendTo(document.body)
 })

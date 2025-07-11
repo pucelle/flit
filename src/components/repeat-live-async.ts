@@ -1,4 +1,4 @@
-import {effect, watch} from '@pucelle/ff'
+import {effect, watch} from '@pucelle/lupos'
 import {LiveRepeat} from './repeat-live'
 import {PageDataCountGetter, PageDataGetter, PageDataLoader} from '../data'
 

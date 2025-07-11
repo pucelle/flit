@@ -1,4 +1,5 @@
-import {Box, Vector, DOMEvents, FrameLoop} from '@pucelle/ff'
+import {Box, EventUtils, Vector} from '@pucelle/ff'
+import {FrameLoop} from '@pucelle/lupos.js'
 
 
 export interface EdgeMovementTimerOptions {
@@ -62,7 +63,7 @@ export class EdgeMovementTimer {
 	updateEvent(e: MouseEvent) {
 		let rect = this.rect
 		let vector = new Vector(0, 0)
-		let screenPosition = DOMEvents.getClientPosition(e)!
+		let screenPosition = EventUtils.getClientPosition(e)!
 
 		if (screenPosition.x < rect.x) {
 			vector.x = screenPosition.x - rect.x

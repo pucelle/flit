@@ -1,4 +1,5 @@
-import {DOMEvents, EventFirer, MouseLeaveControl} from '@pucelle/ff'
+import {EventUtils, MouseLeaveControl} from '@pucelle/ff'
+import {DOMEvents, EventFirer} from '@pucelle/lupos'
 
 
 /** 
@@ -72,8 +73,8 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 	private mapTriggerType(trigger: TriggerType): TriggerType {
 
-		// If has no mouse, uses click event instead.
-		if (trigger === 'hover' && !DOMEvents.havePointer()) {
+		// If can't hover by mouse or pencil, uses mousedown event instead.
+		if (trigger === 'hover' && !EventUtils.canHover()) {
 			trigger = 'mousedown'
 		}
 
@@ -191,7 +192,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		}
 
 		if (this.trigger === 'hover') {
-			if (DOMEvents.havePointer()) {
+			if (EventUtils.canHover()) {
 				this.bindMouseLeave(hideDelay, content)
 			}
 			else {
@@ -254,7 +255,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		}
 
 		if (this.trigger === 'hover') {
-			if (DOMEvents.havePointer()) {
+			if (EventUtils.canHover()) {
 				if (this.unwatchLeave) {
 					this.unwatchLeave()
 					this.unwatchLeave = null

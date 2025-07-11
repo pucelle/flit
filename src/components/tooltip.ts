@@ -1,9 +1,8 @@
-import {css, html} from '@pucelle/lupos.js'
+import {css, html, fade} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Icon} from './icon'
 import {Triangle} from './triangle'
-import {fade} from '@pucelle/ff'
 
 
 /** 

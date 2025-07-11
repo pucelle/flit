@@ -1,5 +1,6 @@
 import {Component, html, css} from '@pucelle/lupos.js'
-import {DOMEvents, MouseLeaveControl, NumberUtils} from '@pucelle/ff'
+import {MouseLeaveControl, NumberUtils} from '@pucelle/ff'
+import {DOMEvents} from '@pucelle/lupos'
 import {tooltip, TooltipOptions} from '../bindings'
 
 

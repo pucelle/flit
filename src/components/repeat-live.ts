@@ -1,7 +1,7 @@
-import {PartCallbackParameterMask} from '@pucelle/lupos.js'
+import {PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
 import {Repeat, RepeatRenderFn} from './repeat'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
-import {PerFrameTransitionEasingName, effect, untilUpdateComplete} from '@pucelle/ff'
+import {effect, untilUpdateComplete} from '@pucelle/lupos'
 import {html} from '@pucelle/lupos.js'
 import {locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
 

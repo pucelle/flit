@@ -1,6 +1,5 @@
-import {css, html, RenderResult} from '@pucelle/lupos.js'
+import {css, html, RenderResult, fade} from '@pucelle/lupos.js'
 import {Popup} from './popup'
-import {fade} from '@pucelle/ff'
 
 
 /** `<Contextmenu>` to render a simple context menu with a `<List>` or `<DropList>` inside. */

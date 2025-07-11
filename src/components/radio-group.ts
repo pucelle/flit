@@ -1,6 +1,7 @@
 import {Component} from '@pucelle/lupos.js'
 import {Radio} from './radio'
-import {ListUtils, watch} from '@pucelle/ff'
+import {ListUtils} from '@pucelle/ff'
+import {watch} from '@pucelle/lupos'
 
 
 interface RadioGroupEvents<T> {

@@ -1,4 +1,5 @@
-import {computed, ListUtils, Observed} from '@pucelle/ff'
+import {computed, Observed} from '@pucelle/lupos'
+import {ListUtils} from '@pucelle/ff'
 
 
 export interface StoreOptions<T> {

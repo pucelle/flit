@@ -1,9 +1,10 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, IntersectionWatcher, untilUpdateComplete, promiseWithResolves, MouseLeaveControl} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, IntersectionWatcher, MouseLeaveControl} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
 import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-binder'
+import {promiseWithResolves, untilUpdateComplete} from '@pucelle/lupos'
 export {TriggerType}
 
 
@@ -425,7 +426,7 @@ export class popup implements Binding, Part {
 		// Update popup property and related transition.
 		if (popup !== this.popup) {
 			this.popup = popup
-			SharedPopups.setUser(popup, this)
+			SharedPopups.setPopupUser(popup, this)
 		}
 
 		// Update popup properties.
@@ -457,9 +458,10 @@ export class popup implements Binding, Part {
 			}
 
 			this.rendered = rendered
+			SharedPopups.setCacheUser(rendered, this)
 		}
 
-		// Even not use but cache exists, clear it.
+		// Same key cache exists, clear it.
 		else if (this.options.key) {
 			SharedPopups.clearCache(this.options.key, this)
 		}
@@ -578,12 +580,12 @@ export class popup implements Binding, Part {
 
 	/** Clears popup content, reset to initial state. */
 	clearPopup() {
-		if (this.popup) {
-			SharedPopups.clearUser(this.popup)
-		}
-
 		if (this.opened) {
 			this.hidePopup()
+		}
+
+		if (this.popup) {
+			SharedPopups.clearPopupUser(this.popup)
 		}
 
 		this.rendered = null

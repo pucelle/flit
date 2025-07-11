@@ -1,4 +1,4 @@
-import {DOMEvents} from '@pucelle/ff'
+import {DOMEvents} from '@pucelle/lupos'
 import {Binding, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
 import {DraggableBase} from './draggable'

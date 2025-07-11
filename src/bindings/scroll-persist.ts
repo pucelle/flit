@@ -1,4 +1,5 @@
-import {DOMScroll, untilUpdateComplete} from '@pucelle/ff'
+import {ScrollUtils} from '@pucelle/ff'
+import {untilUpdateComplete} from '@pucelle/lupos'
 import {Binding, Part} from '@pucelle/lupos.js'
 
 
@@ -31,7 +32,7 @@ export class scrollPersist implements Binding, Part {
 	}
 
 	private readScrollDirection() {
-		this.direction = DOMScroll.getCSSOverflowDirection(this.el) ?? 'none'
+		this.direction = ScrollUtils.getCSSOverflowDirection(this.el) ?? 'none'
 	}
 
 	beforeDisconnectCallback(): Promise<void> | void {

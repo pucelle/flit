@@ -1,4 +1,4 @@
-import {NumberUtils, Vector} from '@pucelle/ff'
+import {NumberUtils} from '@pucelle/ff'
 import {Resizer} from './resizer'
 import {css, html} from '@pucelle/lupos.js'
 
@@ -72,7 +72,7 @@ export class ParentalResizer<E = {}> extends Resizer<E> {
 		}
 	}
 
-	protected onResizeMoves(moves: Vector, e: MouseEvent) {
+	protected onResizeMoves(moves: Coord, e: MouseEvent) {
 		e.preventDefault()
 
 		let value: number

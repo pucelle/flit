@@ -1,11 +1,12 @@
-import {DOMScroll, fade, untilUpdateComplete} from '@pucelle/ff'
-import {css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
+import {untilUpdateComplete} from '@pucelle/lupos'
+import {DOMScroll, fade, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
 import {ListItem, List} from './list'
 import {Popup} from './popup'
 import {Icon} from './icon'
 import {popup} from '../bindings'
+import {ScrollUtils} from '@pucelle/ff'
 
 
 interface SelectEvents<T, M extends boolean> {
@@ -93,7 +94,8 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 
 			.list-item{
 				padding-left: 0.6em;
-				border-top: none;
+				padding-right: 0.15em;
+				border-bottom: none;
 			}
 		}
 
@@ -141,7 +143,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	 * Renderer to render text content.
 	 * If specifies, it overwrites default action of rendering `text` property.
 	 */
-	itemTextRenderer: ((item: ListItem<T>) => RenderResult | string | number) | null = null
+	textRenderer: ((item: ListItem<T>) => RenderResult | string | number) | null = null
 
 
 	/** The element of popup component. */
@@ -250,7 +252,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					:ref.el=${this.listEl}
 					.selectable
 					.data=${data}
-					.textRenderer=${this.itemTextRenderer}
+					.textRenderer=${this.textRenderer}
 					.selected=${(this.multiple ? this.value : this.value === null ? [] : [this.value])}
 					.multipleSelect=${this.multiple}
 					.keyComeFrom=${this.inputEl}
@@ -337,7 +339,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	protected scrollToViewSelectedItem() {
 		if (this.listEl) {
 			let selectedItem = this.listEl.querySelector('[class*=selected]') as HTMLElement | null
-			if (selectedItem && DOMScroll.getSizedOverflowDirection(this.listEl) === 'vertical') {
+			if (selectedItem && ScrollUtils.getSizedOverflowDirection(this.listEl) === 'vertical') {
 				DOMScroll.scrollToTop(selectedItem)
 			}
 		}

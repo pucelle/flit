@@ -10,7 +10,10 @@ import {RenderedComponentLike} from '@pucelle/lupos.js'
  */
 const PopupContentCache: ListMap<string, RenderedComponentLike> = new ListMap()
 
-/** Cache shared popup rendered that are using by popup binding. */
+/** Cache shared rendered that are using by popup binding. */
+const RenderedUsedBy: WeakMap<RenderedComponentLike, popup> = new WeakMap()
+
+/** Cache popups that are using by popup binding. */
 const PopupUsedBy: WeakMap<Popup, popup> = new WeakMap()
 
 
@@ -21,13 +24,9 @@ export function getCache(key: string): RenderedComponentLike | null {
 		return null
 	}
 
-	let popup = cache.getAs(Popup)
-	if (!popup) {
-		return cache
-	}
-
-	let binding = PopupUsedBy.get(popup)
+	let binding = RenderedUsedBy.get(cache)
 	if (binding) {
+		clearCacheUser(cache)
 		binding.clearPopup()
 	}
 
@@ -42,13 +41,9 @@ export function clearCache(key: string, fromBinding: popup) {
 		return
 	}
 
-	let popup = cache.getAs(Popup)
-	if (!popup) {
-		return
-	}
-
-	let binding = PopupUsedBy.get(popup)
+	let binding = RenderedUsedBy.get(cache)
 	if (binding && binding !== fromBinding) {
+		clearCacheUser(cache)
 		binding.clearPopup()
 		return true
 	}
@@ -68,18 +63,19 @@ function findCache(key: string): RenderedComponentLike | null {
 	let others: RenderedComponentLike | null = null
 
 	for (let cache of caches) {
+
+		// Are using and can't reuse.
+		let binding = RenderedUsedBy.get(cache)
+		if (binding && !binding.canPopupReuse()) {
+			continue
+		}
+
 		let popup = cache.getAs(Popup)
 		if (!popup) {
-			others = others ?? cache
 			continue
 		}
 
 		if (MouseLeaveControl.checkLocked(popup.el)) {
-			continue
-		}
-
-		let binding = PopupUsedBy.get(popup)
-		if (binding && !binding.canPopupReuse()) {
 			continue
 		}
 
@@ -103,12 +99,7 @@ export function isCacheOpened(key: string): boolean {
 		return false
 	}
 
-	let popup = cache.getAs(Popup)
-	if (!popup) {
-		return false
-	}
-
-	let binding = PopupUsedBy.get(popup)
+	let binding = RenderedUsedBy.get(cache)
 	if (!binding) {
 		return false
 	}
@@ -123,20 +114,34 @@ export function addCache(key: string, cache: RenderedComponentLike) {
 }
 
 
+/** Set a rendered is using by a popup binding. */
+export function setCacheUser(cache: RenderedComponentLike, binding: popup) {
+	RenderedUsedBy.set(cache, binding)
+}
+
+/** Get the popup binding which uses a rendered. */
+export function getCacheUser(cache: RenderedComponentLike): popup | undefined {
+	return RenderedUsedBy.get(cache)
+}
+
+/** Clear a rendered usage. */
+export function clearCacheUser(cache: RenderedComponentLike) {
+	RenderedUsedBy.delete(cache)
+}
+
+
 /** Set a <Popup> is using by a popup binding. */
-export function setUser(popup: Popup, binding: popup) {
+export function setPopupUser(popup: Popup, binding: popup) {
 	PopupUsedBy.set(popup, binding)
 }
 
-
 /** Get the popup binding which uses a <Popup>. */
-export function getUser(popup: Popup): popup | undefined {
+export function getPopupUser(popup: Popup): popup | undefined {
 	return PopupUsedBy.get(popup)
 }
 
-
 /** Clear a <Popup> usage. */
-export function clearUser(popup: Popup) {
+export function clearPopupUser(popup: Popup) {
 	PopupUsedBy.delete(popup)
 }
 

@@ -1,4 +1,5 @@
-import {EventFirer, Timeout} from '@pucelle/ff'
+import {Timeout} from '@pucelle/ff'
+import {EventFirer} from '@pucelle/lupos'
 
 
 interface PopupStateEvents {

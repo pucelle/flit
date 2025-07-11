@@ -3,7 +3,8 @@ import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'
 import {TriggerType} from '../bindings'
-import {AnchorPosition, computed, ObjectUtils} from '@pucelle/ff'
+import {AnchorPosition, ObjectUtils} from '@pucelle/ff'
+import {computed} from '@pucelle/lupos'
 
 
 /** `<Dropdown>` for containing both trigger element and popup content.  */

@@ -1,5 +1,5 @@
 import {css, html, Component, render} from '@pucelle/lupos.js'
-import {MouseMovement, Vector} from '@pucelle/ff'
+import {MouseMovement} from '@pucelle/ff'
 
 
 interface ResizerEvents {
@@ -8,7 +8,7 @@ interface ResizerEvents {
 	'resize-start': (e: MouseEvent) => void
 
 	/** Fires after every time resizing. */
-	'resize-move': (moves: Vector, e: MouseEvent) => void
+	'resize-move': (moves: Coord, e: MouseEvent) => void
 
 	/** Fires after resizing end. */
 	'resize-end': (e: MouseEvent) => void
@@ -90,7 +90,7 @@ export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 	protected onMouseDown(this: Resizer, e: MouseEvent) {
 		let mover = new MouseMovement(e)
 
-		mover.onMove = (moves: Vector, _m: Vector, e: MouseEvent) => {
+		mover.onMove = (moves: Coord, _m: Coord, e: MouseEvent) => {
 			e.preventDefault()
 			this.fire('resize-move', moves, e)
 		}

@@ -1,4 +1,5 @@
-import {computed, effect, ListUtils, Observed} from '@pucelle/ff'
+import {computed, effect, Observed} from '@pucelle/lupos'
+import {ListUtils} from '@pucelle/ff'
 import {PageDataLoader} from './page-data-loader'
 
 

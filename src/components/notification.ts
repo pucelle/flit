@@ -1,5 +1,5 @@
-import {css, html, Component, RenderResultRenderer} from '@pucelle/lupos.js'
-import {Timeout, fold, fade} from '@pucelle/ff'
+import {css, html, Component, RenderResultRenderer, fold, fade} from '@pucelle/lupos.js'
+import {Timeout} from '@pucelle/ff'
 import {Icon} from './icon'
 import {Button} from './button'
 

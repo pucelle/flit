@@ -1,8 +1,7 @@
-import {css, html} from '@pucelle/lupos.js'
+import {css, html, fade} from '@pucelle/lupos.js'
 import {Popup} from './popup'
 import {Triangle} from './triangle'
 import {ThemeSize} from '../style'
-import {fade} from '@pucelle/ff'
 
 
 /** `<Menu>` shows a menu with a `<List>` or `<DropList>` inside. */

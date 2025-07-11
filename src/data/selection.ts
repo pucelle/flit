@@ -1,4 +1,4 @@
-import {Observed} from '@pucelle/ff'
+import {Observed} from '@pucelle/lupos'
 
 
 /** Handle selection. */

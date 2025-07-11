@@ -1,5 +1,5 @@
-import {DOMScroll, PerFrameTransitionEasingName, computed} from '@pucelle/ff'
-import {Component, html, RenderResult} from '@pucelle/lupos.js'
+import {computed} from '@pucelle/lupos'
+import {DOMScroll, PerFrameTransitionEasingName, Component, html, RenderResult} from '@pucelle/lupos.js'
 import {locateVisibleIndex, locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
 import {DirectionalOverflowAccessor} from './repeat-helpers/directional-overflow-accessor'
 

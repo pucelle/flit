@@ -2,7 +2,7 @@ import {Component, css, html} from '@pucelle/lupos.js'
 import {tooltip, TooltipOptions} from '../bindings'
 import {Icon} from './icon'
 import {ThemeSize} from '../style'
-import {DOMModifiableEvents, watch} from '@pucelle/ff'
+import {DOMModifiableEvents, watch} from '@pucelle/lupos'
 
 
 interface InputEvents {

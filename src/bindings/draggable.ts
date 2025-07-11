@@ -1,8 +1,9 @@
-import {Binding, Part, PartCallbackParameterMask, RenderResultRenderer} from '@pucelle/lupos.js'
-import {DOMEvents, Point, WebTransitionEasingName} from '@pucelle/ff'
+import {Binding, Part, PartCallbackParameterMask, RenderResultRenderer, WebTransitionEasingName} from '@pucelle/lupos.js'
+import {EventUtils} from '@pucelle/ff'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
 import {registerDraggable} from './drag-drop-helpers/all-draggable'
 import {droppable} from './droppable'
+import {DOMEvents} from '@pucelle/lupos'
 
 
 export interface DraggableOptions {
@@ -76,7 +77,7 @@ export abstract class DraggableBase<T = any> implements Part {
 	private connected: boolean = false
 	private inHanding: boolean = false
 	private inDragging: boolean = false
-	private startPosition: Point | null = null
+	private startPosition: DOMPoint | null = null
 
 	constructor(el: Element, context: any) {
 		this.el = el as HTMLElement
@@ -125,17 +126,23 @@ export abstract class DraggableBase<T = any> implements Part {
 
 		this.inHanding = true
 		this.inDragging = false
-		this.startPosition = DOMEvents.getClientPosition(e)
+		this.startPosition = EventUtils.getClientPosition(e)
 	
 		DOMEvents.on(document, 'mousemove', this.onMouseMove, this)
 		DOMEvents.on(document, 'mouseup', this.onMouseUp, this)
 	}
 
 	private onMouseMove(e: MouseEvent) {
-		let currentPosition = DOMEvents.getClientPosition(e)
-		let moves = currentPosition.diff(this.startPosition!)
+		let currentPosition = EventUtils.getClientPosition(e)
 
-		if (!this.inDragging && moves.getLength() > 5) {
+		let moves: Coord = {
+			x: currentPosition.x - this.startPosition!.x,
+			y: currentPosition.y - this.startPosition!.y,
+		}
+
+		let movesLength = Math.sqrt(moves.x ** 2 + moves.y ** 2)
+
+		if (!this.inDragging && movesLength > 5) {
 			this.options.onStart?.call(this.context, e)
 
 			// Prevent dragging this time.
@@ -146,7 +153,9 @@ export abstract class DraggableBase<T = any> implements Part {
 				GlobalDragDropRelationship.startDragging(this, e)
 				this.startPosition = currentPosition
 				this.inDragging = true
-				moves.reset()	
+
+				moves.x = 0
+				moves.y = 0
 			}
 		}
 		

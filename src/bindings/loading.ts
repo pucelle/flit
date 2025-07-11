@@ -1,5 +1,4 @@
-import {fade, TransitionResult} from '@pucelle/ff'
-import {Binding, render, html, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
+import {fade, TransitionResult, Binding, render, html, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {Loader} from '../components'
 
 

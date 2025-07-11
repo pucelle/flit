@@ -1,5 +1,5 @@
 import {Component, RenderResult} from '@pucelle/lupos.js'
-import {DOMEvents} from '@pucelle/ff'
+import {DOMEvents} from '@pucelle/lupos'
 import {getPathMatcher} from './router-helpers/path-match'
 import {PathMatcher} from './router-helpers/path-matcher'
 import {Popup} from './popup'

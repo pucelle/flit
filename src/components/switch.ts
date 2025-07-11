@@ -1,6 +1,6 @@
-import {Component, html, css} from '@pucelle/lupos.js'
+import {Component, html, css, getCSSEasingValue} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, getCSSEasingValue} from '@pucelle/ff'
+import {DOMEvents, EventKeys} from '@pucelle/lupos'
 
 
 interface SwitchEvents {
