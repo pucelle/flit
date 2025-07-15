@@ -1,12 +1,8 @@
-import {AsyncTaskQueue, ResizeWatcher} from '@pucelle/ff'
+import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, ResizeWatcher} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {PartialRendererMeasurement, UnCoveredSituation} from './partial-renderer-measurement'
-import {DOMEvents, untilUpdateComplete} from '@pucelle/lupos'
-
-
-/** Function for doing updating. */
-type UpdateRenderingFn = () => void
+import {PartialRendererMeasurement} from './partial-renderer-measurement'
+import {DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
 
 
 interface NeedToApply {
@@ -55,7 +51,7 @@ export class PartialRenderer {
 	readonly slider: HTMLElement
 	readonly repeat: HTMLElement
 	readonly placeholder: HTMLDivElement
-	readonly updateRendering: UpdateRenderingFn
+	readonly updateRendering: () => void
 
 	/** 
 	 * Whether partial rendering content as follower,
@@ -114,7 +110,7 @@ export class PartialRenderer {
 		placeholder: HTMLDivElement,
 		asFollower: boolean,
 		doa: DirectionalOverflowAccessor,
-		updateRendering: UpdateRenderingFn
+		updateRendering: () => void
 	) {
 		this.scroller = scroller
 		this.slider = slider
@@ -123,7 +119,6 @@ export class PartialRenderer {
 		this.asFollower = asFollower
 		this.doa = doa
 		this.updateRendering = updateRendering
-
 		this.measurement = new PartialRendererMeasurement(scroller, slider, doa)
 	}
 
@@ -184,16 +179,20 @@ export class PartialRenderer {
 	async connect() {
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
 		
-		await untilUpdateComplete()
-		this.readScrollerSize()
+		await untilFirstPaintCompleted()
+		await this.readScrollerSize()
 		ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
 	}
 
 	/** After component that use this partial renderer will get disconnected. */
-	disconnect() {
+	async disconnect() {
 
 		// For restoring scroll position later.
 		if (!this.asFollower) {
+
+			// Barrier DOM Writing here.
+			await barrierDOMWriting()
+
 			this.setRenderIndices(this.locateVisibleIndex('start'))
 		}
 
@@ -207,12 +206,21 @@ export class PartialRenderer {
 	}
 
 	/** Read new scroller size. */
-	private readScrollerSize() {
+	private async readScrollerSize() {
+
+		// Barrier DOM Reading here.
+		await barrierDOMReading()
+
 		this.measurement.readScrollerSize()
 	}
 
 	/** Update from applying start index or updating data. */
 	async update() {
+
+		// Don't want to force re-layout before first time paint.
+		await untilFirstPaintCompleted()
+
+		// Can only run only one updating each time.
 		await this.renderQueue.enqueue(() => this.doNormalUpdate())
 
 		// If item size become smaller much, may cause can't fully covered.
@@ -220,61 +228,73 @@ export class PartialRenderer {
 	}
 
 	private async doNormalUpdate() {
-
-		//// Can only write dom properties now.
-
 		let hasMeasuredBefore = this.measurement.hasMeasured()
 		let continuouslyUpdated: boolean = false
 		let needToApply = this.needToApply
 
 		// Adjust scroll position by specified indices.
 		if (needToApply) {
-			continuouslyUpdated = await this.updateByApplyingIndices(needToApply)
 
-			if (needToApply === this.needToApply) {
-				this.needToApply = null
-			}
+			// Barrier DOM Writing inside.
+			continuouslyUpdated = await this.updateByApplyingIndices(needToApply)
+			this.needToApply = null
 		}
 
 		// Data changed, try persist start index and scroll position.
 		else {
-			this.updateWithStartIndexPersist()
+
+			// Barrier DOM Writing inside.
+			await this.updateWithStartIndexPersist()
 		}
 
 		if (hasMeasuredBefore) {
-			this.updatePlaceholderSizeProgressively()
+			this.setPlaceholderSizeProgressively()
 		}
 
-
-		//// Can only read dom properties now.
-
 		if (!continuouslyUpdated) {
-			await untilUpdateComplete()
 
+			// Barrier DOM Reading here.
+			await barrierDOMReading()
 			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 
-			// If newly measured, and render from a specified index, re-render after measured.
+			// If newly measured, and render from a non-zero index, re-render after measured.
 			if (needToApply && !hasMeasuredBefore && needToApply.startIndex) {
 
-				// Muse update placeholder size firstly, or may can't set scroll position correctly.
-				this.updatePlaceholderSizeProgressively()
+				// Barrier DOM Writing here.
+				await barrierDOMWriting()
 
+				// Must update placeholder size firstly, or may can't set scroll position correctly.
+				this.setPlaceholderSizeProgressively()
+
+				// Barrier DOM Reading and Writing inside.
 				await this.updateByApplyingIndices(needToApply)
+
+				// Barrier DOM Reading here.
+				await barrierDOMReading()
 				this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 			}
 
-			this.checkEdgeCasesAfterMeasured()
+			// If has not measured, no need to check, will soon update again by coverage checking.
+			// Barrier DOM Writing inside.
+			if (hasMeasuredBefore) {
+				this.checkEdgeCasesAfterMeasured()
+			}
 		}
 	}
 
-	/** Update when start index specified and need to apply. */
+	/** 
+	 * Update when start index specified and need to apply.
+	 * Barrier DOM Writing inside.
+	 */
 	private async updateByApplyingIndices(needToApply: NeedToApply): Promise<boolean> {
 		let {startIndex, endIndex, alignDirection, tryPersistScrollPosition} = needToApply
 		let hasMeasured = this.measurement.hasMeasured()
 		let renderCount = this.endIndex - this.startIndex
-	
+
 		// Adjust index and persist continuous.
 		if (tryPersistScrollPosition && renderCount > 0) {
+			await barrierDOMReading()
+	
 			let startVisibleIndex = this.locateVisibleIndex('start')
 			let endVisibleIndex = this.locateVisibleIndex('end')
 			let canPersist = false
@@ -309,6 +329,8 @@ export class PartialRenderer {
 			}
 
 			if (canPersist) {
+
+				// Barrier DOM Writing and reading inside.
 				await this.updateContinuously(alignDirection, startIndex!, endIndex)
 				return true
 			}
@@ -317,6 +339,10 @@ export class PartialRenderer {
 		// Reset scroll position, but will align item with index viewport edge.
 		this.setIndices(startIndex, endIndex)
 		this.setAlignDirection(alignDirection ?? 'start')
+
+		// Barrier DOM Writing here.
+		await barrierDOMWriting()
+
 		this.updateRendering()
 
 		this.resetPositions(
@@ -328,8 +354,11 @@ export class PartialRenderer {
 		return false
 	}
 
-	/** Update data normally, and try to keep indices and scroll position. */
-	private updateWithStartIndexPersist() {
+	/** 
+	 * Update data normally, and try to keep indices and scroll position.
+	 * Barrier DOM Writing inside.
+	 */
+	private async updateWithStartIndexPersist() {
 		let canPersist = true
 
 		// Can't persist old index and position.
@@ -341,6 +370,10 @@ export class PartialRenderer {
 		this.setIndices(this.startIndex)
 
 		this.setAlignDirection('start')
+
+		// Barrier DOM Writing here.
+		await barrierDOMWriting()
+
 		this.updateRendering()
 
 		if (!canPersist) {
@@ -376,9 +409,12 @@ export class PartialRenderer {
 	 * 
 	 * If `needResetScrollOffset` is `true`, will adjust scroll offset and align to the element
 	 * specified by `alignToStartIndex`, `alignToEndIndex` are specified.
+	 * 
+	 * Ensure to barrier DOM Writing before calling it.
 	 */
 	private resetPositions(needResetScrollOffset: boolean, alignToStartIndex: number = this.startIndex, alignToEndIndex: number = this.endIndex) {
 		let newSliderPosition = this.measurement.calcSliderPositionByIndex(this.alignDirection === 'start' ? this.startIndex : this.endIndex, this.alignDirection)
+		
 		this.setSliderPosition(newSliderPosition)
 		this.measurement.breakContinuousRenderRange()
 
@@ -387,7 +423,10 @@ export class PartialRenderer {
 			alignToEndIndex = Math.min(alignToEndIndex, this.endIndex)
 	
 			// Align scroller start with slider start.
-			let scrollPosition = this.measurement.calcSliderPositionByIndex(this.alignDirection === 'start' ? alignToStartIndex : alignToEndIndex, this.alignDirection)
+			let scrollPosition = this.measurement.calcSliderPositionByIndex(
+				this.alignDirection === 'start' ? alignToStartIndex : alignToEndIndex,
+				this.alignDirection
+			)
 
 			// Align scroller end with slider end.
 			if (this.alignDirection === 'end') {
@@ -402,6 +441,8 @@ export class PartialRenderer {
 	 * Update slider position after setting new indices.
 	 * The position is the slider start/end edge (depend on align direction)
 	 * relative to scroller start.
+	 * 
+	 * Ensure to barrier DOM Writing before calling it.
 	 */
 	private setSliderPosition(position: number) {
 		if (this.alignDirection === 'start') {
@@ -421,8 +462,10 @@ export class PartialRenderer {
 	 * Update height/width of placeholder progressive before next time rendering.
 	 * When scrolling down, and will render more items in the end, update size.
 	 * No need to update when scrolling up.
+	 * 
+	 * Ensure to barrier DOM Writing before calling it.
 	 */
-	private updatePlaceholderSizeProgressively() {
+	private setPlaceholderSizeProgressively() {
 		if (!this.placeholder) {
 			return
 		}
@@ -446,8 +489,13 @@ export class PartialRenderer {
 		this.measurement.cachePlaceholderProperties(this.endIndex, this.dataCount, size)
 	}
 
-	/** After update complete, and after `measureAfterRendered`, do more check for edge cases. */
-	private checkEdgeCasesAfterMeasured() {
+	/** 
+	 * After update complete, and after `measureAfterRendered`, do more check for edge cases.
+	 * 
+	 * Ensure barrier DOM Reading before calling it.
+	 * Will barrier DOM Writing inside.
+	 */
+	private async checkEdgeCasesAfterMeasured() {
 
 		// When reach start index but may not reach scroll start.
 		if (this.startIndex === 0) {
@@ -457,41 +505,60 @@ export class PartialRenderer {
 			// reset to start position 0 cause this 10px get removed,
 			// And we need to scroll up (element down) for 10px.
 			let moreSize = -this.measurement.latestSliderPositionProperties.startPosition
-			this.doa.setScrolled(this.scroller, this.doa.getScrolled(this.scroller) + moreSize)
-			this.setAlignDirection('start')
-			this.setSliderPosition(0)
+			
+			if (moreSize !== 0) {
+				let scrolled = this.doa.getScrolled(this.scroller) + moreSize
+
+				// Barrier DOM Writing here.
+				await barrierDOMWriting()
+
+				this.doa.setScrolled(this.scroller, scrolled)
+				this.setAlignDirection('start')
+				this.setSliderPosition(0)
+			}
 
 			// Should also update `sliderEndPosition`,
 			// but it will not be used before next update.
 		}
 
 		// When reach scroll index but not start index.
-		else if (this.startIndex > 0 && this.measurement.latestSliderPositionProperties.startPosition <= 0) {
+		else if (this.measurement.latestSliderPositionProperties.startPosition <= 0) {
 
 			// Guess size of items before, and add missing size of current rendering.
 			let newPosition = this.measurement.calcSliderPositionByIndex(this.startIndex, 'start')
 			let moreSize = newPosition - this.measurement.latestSliderPositionProperties.startPosition
+			let scrolled = this.doa.getScrolled(this.scroller) + moreSize
 
-			this.doa.setScrolled(this.scroller, this.doa.getScrolled(this.scroller) + moreSize)
+			// Barrier DOM Writing here.
+			await barrierDOMWriting()
+			
+			this.doa.setScrolled(this.scroller, scrolled)
 			this.setPlaceholderSize(this.measurement.latestPlaceholderProperties.placeholderSize + moreSize)
+
 			this.setAlignDirection('start')
 			this.setSliderPosition(newPosition)
 		}
 
 		// When reach end index but not scroll end.
 		if (this.endIndex === this.dataCount) {
-			this.setPlaceholderSize(this.measurement.latestSliderPositionProperties.endPosition)
+
+			// Placeholder size is too large and should be shrink.
+			if (this.measurement.latestPlaceholderProperties.placeholderSize > this.measurement.latestSliderPositionProperties.endPosition) {
+
+				// Barrier DOM Writing here.
+				await barrierDOMWriting()
+				this.setPlaceholderSize(this.measurement.latestSliderPositionProperties.endPosition)
+			}
 		}
 
 		// When reach scroll end but not end index.
 		// Note `scrollTop` value may be float, but two heights are int.
-		else if (this.endIndex < this.dataCount
-			&& this.doa.getScrolled(this.scroller) + this.doa.getClientSize(this.scroller)
-				>= this.doa.getScrollSize(this.scroller)
-		) {
+		else if (this.doa.getScrolled(this.scroller) + this.doa.getClientSize(this.scroller) >= this.doa.getScrollSize(this.scroller)) {
 			let moreSize = this.measurement.calcSliderPositionByIndex(this.dataCount, 'end')
 				- this.measurement.calcSliderPositionByIndex(this.endIndex, 'end')
 
+			// Barrier DOM Writing here.
+			await barrierDOMWriting()
 			this.setPlaceholderSize(this.measurement.latestPlaceholderProperties.placeholderSize + moreSize)
 		}
 	}
@@ -507,19 +574,19 @@ export class PartialRenderer {
 			return
 		}
 
+		await this.renderQueue.enqueue(() => this.updateByCoverage())
+	}
 
-		//// Can only read dom properties now.
+	private async updateByCoverage() {
+		
+		// Barrier DOM Reading here.
+		await barrierDOMReading()
 
 		// Which direction is un-covered.
 		let unCoveredSituation = this.measurement.checkUnCoveredSituation(this.startIndex, this.endIndex, this.dataCount)
 		if (unCoveredSituation === null) {
 			return
 		}
-
-		await this.renderQueue.enqueue(() => this.doCoverageUpdate(unCoveredSituation))
-	}
-
-	private async doCoverageUpdate(unCoveredSituation: UnCoveredSituation) {
 
 		// Update and try to keep same element with same position.
 		if (unCoveredSituation === 'end' || unCoveredSituation === 'start') {
@@ -539,35 +606,36 @@ export class PartialRenderer {
 				newStartIndex = this.startIndex - this.endIndex + newEndIndex
 			}
 
+			// Barrier DOM Writing and reading inside.
 			await this.updateContinuously(alignDirection, newStartIndex, newEndIndex)
 		}
 
 		// No intersection, reset indices by current scroll position.
 		else if (unCoveredSituation === 'break') {
 
-			//// Read complete, now can only write.
+			// Barrier DOM Writing inside.
+			await this.updatePersistScrollPosition()
 
-			this.updatePersistScrollPosition()
-			this.updatePlaceholderSizeProgressively()
+			this.setPlaceholderSizeProgressively()
 
-
-			//// Write complete, now can only read dom properties below.
-			await untilUpdateComplete()
-
+			// Barrier DOM Reading here.
+			await barrierDOMReading()
 			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
+
+			// Barrier DOM Writing inside.
 			this.checkEdgeCasesAfterMeasured()
 		}
 	}
 
-	/** Update and make render content continuous. */
+	/** 
+	 * Update and make render content continuous.
+	 * Barrier DOM Writing inside and reading inside.
+	 */
 	private async updateContinuously(
 		alignDirection: 'start' | 'end',
 		newStartIndex: number,
 		newEndIndex: number | undefined
 	) {
-
-		//// Can only read dom properties below.
-
 		// If edge index has not changed, no need to reset position, then its `null`.
 		let position: number | null = null
 
@@ -595,6 +663,9 @@ export class PartialRenderer {
 			else if (this.startIndex !== oldStartIndex) {
 				let elIndex = this.startIndex - oldStartIndex
 				let el = this.repeat.children[elIndex] as HTMLElement
+	
+				// Barrier DOM Writing here.
+				await barrierDOMReading()
 
 				// If el located at start, it will move by slider padding top,
 				// to keep it's position, should remove slider padding.
@@ -616,6 +687,9 @@ export class PartialRenderer {
 			else if (this.endIndex !== oldEndIndex) {
 				let elIndex = this.endIndex - oldStartIndex - 1
 				let el = this.repeat.children[elIndex] as HTMLElement
+	
+				// Barrier DOM Writing here.
+				await barrierDOMReading()
 
 				// If el located at end, it will move up by slider padding bottom,
 				// to keep it's position, should add slider bottom padding.
@@ -625,28 +699,74 @@ export class PartialRenderer {
 			}
 		}
 
-
-		//// Read complete, now can only write.
-
-
 		// Totally reset scroll position.
+		// Barrier DOM Writing inside.
 		if (needReset) {
-			this.updateByNewIndices()
+			await this.updateByNewIndices()
 		}
 		
 		// Update continuously.
+		// Barrier DOM Writing inside.
 		else {
-			this.updateBySliderPosition(alignDirection, position!)
+			await this.updateBySliderPosition(alignDirection, position!)
 		}
 
-		this.updatePlaceholderSizeProgressively()
+		this.setPlaceholderSizeProgressively()
 
-
-		//// Write complete, now can only read dom properties below.
-		await untilUpdateComplete()
-
+		// Barrier DOM Reading here.
+		await barrierDOMReading()
 		this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
+
+		// Barrier DOM Writing inside.
 		this.checkEdgeCasesAfterMeasured()
+	}
+
+	/** 
+	 * Reset indices by current scroll position.
+	 * Ensure to barrier DOM Reading before calling it.
+	 * 
+	 * Ensure to barrier DOM Reading before calling it.
+	 * Barrier DOM Writing inside.
+	 */
+	private async updatePersistScrollPosition() {
+		let newStartIndex = this.measurement.calcStartIndexByScrolled()
+		this.setIndices(newStartIndex)
+
+		this.setAlignDirection('start')
+
+		// Barrier DOM Writing here.
+		await barrierDOMWriting()
+
+		this.updateRendering()
+		this.resetPositions(false)
+	}
+
+	/** 
+	 * Update by specified slider position.
+	 * Barrier DOM Writing inside.
+	 */
+	private async updateBySliderPosition(direction: 'start' | 'end', position: number | null) {
+		this.setAlignDirection(direction)
+
+		// Barrier DOM Writing here.
+		await barrierDOMWriting()
+
+		this.updateRendering()
+
+		if (position !== null) {
+			this.setSliderPosition(position)
+		}
+	}
+
+	/** Reset scroll position by current indices. */
+	private async updateByNewIndices() {
+		this.setAlignDirection('start')
+
+		// Barrier DOM Writing here.
+		await barrierDOMWriting()
+
+		this.updateRendering()
+		this.resetPositions(true)
 	}
 
 	/** 
@@ -664,36 +784,5 @@ export class PartialRenderer {
 		)
 
 		return visibleIndex + this.startIndex
-	}
-
-	/** Reset indices by current scroll position. */
-	private updatePersistScrollPosition() {
-		this.resetIndicesByCurrentPosition()
-		this.setAlignDirection('start')
-		this.updateRendering()
-		this.resetPositions(false)
-	}
-
-	/** Reset indices by current scroll position. */
-	private resetIndicesByCurrentPosition() {
-		let newStartIndex = this.measurement.calcStartIndexByScrolled()
-		this.setIndices(newStartIndex)
-	}
-
-	/** Update by specified slider position. */
-	private updateBySliderPosition(direction: 'start' | 'end', position: number | null) {
-		this.setAlignDirection(direction)
-		this.updateRendering()
-
-		if (position !== null) {
-			this.setSliderPosition(position)
-		}
-	}
-
-	/** Reset scroll position by current indices. */
-	private updateByNewIndices() {
-		this.setAlignDirection('start')
-		this.updateRendering()
-		this.resetPositions(true)
 	}
 }

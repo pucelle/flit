@@ -150,7 +150,10 @@ export class PartialRendererMeasurement {
 		}
 	}
 
-	/** Read new scroller size. */
+	/** 
+	 * Read new scroller size.
+	 * Ensure to barrier DOM Reading before calling it.
+	 */
 	readScrollerSize() {
 		this.scrollerSize = this.doa.getClientSize(this.scroller)
 	}
@@ -238,7 +241,10 @@ export class PartialRendererMeasurement {
 		this.continuousRenderRange = null
 	}
 
-	/** Every time after update complete, do measurement. */
+	/** 
+	 * Every time after update complete, do measurement.
+	 * Ensure to barrier DOM Reading before call it.
+	 */
 	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
@@ -360,7 +366,10 @@ export class PartialRendererMeasurement {
 		}
 	}
 
-	/** Check cover situation and decide where to render more contents. */
+	/** 
+	 * Check cover situation and decide where to render more contents.
+	 * Ensure to barrier DOM Reading before call it.
+	 */
 	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number): UnCoveredSituation | null {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)

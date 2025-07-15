@@ -362,7 +362,9 @@ export class popup implements Binding, Part {
 		// If should show immediately and haven't shown.
 		if (!this.opened && this.shouldKeepVisible()) {
 			this.persistVisible = true
-			this.showPopup()
+
+			// Not `showPopup` here, to prevent it affect first frame rendering.
+			this.showPopupLater()
 		}
 
 		// Options changes and no need to persist visible, or renderer becomes null.

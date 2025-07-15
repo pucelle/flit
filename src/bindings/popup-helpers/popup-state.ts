@@ -38,18 +38,13 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 			return false
 		}
 
-		if (showDelay > 0) {
-			this.showTimeout = new Timeout(() => {
-				this.showTimeout = null
-				this.show()
-			}, showDelay)
-
-			this.showTimeout.start()
-			this.willShowSoon = true
-		}
-		else {
+		this.showTimeout = new Timeout(() => {
+			this.showTimeout = null
 			this.show()
-		}
+		}, showDelay)
+
+		this.showTimeout.start()
+		this.willShowSoon = true
 
 		return true
 	}

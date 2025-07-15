@@ -371,7 +371,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	@effect
 	protected applyColumnResizerProperties() {
 		this.columnResizer?.update(this.columns, this.minColumnWidth)
-		this.columnResizer?.updateColumnWidths()
 	}
 
 	/** Order specified column with specified direction by column name. */

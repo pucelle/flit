@@ -1,7 +1,7 @@
-import {DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
+import {barrierDOMReading, barrierDOMWriting, DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
 import {html, render} from '@pucelle/lupos.js'
-import {DOMEvents, untilUpdateComplete} from '@pucelle/lupos'
+import {DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
 
 
 /** For `<f-table>` to resize column widths. */
@@ -48,28 +48,32 @@ export class ColumnWidthResizer {
 	}
 
 	/** Update properties from <Table>. */
-	update(columns: TableColumn[], minColumnWidth: number) {
+	async update(columns: TableColumn[], minColumnWidth: number) {
 		this.columns = columns
 		this.minColumnWidth = minColumnWidth
+
+		await this.updateColumnWidths()
 	}
 
 	/** 
 	 * Update column widths from column configuration.
-	 * Will check available column width and may cause page re-layout.
+	 * Will check available column width and will cause page re-layout.
 	 */
 	async updateColumnWidths() {
 
-		//// Now can read dom properties.
+		// Don't want to force re-layout before first time paint.
+		await untilFirstPaintCompleted()
 
-		await untilUpdateComplete()
-		
+		await barrierDOMReading()
+
+		//// Now can read dom properties.
 		let headAvailableWidth = this.head.clientWidth
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingLeft')
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingRight')
 
 
 		//// Now can write dom properties.
-
+		await barrierDOMWriting()
 		this.updateColumnWidthsByAvailable(headAvailableWidth)
 	}
 
