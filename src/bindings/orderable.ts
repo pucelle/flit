@@ -23,18 +23,15 @@ const DefaultOrderableOptions: OrderableOptions = {
  * :orderable=${data, index, ?options}
  * - `data`: Data item to identify current dragging item.
  * - `index`: Data item index within it's siblings.
- * - `options` Reorder options.
+ * - `options` Orderable options.
  */
 export class orderable<T = any> extends DraggableBase<T> implements Binding, Part {
 
-	readonly mode = 'reorder'
+	readonly mode = 'order'
 
 	options: OrderableOptions = DefaultOrderableOptions
 
-	/** 
-	 * Data item index within it's siblings.
-	 * Must provide on `reorder` mode.
-	 */
+	/** Data item index within it's siblings. */
 	index: number = -1
 
 	update(data: T, index: number, options: Partial<DraggableOptions> = {}) {

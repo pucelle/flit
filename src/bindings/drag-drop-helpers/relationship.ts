@@ -59,7 +59,7 @@ class DragDropRelationship {
 
 		this.activeDrop = activeDrop
 
-		if (this.dragging.mode === 'reorder') {
+		if (this.dragging.mode === 'order') {
 			this.movement = new OrderMovement(this.dragging as orderable, activeDrop)
 		}
 		else {
@@ -110,7 +110,7 @@ class DragDropRelationship {
 	private canEnterToSwapWith(drag: DraggableBase): drag is orderable {
 		return !!(
 			this.dragging
-				&& this.dragging.mode === 'reorder' && (this.dragging as orderable).options.slideOnly
+				&& this.dragging.mode === 'order'
 				&& this.dragging.options.name === drag.options.name
 				&& this.dragging !== drag
 		)
@@ -146,7 +146,7 @@ class DragDropRelationship {
 			}
 		}
 
-		if (dragging.el !== drop.el) {
+		if (dragging.el === drop.el) {
 			return false
 		}
 
@@ -163,7 +163,7 @@ class DragDropRelationship {
 	leaveDrop(dropping: droppable) {
 
 		// Always in same drop for slide only mode.
-		if (this.dragging?.mode === 'reorder' && (this.dragging as orderable)?.options.slideOnly) {
+		if (this.dragging?.mode === 'order' && (this.dragging as orderable)?.options.slideOnly) {
 			return
 		}
 		
@@ -171,13 +171,13 @@ class DragDropRelationship {
 
 		if (this.activeDrop === dropping) {
 			dropping.fireLeave(this.dragging!)
-			this.activeDrop = null
 			this.movement?.onLeaveDrop(dropping)
+			this.activeDrop = null
 		}
 	}
 
 	/** When release dragging. */
-	endDragging() {
+	async endDragging() {
 		if (!this.dragging) {
 			return
 		}
@@ -186,19 +186,13 @@ class DragDropRelationship {
 		let movement = this.movement
 		let activeDrop = this.activeDrop
 
-		if (activeDrop) {
-			this.leaveDrop(activeDrop)
-		}
-
-		movement?.endDragging().then(() => {
-			if (movement.canDrop()) {
-				activeDrop?.fireDrop(dragging, movement.getInsertIndex())
-			}
-		})
-
 		this.dragging = null
 		this.movement = null
 		this.activeDrop = null
+
+		if (activeDrop) {
+			this.enteredDroppable.delete(activeDrop)
+		}
 
 		if (this.followElementRendered) {
 			this.followElementRendered.remove()
@@ -207,6 +201,19 @@ class DragDropRelationship {
 
 		if (this.followElement) {
 			this.followElement.remove()
+			this.followElement = null
+		}
+
+		// No need to call `leaveDrop` here.
+		if (movement) {
+			let canDrop = movement.canDrop() && activeDrop
+			let insertIndex = movement.getInsertIndex()
+
+			await movement.endDragging()
+			
+			if (canDrop) {
+				activeDrop!.fireDrop(dragging, insertIndex)
+			}
 		}
 	}
 }

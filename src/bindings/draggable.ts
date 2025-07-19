@@ -201,7 +201,7 @@ export abstract class DraggableBase<T = any> implements Part {
  */
 export class draggable<T = any> extends DraggableBase<T> implements Binding, Part {
 
-	readonly mode: string = 'nest'
+	readonly mode: string = 'drag'
 	
 	update(data: T, options: Partial<DraggableOptions> = {}) {
 		this.data = data

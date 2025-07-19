@@ -43,7 +43,7 @@ export class DragMovement {
 		this.setBaseDraggingStyle(mousePosition)
 
 		if (applyDraggingStyle) {
-			if (dragging.mode === 'reorder') {
+			if (dragging.mode === 'order') {
 				this.startStyleText = this.draggingEl.style.cssText
 			}
 
@@ -98,12 +98,12 @@ export class DragMovement {
 		}
 	}
 
-	/** When mouse enter droppable. */
-	onEnterDrop(_drop: droppable) {}
-	
 	/** When mouse enter draggable. */
 	onEnterDrag(_drag: DraggableBase) {}
 
+	/** When mouse enter droppable. */
+	onEnterDrop(_drop: droppable) {}
+	
 	/** When mouse leaves drop area. */
 	onLeaveDrop(_drop: droppable) {}
 

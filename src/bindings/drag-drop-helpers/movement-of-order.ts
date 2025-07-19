@@ -60,6 +60,7 @@ export class OrderMovement extends DragMovement {
 
 	constructor(drag: orderable, drop: droppable | null) {
 		let elRect = drag.el.getBoundingClientRect()
+		let placeholder = drag.el.cloneNode() as HTMLElement
 
 		super(
 			drag,
@@ -77,8 +78,7 @@ export class OrderMovement extends DragMovement {
 		this.outerHeight = DOMUtils.getOuterHeight(this.draggingEl)
 
 		this.prepareSiblings()
-
-		this.placeholder = this.initPlaceholder(elRect)
+		this.placeholder = this.initPlaceholder(placeholder, elRect)
 
 		if (drop) {
 			this.insertPlaceholder(drop, false)
@@ -108,8 +108,7 @@ export class OrderMovement extends DragMovement {
 	}
 
 	/** Create a placeholder having same size with dragging element and insert into drop element. */
-	private initPlaceholder(elRect: DOMRect) {
-		let placeholder = this.dragging.el.cloneNode() as HTMLElement
+	private initPlaceholder(placeholder: HTMLElement, elRect: DOMRect) {
 		placeholder.style.visibility = 'hidden'
 		placeholder.style.width = elRect.width + 'px'
 		placeholder.style.height = elRect.height + 'px'
@@ -203,12 +202,6 @@ export class OrderMovement extends DragMovement {
 		}
 	}
 
-	onEnterDrop(drop: droppable) {
-		this.activeDrop = drop
-		this.itemsAlignDirection = drop.options.itemsAlignDirection ?? 'vertical'
-		this.insertPlaceholder(drop, true)
-	}
-	
 	onEnterDrag(drag: orderable) {
 		if (!this.activeDrop) {
 			return
@@ -224,7 +217,7 @@ export class OrderMovement extends DragMovement {
 			willMoveElements.delete(drag.el)
 		}
 
-		// Keeps position.
+		// Persist position.
 		for (let el of this.movedElements) {
 			if (!willMoveElements.has(el)) {
 				this.moveElement(el, 0, true)
@@ -344,6 +337,12 @@ export class OrderMovement extends DragMovement {
 		}
 	}
 
+	onEnterDrop(drop: droppable) {
+		this.activeDrop = drop
+		this.itemsAlignDirection = drop.options.itemsAlignDirection ?? 'vertical'
+		this.insertPlaceholder(drop, true)
+	}
+	
 	onLeaveDrop(drop: droppable) {
 		if (drop !== this.activeDrop) {
 			return
@@ -368,6 +367,7 @@ export class OrderMovement extends DragMovement {
 		)
 	}
 
+	/** Get the index where in droppable to insert dragging item. */
 	getInsertIndex(): number {
 		return this.draggingToIndex
 	}

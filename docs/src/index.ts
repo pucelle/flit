@@ -1,28 +1,19 @@
-import * as ff from '@pucelle/ff'
 import {html, Component, render} from '@pucelle/lupos.js'
 import {watch} from '@pucelle/lupos'
 import {
 	Radio, RadioGroup, Checkbox, CheckboxGroup, Row, Col, Icon, Button, ButtonGroup,
 	Select, tooltip, Link, Label, Switch, Tag, Input, Textarea, Form, Search,
 	Progress, Slider, Loader, List, Navigation, Popover, popup, Menu, notification,
-	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore, draggable, droppable,
+	dialog, Modal, loading, Table, TableColumn, Store, RemoteStore,
 	ParentalResizer,
 	DroppableOptions,
 	TooltipOptions,
 	PopupOptions,
-	ListItem
+	ListItem,
+	orderable,
+	droppable
 } from '../../out'
-import {range} from '@pucelle/ff'
-
-
-declare global {
-    interface Window {
-		ff: typeof ff
-	}
-}
-
-
-window.ff = ff
+import {sleep, range, EventUtils} from '@pucelle/ff'
 
 
 class Preview extends Component {
@@ -1135,7 +1126,7 @@ class Preview extends Component {
 				>
 					${this.leftData.map((data: number, index: number) => html`
 						<div style="width: 100px; vertical-align: top; margin: 4px; cursor: grab; background: color-mix(in srgb, var(--background-color) 85%, var(--text-color))"
-							:draggable=${data, index}
+							:orderable=${data, index}
 						>${data}</div>
 					`)}
 				</div>
@@ -1156,7 +1147,7 @@ class Preview extends Component {
 				>
 					${this.rightData.map((data: number, index: number) => html`
 						<div style="width: 100px; vertical-align: top; margin: 4px; cursor: grab; background: color-mix(in srgb, var(--background-color) 85%, var(--text-color));"
-							:draggable=${data, index}
+							:orderable=${data, index}
 						>${data}</div>
 					`)}
 				</div>
@@ -1222,12 +1213,12 @@ class ExampleRemoteStore extends RemoteStore {
 	}
 
 	async pageDataGetter(start: number, end: number) {
-		await ff.sleep(500)
-		return [...ff.range(start, end)].map(v => ({id: v + 1, value: Math.round(Math.random() * 100)}))
+		await sleep(500)
+		return [...range(start, end)].map(v => ({id: v + 1, value: Math.round(Math.random() * 100)}))
 	}
 }
 
 
-ff.EventUtils.untilWindowLoaded().then(() => {
+EventUtils.untilWindowLoaded().then(() => {
 	new Preview().appendTo(document.body)
 })

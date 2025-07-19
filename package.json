@@ -9,6 +9,7 @@
 		"type": "git",
 		"url": "https://github.com/pucelle/flit.git"
 	},
+	"type": "module",
 	"main": "out/index.js",
 	"types": "out/index.d.ts",
 	"sideEffects": false,
@@ -18,6 +19,7 @@
 		"build-docs": "cd docs && luc",
 		"watch-docs": "cd docs && luc -w",
 		"start-docs": "webpack serve",
+		"bundle-docs": "webpack --mode=\"production\"",
 		"prepublish": "npm run build && npm run build-docs"
 	},
 	"dependencies": {
