@@ -1,15 +1,9 @@
-import {Component, css} from '@pucelle/lupos.js'
+import {Component} from '@pucelle/lupos.js'
 import {Input} from './input'
 
 
 /** `<Form>` can contain `<Input>` or `<Textarea>` and check their valid state at once. */
 export class Form<E = {}> extends Component<E> {
-
-	static style = css`
-		:host{
-			display: block;
-		}
-	`
 
 	/** 
 	 * Whether all inputs and textareas are valid.

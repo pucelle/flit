@@ -1,20 +1,20 @@
 import {ListMap, MouseLeaveControl} from '@pucelle/ff'
+import {RenderedComponentLike} from '@pucelle/lupos.js'
 import {Popup} from '../../components'
 import {popup} from '../popup'
-import {RenderedComponentLike} from '@pucelle/lupos.js'
 
 
 /** 
  * Cache shared popup rendered by their `:popup` `key` option.
  * If many different template share same key, may cause frequently toggling and destroying.
  */
-const PopupContentCache: ListMap<string, RenderedComponentLike> = new ListMap()
+const PopupContentCache: ListMap<string, RenderedComponentLike> = /*#__PURE__*/new ListMap()
 
 /** Cache shared rendered that are using by popup binding. */
-const RenderedUsedBy: WeakMap<RenderedComponentLike, popup> = new WeakMap()
+const RenderedUsedBy: WeakMap<RenderedComponentLike, popup> = /*#__PURE__*/new WeakMap()
 
 /** Cache popups that are using by popup binding. */
-const PopupUsedBy: WeakMap<Popup, popup> = new WeakMap()
+const PopupUsedBy: WeakMap<Popup, popup> = /*#__PURE__*/new WeakMap()
 
 
 /** Get a shared popup cache by `key`, initialize it for reuse. */

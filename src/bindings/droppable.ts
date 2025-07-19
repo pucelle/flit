@@ -2,6 +2,7 @@ import {DOMEvents} from '@pucelle/lupos'
 import {Binding, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
 import {DraggableBase} from './draggable'
+import {HVDirection} from '@pucelle/ff'
 
 
 export interface DroppableOptions<T> {

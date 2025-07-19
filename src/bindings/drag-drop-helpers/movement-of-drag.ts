@@ -1,4 +1,4 @@
-import {DOMUtils, ScrollUtils} from '@pucelle/ff'
+import {Coord, DOMUtils, HVDirection, ScrollUtils} from '@pucelle/ff'
 import {DraggableBase} from '../draggable'
 import {droppable} from '../droppable'
 import {EdgeMovementTimer} from '../../components/rect-selection-helpers/edge-movement-timer'

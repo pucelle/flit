@@ -1,4 +1,4 @@
-import {Box, DOMUtils} from '@pucelle/ff'
+import {Box, Coord, DOMUtils, HVDirection} from '@pucelle/ff'
 import {WebTransition, WebTransitionKeyFrame} from '@pucelle/lupos.js'
 import {droppable} from '../droppable'
 import {getDraggableByElement} from './all-draggable'

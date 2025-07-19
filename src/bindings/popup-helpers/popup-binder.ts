@@ -27,7 +27,7 @@ interface PopupTriggerEvents {
 }
 
 
-enum BoundMask {
+const enum BoundMask {
 	Enter = 1,
 	Leave = 2,
 	LeaveBeforeShow = 4,

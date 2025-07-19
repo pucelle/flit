@@ -1,7 +1,7 @@
 import {PathMatcher} from './path-matcher'
 
 
-const PathMatcherCache: Map<string, PathMatcher> = new Map()
+const PathMatcherCache: Map<string, PathMatcher> = /*#__PURE__*/new Map()
 
 
 export function getPathMatcher(routePath: string | RegExp): PathMatcher {

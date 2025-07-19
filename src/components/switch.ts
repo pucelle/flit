@@ -22,7 +22,7 @@ export class Switch<E = {}> extends Component<E & SwitchEvents> {
 			border-radius: 0.625em;
 			background: var(--field-color);
 			padding: 1px;
-			transition: background-color 0.2s ${getCSSEasingValue('ease-out-cubic')};
+			transition: background-color 0.2s ${/*#__PURE__*/getCSSEasingValue('ease-out-cubic')};
 			cursor: pointer;
 
 			&:hover{
@@ -39,7 +39,7 @@ export class Switch<E = {}> extends Component<E & SwitchEvents> {
 			height: calc(1.25em - 2px);
 			background: var(--background-color);
 			border-radius: 50%;
-			transition: margin 0.2s ${getCSSEasingValue('ease-out-cubic')};
+			transition: margin 0.2s ${/*#__PURE__*/getCSSEasingValue('ease-out-cubic')};
 		}
 	
 		.switch-on{		

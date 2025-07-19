@@ -1,4 +1,4 @@
-import {DOMUtils} from '@pucelle/ff'
+import {DOMUtils, HVDirection} from '@pucelle/ff'
 
 
 /** It get and set overflow value by current overflow direction. */

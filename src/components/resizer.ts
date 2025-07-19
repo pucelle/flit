@@ -1,5 +1,5 @@
 import {css, html, Component, render} from '@pucelle/lupos.js'
-import {MouseMovement} from '@pucelle/ff'
+import {Coord, MouseMovement} from '@pucelle/ff'
 
 
 interface ResizerEvents {

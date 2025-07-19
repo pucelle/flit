@@ -8,9 +8,11 @@ module.exports = {
 		path: __dirname,
 		filename: 'docs/js/bundle.js',
 	},
-	optimization: {},
+	optimization: {
+		usedExports: true,
+		sideEffects: false,
+	},
 	plugins: [
-
 		// Required when use `ts-loader`.
 		//new ForkTsCheckerWebpackPlugin()
 	],
@@ -48,25 +50,6 @@ module.exports = {
 					fullySpecified: false,
 				},
 			},
-
-			// {
-			// 	test: /\.tsx?$/,
-			// 	use: [{
-			// 		loader: 'ts-loader',
-			// 		options: {
-
-			// 			// Required, or types of imported modules are not loaded.
-			// 			transpileOnly: false,
-	
-			// 			// Specifies `getCustomTransformers` not working.
-			// 			compiler: 'ts-patch/compiler',
-
-			// 			// Optional.
-			// 			// configFile: './tsconfig.json'
-			// 		},
-			// 	}],
-			// 	exclude: /node_modules/
-			// },
 		],
 	},
 }

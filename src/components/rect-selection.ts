@@ -1,4 +1,4 @@
-import {Box, EventUtils, NumberUtils, ScrollUtils} from '@pucelle/ff'
+import {Box, Coord, EventUtils, HVDirection, NumberUtils, ScrollUtils} from '@pucelle/ff'
 import {Component, css, html, RenderResult} from '@pucelle/lupos.js'
 import {EdgeMovementTimer} from './rect-selection-helpers/edge-movement-timer'
 import {DOMEvents} from '@pucelle/lupos'

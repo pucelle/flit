@@ -1,4 +1,4 @@
-import {DOMUtils, EventUtils} from '@pucelle/ff'
+import {Coord, DOMUtils, EventUtils} from '@pucelle/ff'
 import {DraggableBase} from '../draggable'
 import {droppable} from '../droppable'
 import {OrderMovement} from './movement-of-order'
@@ -211,4 +211,4 @@ class DragDropRelationship {
 	}
 }
 
-export const GlobalDragDropRelationship = new DragDropRelationship()
+export const GlobalDragDropRelationship = /*#__PURE__*/new DragDropRelationship()

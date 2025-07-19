@@ -71,9 +71,9 @@ class SVGIcons {
  * Global icon manager to provide icon data for `<Icon />`.
  * You may append more icons by `icons.add({...})`.
  */
-export const icons = new SVGIcons()
+export const icons = /*#__PURE__*/new SVGIcons()
 
-icons.add(
+/*#__PURE__*/icons.add(
 	checkboxChecked,
 	checkboxIndeterminate,
 	checkboxUnchecked,

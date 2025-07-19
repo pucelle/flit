@@ -25,7 +25,7 @@ const DefaultLoadingOptions: LoadingOptions = {
 	size: 18,
 	strokeSize: 3,
 	speed: 0.6,
-	transition: fade(),
+	transition: /*#__PURE__*/fade(),
 }
 
 

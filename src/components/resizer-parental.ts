@@ -1,4 +1,4 @@
-import {NumberUtils} from '@pucelle/ff'
+import {Coord, NumberUtils, SizeLike} from '@pucelle/ff'
 import {Resizer} from './resizer'
 import {css, html} from '@pucelle/lupos.js'
 

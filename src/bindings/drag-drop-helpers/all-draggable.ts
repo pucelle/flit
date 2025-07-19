@@ -1,7 +1,7 @@
 import {DraggableBase} from '../draggable'
 
 
-const AllDraggableMap: WeakMap<HTMLElement, DraggableBase> = new WeakMap()
+const AllDraggableMap: WeakMap<HTMLElement, DraggableBase> = /*#__PURE__*/new WeakMap()
 
 
 export function registerDraggable(draggable: DraggableBase) {

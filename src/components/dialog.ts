@@ -472,11 +472,11 @@ export class TypedDialog {
 
 
 /** A quick global API to show dialogs. */
-export const dialog = new TypedDialog()
+export const dialog = /*#__PURE__*/new TypedDialog()
 
 
 /** Default transitions for `<Dialog>`. */
-translations.add('en', {
+/*#__PURE__*/translations.add('en', {
 	ok: 'OK',
 	cancel: 'Cancel',
 	yes: 'Yes',

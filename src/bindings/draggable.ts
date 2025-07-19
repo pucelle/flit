@@ -1,9 +1,9 @@
 import {Binding, Part, PartCallbackParameterMask, RenderResultRenderer, WebTransitionEasingName} from '@pucelle/lupos.js'
-import {EventUtils} from '@pucelle/ff'
+import {Coord, EventUtils} from '@pucelle/ff'
+import {DOMEvents} from '@pucelle/lupos'
 import {GlobalDragDropRelationship} from './drag-drop-helpers/relationship'
 import {registerDraggable} from './drag-drop-helpers/all-draggable'
 import {droppable} from './droppable'
-import {DOMEvents} from '@pucelle/lupos'
 
 
 export interface DraggableOptions {

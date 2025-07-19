@@ -505,4 +505,4 @@ export class UniqueNotification {
 
 
 /** A quick global API to show notifications. */
-export const notification = new TypedNotification()
+export const notification = /*#__PURE__*/new TypedNotification()

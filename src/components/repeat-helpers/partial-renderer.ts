@@ -574,6 +574,7 @@ export class PartialRenderer {
 			return
 		}
 
+		// Can only run only one updating each time.
 		await this.renderQueue.enqueue(() => this.updateByCoverage())
 	}
 
