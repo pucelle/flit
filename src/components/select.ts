@@ -7,6 +7,7 @@ import {Popup} from './popup'
 import {Icon} from './icon'
 import {popup} from '../bindings'
 import {ScrollUtils} from '@pucelle/ff'
+import {IconClose, IconDown} from '../icons'
 
 
 interface SelectEvents<T, M extends boolean> {
@@ -200,12 +201,12 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 				${this.renderDisplayOrInput()}
 
 				<lu:if ${this.inputtedText}>
-					<Icon class="select-clear-icon" .type="close" .size="inherit"
+					<Icon class="select-clear-icon" .icon=${IconClose} .size="inherit"
 						@click.stop=${this.clearInputtedText}
 					/>
 				</lu:if>
 				<lu:else>
-					<Icon class="dropdown-icon select-dropdown-icon" .type="down" .size="inherit" />
+					<Icon class="dropdown-icon select-dropdown-icon" .icon=${IconDown} .size="inherit" />
 				</lu:else>
 			</template>
 		`

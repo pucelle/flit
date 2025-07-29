@@ -11,7 +11,10 @@ import {
 	PopupOptions,
 	ListItem,
 	orderable,
-	droppable
+	droppable,
+	IconLove,
+	IconTips,
+	IconDown
 } from '../../out'
 import {sleep, range, EventUtils} from '@pucelle/ff'
 
@@ -102,19 +105,19 @@ class Preview extends Component {
 					<Col .span=${4}>
 						<header>Primary</header>
 						<Button style="margin: 8px 0;" .primary>Button Text</Button><br>
-						<Button style="margin: 8px 0;" .primary><Icon .type="love" /><span>Button Text</span></Button><br>
-						<Button style="margin: 8px 0;" .primary><Icon .type="love" /></Button><br>
+						<Button style="margin: 8px 0;" .primary><Icon .icon=${IconLove} /><span>Button Text</span></Button><br>
+						<Button style="margin: 8px 0;" .primary><Icon .icon=${IconLove} /></Button><br>
 					</Col>
 					<Col .span=${4}>
 						<header>Normal</header>
 						<Button style="margin: 8px 0;">Button Text</Button><br>
-						<Button style="margin: 8px 0;"><span>Button Text</span><Icon .type="love" /></Button><br>
-						<Button style="margin: 8px 0;"><Icon .type="love" /></Button><br>
+						<Button style="margin: 8px 0;"><span>Button Text</span><Icon .icon=${IconLove} /></Button><br>
+						<Button style="margin: 8px 0;"><Icon .icon=${IconLove} /></Button><br>
 					</Col>
 					<Col .span=${4}>
 						<header>Flat</header>
 						<Button style="margin: 8px 0;" .flat>Button Text</Button><br>
-						<Button style="margin: 8px 0;" .flat><Icon .type="love" /><span>Button Text</span></Button><br>
+						<Button style="margin: 8px 0;" .flat><Icon .icon=${IconLove} /><span>Button Text</span></Button><br>
 					</Col>
 				</Row>
 			</section>
@@ -134,9 +137,9 @@ class Preview extends Component {
 				</ButtonGroup><br>
 
 				<ButtonGroup style="margin: 8px 0;">
-					<Button .primary><Icon .type="love" /></Button>
-					<Button><Icon .type="love" /></Button>
-					<Button><Icon .type="love" /></Button>
+					<Button .primary><Icon .icon=${IconLove} /></Button>
+					<Button><Icon .icon=${IconLove} /></Button>
+					<Button><Icon .icon=${IconLove} /></Button>
 				</ButtonGroup><br>
 			</section>
 
@@ -177,7 +180,7 @@ class Preview extends Component {
 					<header>With Info</header>
 					<Label>
 						Last Name
-						<Icon .type="tips" :tooltip="Guide Tips" />
+						<Icon .icon=${IconTips} :tooltip="Guide Tips" />
 					</Label>
 				</Col>
 			</Row>
@@ -678,7 +681,7 @@ class Preview extends Component {
 							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>
 							<span>Click to Open Menu</span>
-							<Icon .type="down" />
+							<Icon .icon=${IconDown} />
 						</Button>
 					</Col>
 
@@ -691,7 +694,7 @@ class Preview extends Component {
 							{trigger: 'click', position: 'b', fixTriangle: true} as Partial<PopupOptions>
 						}>
 							<span>Menu with Title</span>
-							<Icon .type="down" />
+							<Icon .icon=${IconDown} />
 						</Button>
 					</Col>
 				</Row>
@@ -983,9 +986,10 @@ class Preview extends Component {
 
 	private renderTable() {
 		return html`
-			<section>
-				<h3>Table</h3>
+			<h3>Table</h3>
 
+			<!-- 
+			<section>
 				<Table
 					.resizable
 					.store=${new Store({
@@ -1021,84 +1025,78 @@ class Preview extends Component {
 					] as TableColumn[]}
 				/>
 			</section>
+			-->
 
-			
-			<section>
-				<h3>Table on Live Mode</h3>
+			<h4>Table on Live Mode</h4>
 
-				<Table
-					style="height: 200px;"
-					.resizable
-					.live
-					.store=${new Store({
-						data: [...range(1, 1001)].map(n => ({id: n, value: Math.round(Math.random() * 100)})),
-					})}
-					.columns=${[
-						{
-							title: 'Index',
-							flex: 1,
-							renderer: (_item: {id: number, value: number}, index: number) => {
-								return index
-							},
+			<Table
+				style="height: 200px;"
+				.resizable
+				.live
+				.store=${new Store({
+					data: [...range(1, 1001)].map(n => ({id: n, value: Math.round(Math.random() * 100)})),
+				})}
+				.columns=${[
+					{
+						title: 'Index',
+						flex: 1,
+						renderer: (_item: {id: number, value: number}, index: number) => {
+							return index
 						},
-						{
-							title: 'ID',
-							orderBy: 'id',
-							flex: 1,
-							renderer: (item) => item.id,
-						},
-						{
-							title: 'Name',
-							orderBy: 'id',
-							flex: 1,
-							renderer: (item) => `Name ${item.id}`,
-						},
-						{
-							title: 'Random Value',
-							orderBy: 'value',
-							flex: 1,
-							renderer: (item) => item.value,
-							align: 'right',
-						}
-					] as TableColumn[]}
-				/>
-			</section>
+					},
+					{
+						title: 'ID',
+						orderBy: 'id',
+						flex: 1,
+						renderer: (item) => item.id,
+					},
+					{
+						title: 'Name',
+						orderBy: 'id',
+						flex: 1,
+						renderer: (item) => `Name ${item.id}`,
+					},
+					{
+						title: 'Random Value',
+						orderBy: 'value',
+						flex: 1,
+						renderer: (item) => item.value,
+						align: 'right',
+					}
+				] as TableColumn[]}
+			/>
 
-			
-			<section>
-				<h3>Table with Remote Data</h3>
+			<h4 style="margin-top: 30px">Table with Remote Data</h4>
 
-				<Table
-					.resizable
-					.live
-					.store=${new ExampleRemoteStore()}
-					.columns=${[
-						{
-							title: 'Index',
-							renderer: (_item: {id: number, value: number}, index: number) => {
-								return index
-							},
+			<Table
+				.resizable
+				.live
+				.store=${new ExampleRemoteStore()}
+				.columns=${[
+					{
+						title: 'Index',
+						renderer: (_item: {id: number, value: number}, index: number) => {
+							return index
 						},
-						{
-							title: 'ID',
-							orderBy: 'id',
-							renderer: (item) => item?.id ?? '--',
-						},
-						{
-							title: 'Name',
-							orderBy: 'id',
-							renderer: (item) => item ? `Name ${item.id}` : '--',
-						},
-						{
-							title: 'Random Value',
-							orderBy: 'value',
-							renderer: (item) => item?.value ?? '--',
-							align: 'right',
-						}
-					] as TableColumn[]}
-				/>
-			</section>
-
+					},
+					{
+						title: 'ID',
+						orderBy: 'id',
+						renderer: (item) => item?.id ?? '--',
+					},
+					{
+						title: 'Name',
+						orderBy: 'id',
+						renderer: (item) => item ? `Name ${item.id}` : '--',
+					},
+					{
+						title: 'Random Value',
+						orderBy: 'value',
+						renderer: (item) => item?.value ?? '--',
+						align: 'right',
+					}
+				] as TableColumn[]}
+			/>
 			`
 	}
 	

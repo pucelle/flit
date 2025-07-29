@@ -11,6 +11,7 @@ export class Textarea extends Input {
 	static style = css`
 		.textarea{
 			height: auto;
+			padding: 0.4em 0.6em;
 		}
 
 		.textarea-field{
@@ -52,5 +53,15 @@ export class Textarea extends Input {
 				@change=${this.onChange}
 			/>
 		`
+	}
+
+	protected onFocus() {
+		this.focusGot = true
+	}
+
+	protected onBlur() {
+		this.focusGot = false
+		this.touched = true
+		this.validate()
 	}
 }

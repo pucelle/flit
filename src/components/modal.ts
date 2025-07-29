@@ -2,6 +2,7 @@ import {css, html, Component, RenderResult, fade} from '@pucelle/lupos.js'
 import {AnchorAligner} from '@pucelle/ff'
 import {DOMEvents, untilUpdateComplete} from '@pucelle/lupos'
 import {Icon} from './icon'
+import {IconClose} from '../icons'
 
 
 /** 
@@ -116,7 +117,7 @@ export class Modal<E = {}> extends Component<E> {
 						${this.renderAction()}
 					</lu:if>
 					<lu:else>
-						<Icon class="modal-close" .type="close"
+						<Icon class="modal-close" .icon=${IconClose}
 							@click=${this.hide}
 						/>
 					</lu:else>

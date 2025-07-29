@@ -433,7 +433,7 @@ export class popup implements Binding, Part {
 
 		// Update popup properties.
 		if (this.opened) {
-			popup.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toInsetKey()!
+			popup.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toBoxOffsetKey()!
 			popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
 		}
 	}

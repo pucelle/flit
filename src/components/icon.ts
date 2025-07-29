@@ -1,6 +1,6 @@
 import {Component, html, css} from '@pucelle/lupos.js'
-import {icons} from '../icons'
 import {ThemeSize} from '../style'
+import {parseSVGCode} from '../icons'
 
 
 /** `<Icon .type>` will show a specified type of svg icon. */
@@ -25,28 +25,26 @@ export class Icon<Events = any> extends Component<Events> {
 	size: ThemeSize = 'default'
 	
 	/** 
-	 * Icon type.
-	 * You may extend more icons by `icons.add(...)`.
+	 * Icon code.
+	 * See `/icons` for all icons available.
 	 */
-	type: string = ''
+	icon: string = ''
 	
 	protected render() {
-		let item = icons.get(this.type)
-		if (!item) {
-			return ''
+		let parsed = parseSVGCode(this.icon)
+		if (!parsed) {
+			return null
 		}
-
-		let code = item.code
-		let [x, y, w, h] = item.viewBox!
-
-		x += (w - 22) / 2
-		y += (h - 22) / 2
+	
+		let {box: {x, y, width, height}, inner} = parsed
+		x += (width - 22) / 2
+		y += (height - 22) / 2
 
 		return html`
 			<template class="icon size-${this.size}">
 				<svg
 					viewBox=${[x, y, 22, 22].join(' ')}
-					:html=${code}
+					:html=${inner}
 				></svg>
 			</template>
 		`

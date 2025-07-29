@@ -4,6 +4,7 @@ import {DOMEvents, EventKeys, Observed, effect} from '@pucelle/lupos'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
+import {IconChecked, IconTriangleDown, IconTriangleRight} from '../icons'
 
 
 /** 
@@ -302,7 +303,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				<div class='list-toggle-placeholder'
 					@click.stop=${() => this.toggleExpanded(item)}
 				>
-					<Icon .type=${expanded ? 'triangle-down' : 'triangle-right'} .size="inherit" />
+					<Icon .icon=${expanded ? IconTriangleDown : IconTriangleRight} .size="inherit" />
 				</div>
 			`
 		}
@@ -322,7 +323,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		return html`
 			<div class='list-icon'>
 				<lu:if ${item.icon}>
-					<Icon .type=${item.icon!} .size="inherit" />
+					<Icon .icon=${item.icon!} .size="inherit" />
 				</>
 			</div>
 		`
@@ -364,7 +365,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 
 		return html`
-			<Icon class="list-selected-icon" .type="checked" .size="inherit" />
+			<Icon class="list-selected-icon" .icon=${IconChecked} .size="inherit" />
 		`
 	}
 

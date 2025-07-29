@@ -3,6 +3,7 @@ import {ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Icon} from './icon'
 import {Triangle} from './triangle'
+import {IconClose} from '../icons'
 
 
 /** 
@@ -106,7 +107,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 					<div class="tooltip-close"
 						@click=${this.close}
 					>
-						<Icon .type="close" .size="inherit" />
+						<Icon .icon=${IconClose} .size="inherit" />
 					</div>
 				</lu:if>
 			</template>

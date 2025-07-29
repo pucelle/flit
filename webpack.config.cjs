@@ -37,7 +37,6 @@ module.exports = {
 				test: /\.svg$/,
 				loader: '@pucelle/webpack-svg-loader',
 				options: {
-					cut: true,
 					mainColor: '#000000',
 				}
 			},

@@ -3,6 +3,7 @@ import {List, ListItem} from './list'
 import {tooltip, contextmenu, popup, PopupOptions} from '../bindings'
 import {Popup} from './popup'
 import {Icon} from './icon'
+import {IconRight} from '../icons'
 
 
 /** `<DropList>` displays sub list as popup content. */
@@ -99,7 +100,7 @@ export class DropList<T> extends List<T> {
 		}
 
 		return html`
-			<Icon class="drop-list-selected-icon" .type="right" .size="inherit" />
+			<Icon class="drop-list-selected-icon" .icon=${IconRight} .size="inherit" />
 		`
 	}
 

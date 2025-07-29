@@ -68,6 +68,11 @@ export class Row extends Component {
 /** `<Col>` can be contained by a `<Row>` to do grid layout. */
 export class Col extends Component {
 
+	static style = css`
+		.col{}
+	`
+
+
 	/** Column span, default value is  */
 	span: number = 1
 	offset: number = 0

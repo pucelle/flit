@@ -2,6 +2,7 @@ import {Component, css, html} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {DOMEvents, watch} from '@pucelle/lupos'
 import {Icon} from './icon'
+import {IconClose, IconSearch} from '../icons'
 
 
 interface SearchEvents {
@@ -87,7 +88,7 @@ export class Search<E = {}> extends Component<SearchEvents & E> {
 	protected render() {
 		return html`
 		<template class="search size-${this.size}">
-			<Icon class="search-icon" .type="search" .size="inherit" />
+			<Icon class="search-icon" .icon=${IconSearch} .size="inherit" />
 
 			<input type="text"
 				class="search-field"
@@ -98,7 +99,7 @@ export class Search<E = {}> extends Component<SearchEvents & E> {
 			/>
 
 			<lu:if ${this.value}>
-				<Icon class="search-clear-icon" .type="close" .size="inherit"
+				<Icon class="search-clear-icon" .icon=${IconClose} .size="inherit"
 					@click.stop=${this.clear}
 				/>
 			</lu:if>

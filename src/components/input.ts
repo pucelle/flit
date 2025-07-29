@@ -3,6 +3,7 @@ import {tooltip, TooltipOptions} from '../bindings'
 import {Icon} from './icon'
 import {ThemeSize} from '../style'
 import {DOMModifiableEvents, watch} from '@pucelle/lupos'
+import {IconChecked} from '../icons'
 
 
 interface InputEvents {
@@ -33,7 +34,6 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			width: 15em;
 			height: 2em;
 			padding: 0.2em 0.6em;
-			padding-bottom: 0;
 			background: var(--field-color);
 			box-shadow: inset 0 -1px 0 0 var(--border-color);
 		}
@@ -81,9 +81,6 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	/** Whether get focus after been inserted into document. */
 	autoFocus: boolean = false
 
-	/** Whether get focus. */
-	focusGot: boolean = false
-
 	/** 
 	 * Whether input has been touched, error messages only appears after touched.
 	 * Set it from `false` to `true` will cause validate.
@@ -114,6 +111,9 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	 */
 	errorOnTooltip: boolean = false
 
+	/** Whether haven got focus. */
+	protected focusGot: boolean = false
+
 	/** Input field element reference. */
 	protected fieldRef!: HTMLInputElement | HTMLTextAreaElement
 	
@@ -132,7 +132,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 				${this.renderField()}
 
 				<lu:if ${this.touched && this.valid}>
-					<Icon class="input-valid-icon" .type="checked" .size="inherit" />
+					<Icon class="input-valid-icon" .icon=${IconChecked} .size="inherit" />
 				</lu:if>
 
 				<lu:if ${this.touched && this.errorMessage && !this.errorOnTooltip}>

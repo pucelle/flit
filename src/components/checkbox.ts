@@ -3,6 +3,7 @@ import {ThemeSize} from '../style'
 import {DOMModifiableEvents} from '@pucelle/lupos'
 import {CheckboxGroup} from './checkbox-group'
 import {Icon} from './icon'
+import {IconCheckboxChecked, IconCheckboxIndeterminate, IconCheckboxUnchecked} from '../icons'
 
 
 interface CheckboxEvents {
@@ -83,11 +84,11 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 	}
 
 	protected render() {
-		let iconType = this.checked
-			? 'checkbox-checked'
+		let icon = this.checked
+			? IconCheckboxChecked
 			: this.indeterminate
-			? 'checkbox-indeterminate'
-			: 'checkbox-unchecked'
+			? IconCheckboxIndeterminate
+			: IconCheckboxUnchecked
 
 		return html`
 		<template tabindex="0"
@@ -98,7 +99,7 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 			@focus=${this.onFocus}
 			@blur=${this.onBlur}
 		>
-			<Icon class="checkbox-icon" .type=${iconType} .size="inherit" />
+			<Icon class="checkbox-icon" .icon=${icon} .size="inherit" />
 			<div class="checkbox-label">
 				<slot />
 			</div>

@@ -1,6 +1,6 @@
 import {css, html} from '@pucelle/lupos.js'
 import {Popup} from './popup'
-import {Inset, RectWatcher} from '@pucelle/ff'
+import {BoxOffsets, RectWatcher} from '@pucelle/ff'
 import {DOMEvents, EventKeys} from '@pucelle/lupos'
 import {tooltip, TooltipOptions} from '../bindings'
 
@@ -128,7 +128,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		let elWidth = this.width || rect.width
 		let left = rect.left + (rect.width - elWidth) * textAlignRate
 		let top = rect.top
-		let edges = new Inset(...paddingList)
+		let edges = new BoxOffsets(...paddingList)
 
 		this.inputStyle = {
 			left: left - edges.left + 'px',

@@ -1,6 +1,7 @@
 import {effect} from '@pucelle/lupos'
 import {WebTransition} from '@pucelle/lupos.js'
 import {Icon} from './icon'
+import {IconRefresh} from '../icons'
 
 
 /** 
@@ -9,8 +10,8 @@ import {Icon} from './icon'
  */
 export class IconLoading extends Icon {
 
-	/** Loading icon type. Default value is `refresh`. */
-	type: string = 'refresh'
+	/** Loading icon code. */
+	icon: string = IconRefresh
 
 	/** Whether in loading state. */
 	loading: boolean = false

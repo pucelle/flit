@@ -1,8 +1,9 @@
 import {css, html, fade} from '@pucelle/lupos.js'
-import {ThemeSize} from '../style/'
+import {ThemeSize} from '../style'
 import {Popup} from './popup'
 import {Triangle} from './triangle'
 import {Icon} from './icon'
+import {IconClose} from '../icons'
 
 
 /** 
@@ -94,7 +95,7 @@ export class Popover<E = {}> extends Popup<E> {
 					<Triangle class="popover-triangle" .direction=${this.triangleDirection} />
 				</lu:if>
 				${this.renderHead()}
-				<div class="content"><slot /></div>
+				<div class="popover-content"><slot /></div>
 			</template>
 		`
 	}
@@ -118,7 +119,7 @@ export class Popover<E = {}> extends Popup<E> {
 
 				<lu:if ${this.closable && !this.slotElements.action}>
 					<div class="popover-close" @click=${this.close}>
-						<Icon .type="close" />
+						<Icon .icon=${IconClose} />
 					</div>
 				</lu:if>
 			</div>

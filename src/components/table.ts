@@ -9,6 +9,7 @@ import {Repeat} from './repeat'
 import {AsyncLiveRepeat} from './repeat-live-async'
 import {Icon} from './icon'
 import {RectSelection} from './rect-selection'
+import {IconOrderAsc, IconOrderDefault, IconOrderDesc} from '../icons'
 
 
 export interface TableEvents {
@@ -217,6 +218,10 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
 			&.selected{
 				background: color-mix(in srgb, var(--primary-color) 10%, var(--background-color));
+			}
+
+			&:last-child .table-cell{
+				border-bottom-color: transparent;
 			}
 		}
 
@@ -540,7 +545,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 						<div class="table-order"
 							:class.current=${hasOrdered && this.orderDirection !== null}
 						>
-							<Icon .type=${this.renderOrderDirectionIcon(orderName!)} .size="inherit" />
+							<Icon .icon=${this.renderOrderDirectionIcon(orderName!)} .size="inherit" />
 						</div>
 					</lu:if>
 				</div>
@@ -558,14 +563,14 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	protected renderOrderDirectionIcon(orderName: string): string {
 		if (orderName === this.orderName) {
 			if (this.orderDirection === 'asc') {
-				return 'order-asc'
+				return IconOrderAsc
 			}
 			else if (this.orderDirection === 'desc') {
-				return 'order-desc'
+				return IconOrderDesc
 			}
 		}
 
-		return 'order-default'
+		return IconOrderDefault
 	}
 
 	protected renderRows() {

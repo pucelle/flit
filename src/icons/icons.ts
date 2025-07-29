@@ -1,102 +1,50 @@
 ///<reference types="@pucelle/webpack-svg-loader" />
+import {BoxLike} from '@pucelle/ff'
 
-import checkboxChecked from '../../icons/checkbox-checked.svg'
-import checkboxIndeterminate from '../../icons/checkbox-indeterminate.svg'
-import checkboxUnchecked from '../../icons/checkbox-unchecked.svg'
-import checked from '../../icons/checked.svg'
-import close from '../../icons/close.svg'
-import confirm from '../../icons/confirm.svg'
-import down from '../../icons/down.svg'
-import error from '../../icons/error.svg'
-import info from '../../icons/info.svg'
-import left from '../../icons/left.svg'
-import love from '../../icons/love.svg'
-import orderAsc from '../../icons/order-asc.svg'
-import orderDefault from '../../icons/order-default.svg'
-import orderDesc from '../../icons/order-desc.svg'
-import radioChecked from '../../icons/radio-checked.svg'
-import radioUnchecked from '../../icons/radio-unchecked.svg'
-import right from '../../icons/right.svg'
-import search from '../../icons/search.svg'
-import success from '../../icons/success.svg'
-import tips from '../../icons/tips.svg'
-import triangleDown from '../../icons/triangle-down.svg'
-import triangleRight from '../../icons/triangle-right.svg'
-import warning from '../../icons/warning.svg'
-import refresh from '../../icons/refresh.svg'
-import up from '../../icons/up.svg'
-
-
-interface IconItem {
-	id: string
-	viewBox?: [number, number, number, number]
-	code: string
-}
+export {default as IconCheckboxChecked} from '../../icons/checkbox-checked.svg'
+export {default as IconCheckboxIndeterminate} from '../../icons/checkbox-indeterminate.svg'
+export {default as IconCheckboxUnchecked} from '../../icons/checkbox-unchecked.svg'
+export {default as IconChecked} from '../../icons/checked.svg'
+export {default as IconClose} from '../../icons/close.svg'
+export {default as IconConfirm} from '../../icons/confirm.svg'
+export {default as IconDown} from '../../icons/down.svg'
+export {default as IconError} from '../../icons/error.svg'
+export {default as IconInfo} from '../../icons/info.svg'
+export {default as IconLeft} from '../../icons/left.svg'
+export {default as IconLove} from '../../icons/love.svg'
+export {default as IconOrderAsc} from '../../icons/order-asc.svg'
+export {default as IconOrderDefault} from '../../icons/order-default.svg'
+export {default as IconOrderDesc} from '../../icons/order-desc.svg'
+export {default as IconRadioChecked} from '../../icons/radio-checked.svg'
+export {default as IconRadioUnchecked} from '../../icons/radio-unchecked.svg'
+export {default as IconRight} from '../../icons/right.svg'
+export {default as IconSearch} from '../../icons/search.svg'
+export {default as IconSuccess} from '../../icons/success.svg'
+export {default as IconTips} from '../../icons/tips.svg'
+export {default as IconTriangleDown} from '../../icons/triangle-down.svg'
+export {default as IconTriangleRight} from '../../icons/triangle-right.svg'
+export {default as IconWarning} from '../../icons/warning.svg'
+export {default as IconRefresh} from '../../icons/refresh.svg'
+export {default as IconUp} from '../../icons/up.svg'
 
 
-class SVGIcons {
-
-	/** Map of `id -> code`. */
-	private readonly map: Map<string, IconItem> = new Map()
-
-	/** Get all icon ids. */
-	get allIds(): string[] {
-		return [...this.map.keys()]
+/** Parse svg code to get view box and svg inner. */
+export function parseSVGCode(code: string): {box: BoxLike, inner: string} | null {
+	let match = code.match(/<svg[\s\S]+?viewBox=["'](.+?)["'][\s\S]*?>\s*([\s\S]+?)\s*<\/svg>/)
+	if (!match) {
+		return null
 	}
 
-	/** Add imported icon items. */
-	add(...items: IconItem[]) {
-		for (let item of items) {
-			this.map.set(item.id, item)
-		}
-	}
-	
-	/** Get svg icon code by id. */
-	get(id: string): IconItem {
-		return this.map.get(id)!
-	}
+	let numbers = match[1].split(/[\s+]/).map(v => Number(v)) as [number, number, number, number]
+	let inner = match[2]
 
-	/** Delete svg icon by id. */
-	delete(id: string) {
-		this.map.delete(id)
-	}
-
-	/** Clear all icons. */
-	clear() {
-		this.map.clear()
+	return {
+		box: {
+			x: numbers[0],
+			y: numbers[1],
+			width: numbers[2],
+			height: numbers[3],
+		},
+		inner,
 	}
 }
-
-/** 
- * Global icon manager to provide icon data for `<Icon />`.
- * You may append more icons by `icons.add({...})`.
- */
-export const icons = /*#__PURE__*/new SVGIcons()
-
-/*#__PURE__*/icons.add(
-	checkboxChecked,
-	checkboxIndeterminate,
-	checkboxUnchecked,
-	checked,
-	close,
-	confirm,
-	down,
-	error,
-	info,
-	love,
-	left,
-	orderAsc,
-	orderDefault,
-	orderDesc,
-	radioChecked,
-	radioUnchecked,
-	right,
-	search,
-	success,
-	tips,
-	triangleDown,
-	triangleRight,
-	warning,
-	refresh,
-	up,
-)

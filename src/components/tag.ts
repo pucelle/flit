@@ -1,6 +1,7 @@
 import {Component, html, css} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Icon} from './icon'
+import {IconClose} from '../icons'
 
 
 interface TagEvents {
@@ -68,7 +69,7 @@ export class Tag<E = {}> extends Component<E & TagEvents> {
 		<template class="tag">
 			<span class="tag-label"><slot /></span>
 			<lu:if ${this.closable}>
-				<Icon class="tag-close-icon" .type="close" .size="inherit"
+				<Icon class="tag-close-icon" .icon=${IconClose} .size="inherit"
 					@click=${this.close}
 				/>
 			</lu:if>

@@ -6,11 +6,12 @@ import {Textarea} from './textarea'
 import {Icon} from './icon'
 import {Button} from './button'
 import {tooltip, TooltipOptions} from '../bindings'
+import {IconConfirm} from '../icons'
 
 
 export interface DialogOptions {
 
-	/** Dialog icon on the left side. */
+	/** Dialog icon code on the left side. */
 	icon?: string
 
 	/** Dialog title. */
@@ -157,7 +158,7 @@ export class Dialog<E = {}> extends Component<E> {
 			justify-content: flex-end;
 			margin-top: 1.2em;
 
-			.button{
+			.dialog-action{
 				margin-left: 0.6em;
 			}
 
@@ -219,7 +220,7 @@ export class Dialog<E = {}> extends Component<E> {
 
 				<div class="dialog-content">
 					<lu:if ${options.icon}>
-						<Icon class="dialog-left" .type="${options.icon}" />
+						<Icon class="dialog-left" .icon=${options.icon!} />
 					</lu:if>
 
 					<div class="dialog-right">
@@ -257,7 +258,7 @@ export class Dialog<E = {}> extends Component<E> {
 		}
 
 		return html`<div class="dialog-actions">${actions.map(action => html`
-			<Button class="action"
+			<Button class="dialog-action"
 				.primary=${!!action.primary}
 				:class.dialog-third=${action.third}
 				:tooltip=${action.tooltip ?? null, {position: 'b'} as Partial<TooltipOptions>}
@@ -406,7 +407,7 @@ export class TypedDialog {
 	/** Show confirm type dialog or add it to dialog stack. */
 	confirm(message: RenderResultRenderer, options: DialogOptions = {}): Promise<string | undefined> {
 		return this.addOptions({
-			icon: 'confirm',
+			icon: IconConfirm,
 			message,
 			actions: [
 				{value: 'cancel', text: t('cancel')},

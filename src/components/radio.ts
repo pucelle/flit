@@ -3,6 +3,7 @@ import {ThemeSize} from '../style'
 import {Icon} from './icon'
 import {RadioGroup} from './radio-group'
 import {DOMEvents, DOMModifiableEvents} from '@pucelle/lupos'
+import {IconRadioChecked, IconRadioUnchecked} from '../icons'
 
 
 interface RadioEvents {
@@ -94,7 +95,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 				@click=${this.onClick}
 				@focus=${this.onFocus}
 			>
-				<Icon class="radio-icon" .type=${this.checked ? 'radio-checked' : 'radio-unchecked'} />
+				<Icon class="radio-icon" .icon=${this.checked ? IconRadioChecked : IconRadioUnchecked} />
 				<div class="radio-label">
 					<slot />
 				</div>

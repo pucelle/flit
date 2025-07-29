@@ -5,6 +5,7 @@ import {Popup} from './popup'
 import {TriggerType} from '../bindings'
 import {AnchorPosition, HVDirection, ObjectUtils} from '@pucelle/ff'
 import {computed} from '@pucelle/lupos'
+import {IconDown} from '../icons'
 
 
 /** `<Dropdown>` for containing both trigger element and popup content.  */
@@ -13,6 +14,12 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	static style = css`
 		.dropdown{
 			display: inline-flex;
+
+			&.opened{
+				.dropdown-icon{
+					color: var(--primary-color);
+				}
+			}
 		}
 	`
 
@@ -75,7 +82,7 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 				:popup=${this.renderPopup, this.popupOptions}
 			>
 				<slot />
-				<Icon class="dropdown-icon" .type="down" .size="inherit" />
+				<Icon class="dropdown-icon" .icon=${IconDown} .size="inherit" />
 			</template>
 		`
 	}

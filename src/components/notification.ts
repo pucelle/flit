@@ -2,6 +2,7 @@ import {css, html, Component, RenderResultRenderer, fold, fade} from '@pucelle/l
 import {Timeout} from '@pucelle/ff'
 import {Icon} from './icon'
 import {Button} from './button'
+import {IconClose, IconError, IconInfo, IconSuccess, IconWarning} from '../icons'
 
 
 export interface NotificationOptions {
@@ -11,6 +12,9 @@ export interface NotificationOptions {
 
 	/** Notification type, `info, warning, error, success`. */
 	type?: NotificationType
+
+	/** Notification icon code. */
+	icon?: string
 
 	/** Notification title. */
 	title?: string
@@ -212,7 +216,7 @@ export class Notification<E = {}> extends Component<E> {
 					<div class="notification-stripe" />
 
 					<div class="notification-left">
-						<Icon class="notification-type-icon" .type=${item.type ?? 'info'} />
+						<Icon class="notification-type-icon" .icon=${item.icon ?? IconInfo} />
 					</div>
 
 					<div class="notification-content">
@@ -232,7 +236,7 @@ export class Notification<E = {}> extends Component<E> {
 					</div>
 
 					<div class="notification-close" @click=${() => this.onClickClose(item)}>
-						<Icon .type="close" />
+						<Icon .icon=${IconClose} />
 					</div>
 				</div>`
 			}</lu:for>
@@ -411,6 +415,7 @@ export class TypedNotification {
 	/** Shows info type notification, returns it's id. */
 	info(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'info'
+		options.icon = options.icon ?? IconInfo
 		options.message = message
 
 		return this.showNotification(options)
@@ -419,6 +424,7 @@ export class TypedNotification {
 	/** Shows warn type notification, returns it's id. */
 	warn(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'warning'
+		options.icon = options.icon ?? IconWarning
 		options.message = message
 
 		return this.showNotification(options)
@@ -427,6 +433,7 @@ export class TypedNotification {
 	/** Shows error type notification, returns it's id. */
 	error(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'error'
+		options.icon = options.icon ?? IconError
 		options.message = message
 
 		return this.showNotification(options)
@@ -435,6 +442,7 @@ export class TypedNotification {
 	/** Shows success type notification, returns it's id. */
 	success(message: RenderResultRenderer, options: NotificationOptions = {}): number {
 		options.type = 'success'
+		options.icon = options.icon ?? IconSuccess
 		options.message = message
 
 		return this.showNotification(options)
