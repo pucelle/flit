@@ -36,6 +36,18 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			padding: 0.2em 0.6em;
 			background: var(--field-color);
 			box-shadow: inset 0 -1px 0 0 var(--border-color);
+			
+			&.focus{
+				box-shadow: inset 0 -1px 0 0 var(--primary-color);
+			}
+
+			&.valid{
+				box-shadow: inset 0 -1px 0 0 var(--success-color);
+			}
+
+			&.invalid{
+				box-shadow: inset 0 -1px 0 0 var(--error-color);
+			}
 		}
 
 		.input-field{
@@ -43,18 +55,6 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			min-width: 0;
 			border: none;
 			background: none;
-		}
-
-		.input-focus{
-			box-shadow: inset 0 -1px 0 0 var(--primary-color);
-		}
-
-		.input-valid{
-			box-shadow: inset 0 -1px 0 0 var(--success-color);
-		}
-
-		.input-invalid{
-			box-shadow: inset 0 -1px 0 0 var(--error-color);
 		}
 
 		.input-valid-icon{
@@ -120,9 +120,9 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	protected render() {
 		return html`
 			<template class=${this.renderClassName()}
-				:class.input-focus=${this.focusGot}
-				:class.input-valid=${this.touched && this.valid}
-				:class.input-invalid=${this.touched && this.valid === false}
+				:class.focus=${this.focusGot}
+				:class.valid=${this.touched && this.valid}
+				:class.invalid=${this.touched && this.valid === false}
 				?:tooltip=${
 					this.touched && this.errorMessage && this.errorOnTooltip,
 					this.errorMessage,

@@ -1,5 +1,5 @@
 import {untilUpdateComplete} from '@pucelle/lupos'
-import {DOMScroll, fade, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
+import {fade, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
 import {ListItem, List} from './list'
@@ -8,6 +8,7 @@ import {Icon} from './icon'
 import {popup} from '../bindings'
 import {ScrollUtils} from '@pucelle/ff'
 import {IconClose, IconDown} from '../icons'
+import {DOMScroll} from '../tools'
 
 
 interface SelectEvents<T, M extends boolean> {
@@ -98,10 +99,6 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 				padding-right: 0.15em;
 				border-bottom: none;
 			}
-		}
-
-		.select-selected-icon{
-			margin-right: -4px;
 		}
 	`
 

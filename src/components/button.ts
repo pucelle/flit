@@ -37,7 +37,7 @@ export class Button<E = {}> extends Component<E> {
 				color: var(--background-color);
 			}
 
-			.icon, .icon-loading{
+			.icon{
 				&:first-child{
 					margin-right: 0.15em;
 					margin-left: -0.25em;

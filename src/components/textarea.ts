@@ -12,10 +12,10 @@ export class Textarea extends Input {
 		.textarea{
 			height: auto;
 			padding: 0.4em 0.6em;
-		}
 
-		.textarea-field{
-			height: auto;
+			.input-field{
+				height: auto;
+			}
 		}
 	`
 
@@ -38,7 +38,7 @@ export class Textarea extends Input {
 
 	protected renderField() {
 		return html`
-			<textarea class="input-field textarea-field"
+			<textarea class="input-field"
 				placeholder=${this.placeholder}
 				?autofocus=${this.autoFocus}
 				:ref=${this.fieldRef}

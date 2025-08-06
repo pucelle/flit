@@ -91,19 +91,19 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 			: IconCheckboxUnchecked
 
 		return html`
-		<template tabindex="0"
-			class="checkbox size-${this.size}" 
-			:class.checked=${this.checked}
-			:class.indeterminate=${this.indeterminate}
-			@click=${this.onClick}
-			@focus=${this.onFocus}
-			@blur=${this.onBlur}
-		>
-			<Icon class="checkbox-icon" .icon=${icon} .size="inherit" />
-			<div class="checkbox-label">
-				<slot />
-			</div>
-		</template>
+			<template tabindex="0"
+				class="checkbox size-${this.size}" 
+				:class.checked=${this.checked}
+				:class.indeterminate=${this.indeterminate}
+				@click=${this.onClick}
+				@focus=${this.onFocus}
+				@blur=${this.onBlur}
+			>
+				<Icon class="checkbox-icon" .icon=${icon} .size="inherit" />
+				<div class="checkbox-label">
+					<slot />
+				</div>
+			</template>
 		`
 	}
 

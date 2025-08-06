@@ -153,10 +153,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			border-bottom-color: #888;
 		}
 
-		.table-resizable .table-column-title{
-			flex: 1;
-		}
-
 		.table-order{
 			width: 1.2em;
 			flex: none;
@@ -186,12 +182,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 				width: 1px;
 				background: color-mix(in srgb, var(--text-color) 20%, var(--background-color));
 			}
-		}
-
-		.table-scroller{
-			flex: 1;
-			overflow-y: scroll;
-			overflow-x: hidden;
 		}
 
 		.table-body{

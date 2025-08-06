@@ -34,7 +34,7 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 			height: 2em;
 			cursor: pointer;
 
-			&:focus .ball{
+			&:focus .slider-ball{
 				box-shadow: 0 0 var(--focus-shadow-blur-radius) var(--primary-color);
 				border-color: var(--primary-color);
 			}

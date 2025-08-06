@@ -1,10 +1,11 @@
-import {css, Component, html, RenderResult, RenderResultRenderer, fold, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions, DOMScroll} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, RenderResultRenderer, fold, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {DOMEvents, EventKeys, Observed, effect} from '@pucelle/lupos'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
 import {IconChecked, IconTriangleDown, IconTriangleRight} from '../icons'
+import {DOMScroll} from '../tools'
 
 
 /** 
@@ -120,12 +121,6 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			display: flex;
 			width: 1.6em;
 			opacity: 0.7;
-			align-items: center;
-		}
-
-		.list-icon-placeholder{
-			display: flex;
-			width: 1.6em;
 			align-items: center;
 		}
 
