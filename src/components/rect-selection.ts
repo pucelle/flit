@@ -26,10 +26,11 @@ export interface RectSelectionEvents {
 
 
 /** 
- * Handle rect selection, especially it can cause
- * scrolling of parent scroller to select more items.
+ * Handle rectangle selection.
  * 
- * It children are partial rendered, you can specify a `data-index` for it.
+ * The parent scroller will automatically scrolls when mouse reaches edges while selecting.
+ * 
+ * It children are partial rendered, you can specify a `data-index` for it to indicate real index.
  * 
  * You should put this component into a scrollable element.
  */

@@ -17,7 +17,7 @@ interface SliderEvents {
 }
 
 
-/** `<Slider>` provides a range picker, you may pick one value by sliding on the bar. */
+/** `<Slider>` provides a range selection control that allows value selection through drag interaction. */
 export class Slider<E = {}> extends Component<E & SliderEvents> {
 
 	static style = css`

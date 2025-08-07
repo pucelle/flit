@@ -22,7 +22,7 @@ interface SelectEvents<T, M extends boolean> {
 
 
 /** 
- * `<Select>` works just like `<select>` element, you can select one or multiple option from it.
+ * `<Select>` works just like html `<select>` element, supports single or multiple option selection.
  * 
  * Use it like:
  * `<Select .data=${[{text, icon?, tip?}]} .value=${[ItemOfData]}>`

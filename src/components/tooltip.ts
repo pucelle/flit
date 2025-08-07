@@ -15,7 +15,7 @@ import {IconClose} from '../icons'
 export type TooltipType = 'default' | 'prompt' | 'error'
 
 
-/** `<Tooltip>` shows a short text or html type message beside it's trigger element. */
+/** `<Tooltip>` displays a short text or html content beside it's trigger element. */
 export class Tooltip<E = {}> extends Popup<E> {
 
 	static style = css`

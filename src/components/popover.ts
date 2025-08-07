@@ -7,7 +7,7 @@ import {IconClose} from '../icons'
 
 
 /** 
- * `<Popover>` shows content message on a popup beside it's trigger element.
+ * `<Popover>` displays content message on a popup besides it's trigger element.
  * 
  * `:slot=action` - single action button or action buttons container.
  */
@@ -83,7 +83,7 @@ export class Popover<E = {}> extends Popup<E> {
 	/** Popover title. */
 	title: string = ''
 
-	/** Whether shows a close icon to quickly close current popover. */
+	/** Whether displays a close icon to quickly close current popover. */
 	closable: boolean = false
 
 	protected render() {

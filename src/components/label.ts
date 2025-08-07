@@ -1,7 +1,7 @@
 import {Component, html, css} from '@pucelle/lupos.js'
 
 
-/** `<Label>` shows a text label. */
+/** `<Label>` displays a text label. */
 export class Label<Events = any> extends Component<Events> {
 
 	static style = css`

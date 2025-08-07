@@ -57,7 +57,7 @@ export interface ListEvents<T> {
 
 
 /** 
- * `<List>` will render data items as a list,
+ * `<List>` renders data items as a list,
  * and supports sub list.
  * Otherwise it provides single or multiple selection,
  * and direction key navigation.

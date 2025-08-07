@@ -11,7 +11,7 @@ export type RepeatRenderFn<T> = (item: T, index: number) => RenderResult
 
 
 /** 
- * `<Repeat>` creates repetitive contents by a `renderFn` and an iterable data.
+ * `<Repeat>` generates repetitive content using a `renderFn` and iterable data.
  * it works just like a `<for>...` block, but gives more controllable based on component.
  */
 export class Repeat<T = any, E = {}> extends Component<E> {

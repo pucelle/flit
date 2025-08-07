@@ -19,7 +19,7 @@ const DefaultOrderableOptions: OrderableOptions = {
 
 
 /** 
- * Make current element orderable.
+ * Make current element orderable, can drag it to swap order index among siblings.
  * :orderable=${data, index, ?options}
  * - `data`: Data item to identify current dragging item.
  * - `index`: Data item index within it's siblings.

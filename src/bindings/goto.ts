@@ -7,8 +7,8 @@ import {Router} from '../components'
  * A `:goto` binding will goto target location path using router after clicking bound element.
  * Note update parameter `path` is path for closest router, may be path of sub router.
  * 
- * `:goto="closestRouterPath"`
- * `:goto=${closestRouterPath}`
+ * `:goto="routerPath"`
+ * `:goto=${routerPath}`
  */
 export class goto implements Binding {
 	

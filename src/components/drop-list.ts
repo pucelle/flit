@@ -6,7 +6,7 @@ import {Icon} from './icon'
 import {IconRight} from '../icons'
 
 
-/** `<DropList>` displays sub list as popup content. */
+/** `<DropList>` renders sub list as popup content. */
 export class DropList<T> extends List<T> {
 
 	static style = css`

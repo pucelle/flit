@@ -19,7 +19,8 @@ export type ResizerPosition = 'top' | 'right' | 'bottom' | 'left'
 
 
 /** 
- * `<Resizer>` can be used to drag to adjust item sizes.
+ * `<Resizer>` allows you drag to resize sibling elements.
+ * 
  * You should normally use it to adjust sibling sizes in 'resize-move' event.
  * Or use `<ParentalResizer>` to adjust parent size directly.
  */

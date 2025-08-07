@@ -3,8 +3,8 @@ import {Component, css, html} from '@pucelle/lupos.js'
 
 
 /** 
- * `<Row>` used to do grid layout, can contain several `<Col>`.
- * If available width changes, count of `<Col>` in one line may be adjusted.
+ * `<Row>` implements grid layouts by containing multiple <Col> components.
+ * The size of each column per row adjusts responsively based on available row width.
  */
 export class Row extends Component {
 
@@ -65,7 +65,7 @@ export class Row extends Component {
 }
 
 
-/** `<Col>` can be contained by a `<Row>` to do grid layout. */
+/** `<Col>` is used within a <Row> to create grid layouts. */
 export class Col extends Component {
 
 	static style = css`

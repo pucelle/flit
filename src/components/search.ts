@@ -13,7 +13,7 @@ interface SearchEvents {
 
 
 /** 
- * `<Search>` can input text to do searching.
+ * `<Search>` allows text input to perform searches.
  * It contains only an input, can be extend to list suggested data.
  */
 export class Search<E = {}> extends Component<SearchEvents & E> {
@@ -76,34 +76,37 @@ export class Search<E = {}> extends Component<SearchEvents & E> {
 	/** Current inputted value. */
 	value: string = ''
 	
+	/** 
+	 * Whether input field get focused.
+	 * Readonly outside.
+	 */
+	focused: boolean = false
+
 	/** Search input element. */
 	protected inputEl!: HTMLInputElement
-
-	/** Whether search input get focus. */
-	protected focused: boolean = false
 
 	/** When in composition inputting. */
 	protected inCompositionInputting: boolean = false
 
 	protected render() {
 		return html`
-		<template class="search size-${this.size}">
-			<Icon class="search-icon" .icon=${IconSearch} .size="inherit" />
+			<template class="search size-${this.size}">
+				<Icon class="search-icon" .icon=${IconSearch} .size="inherit" />
 
-			<input type="text"
-				class="search-field"
-				placeholder=${this.placeholder}
-				.value=${this.value}
-				:ref=${this.inputEl}
-				@focus=${this.onFocus}
-			/>
-
-			<lu:if ${this.value}>
-				<Icon class="search-clear-icon" .icon=${IconClose} .size="inherit"
-					@click.stop=${this.clear}
+				<input type="text"
+					class="search-field"
+					placeholder=${this.placeholder}
+					.value=${this.value}
+					:ref=${this.inputEl}
+					@focus=${this.onFocus}
 				/>
-			</lu:if>
-		</template>
+
+				<lu:if ${this.value}>
+					<Icon class="search-clear-icon" .icon=${IconClose} .size="inherit"
+						@click.stop=${this.clear}
+					/>
+				</lu:if>
+			</template>
 		`
 	}
 

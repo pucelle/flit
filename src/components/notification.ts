@@ -60,7 +60,7 @@ interface NotificationItem extends NotificationOptions {
 }
 
 
-/** `<Notification>` shows a notification list to notify about infos. */
+/** `<Notification>` displays a notification list of notification messages. */
 export class Notification<E = {}> extends Component<E> {
 
 	static style = css`

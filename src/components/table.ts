@@ -88,11 +88,11 @@ export interface TableColumn<T = any> extends Observed {
 
 
 /** 
- * `<Table>` works just like a HTML Element `<table>`,
- * it renders rows and columns by provided data items.
+ * `<Table>` display data items in rows and columns,
+ * and enables users to sort, filter and resize on columns.
  * 
  * - `columns` provides data column mode for table view.
- * - `store` provides data service and also data filtering and data ordering.
+ * - `store` provides data and enables filtering and ordering.
  */
 export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 

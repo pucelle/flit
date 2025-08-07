@@ -2,7 +2,7 @@ import {Component} from '@pucelle/lupos.js'
 import {Input} from './input'
 
 
-/** `<Form>` can contain `<Input>` or `<Textarea>` and check their valid state at once. */
+/** `<Form>` can contain several `<Input>` and `<Textarea>` and validate them. */
 export class Form<E = {}> extends Component<E> {
 
 	/** 

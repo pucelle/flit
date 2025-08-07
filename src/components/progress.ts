@@ -2,7 +2,7 @@ import {Component, css, html} from '@pucelle/lupos.js'
 import {tooltip, TooltipOptions} from '../bindings'
 
 
-/** `<Progress>` gives a progress indicate in percentage, just like `<input type=progress>`. */
+/** `<Progress>` displays a progress indicator in percentage, just like `<input type=progress>`. */
 export class Progress<E = {}> extends Component<E> {
 
 	static style = css`

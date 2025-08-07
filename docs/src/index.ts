@@ -88,9 +88,9 @@ class Preview extends Component {
 				</Row>
 
 				<Row style="margin: 12px 0;">
-					<Col .span=${4}>Main color</Col>
+					<Col .span=${4}>Primary color</Col>
 					<Col .span=${20}>
-						<MainColorSelect style="width: 12em;" />
+						<PrimaryColorSelect style="width: 12em;" />
 					</Col>
 				</Row>
 			</section>
@@ -99,7 +99,7 @@ class Preview extends Component {
 
 	private renderButton() {
 		return html`
-			<section class="basic">
+			<section>
 				<h3>Buttons</h3>
 				<Row style="margin: 12px 0;">
 					<Col .span=${4}>
@@ -1171,7 +1171,7 @@ class Preview extends Component {
 }
 
 
-class MainColorSelect extends Select<string> {
+class PrimaryColorSelect extends Select<string> {
 
 	data = [
 		{value: 'ActiveText', text: `Auto`},

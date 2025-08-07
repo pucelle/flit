@@ -7,10 +7,12 @@ import {locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator
 
 
 /** 
- * Compare with `<Repeat>`, `<LiveRepeat>` can render partial items in the scroll viewport,
- * and update rendered partial items follow user scrolling.
+ * `<LiveRepeat>` dynamically renders visible portions of data in list format.
  * 
- * Some style restrictions you need to know:
+ * Compared to `<Repeat>`, `<LiveRepeat>` renders only visible data items and
+ * dynamically updates them during user scrolling.
+ * 
+ * Some restrictions you need to know:
  * - `<LiveRepeat>` must be contained in a scroller element with `overflow: auto / scroll`.
  * - `<LiveRepeat>` must be the only child of the scroller element.
  * - `<LiveRepeat>` must in `absolute` position.

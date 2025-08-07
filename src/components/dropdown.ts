@@ -8,7 +8,7 @@ import {computed} from '@pucelle/lupos'
 import {IconDown} from '../icons'
 
 
-/** `<Dropdown>` for containing both trigger element and popup content.  */
+/** `<Dropdown>` contains trigger element and popup content.  */
 export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptions> {
 
 	static style = css`

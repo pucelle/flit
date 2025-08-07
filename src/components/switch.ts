@@ -10,7 +10,7 @@ interface SwitchEvents {
 }
 
 
-/** `<Switch>` work just like `<Checkbox>` but easier to interact with. */
+/** `<Switch>` allows users to toggle between on and off states. */
 export class Switch<E = {}> extends Component<E & SwitchEvents> {
 
 	static style = css`

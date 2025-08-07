@@ -3,7 +3,7 @@ import {ThemeSize} from '../style'
 import {parseSVGCode} from '../icons'
 
 
-/** `<Icon .type>` will show a specified type of svg icon. */
+/** `<Icon>` renders a specified svg icon. */
 export class Icon<Events = any> extends Component<Events> {
 
 	static style = css`

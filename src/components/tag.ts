@@ -11,7 +11,7 @@ interface TagEvents {
 }
 
 
-/** `<Tag>` used to give a tag label to a kind of items. */
+/** `<Tag>` is typically used to categorize content with a text label. */
 export class Tag<E = {}> extends Component<E & TagEvents> {
 
 	static style = css`
@@ -66,14 +66,14 @@ export class Tag<E = {}> extends Component<E & TagEvents> {
 
 	protected render() {
 		return html`
-		<template class="tag">
-			<span class="tag-label"><slot /></span>
-			<lu:if ${this.closable}>
-				<Icon class="tag-close-icon" .icon=${IconClose} .size="inherit"
-					@click=${this.close}
-				/>
-			</lu:if>
-		</template>
+			<template class="tag">
+				<span class="tag-label"><slot /></span>
+				<lu:if ${this.closable}>
+					<Icon class="tag-close-icon" .icon=${IconClose} .size="inherit"
+						@click=${this.close}
+					/>
+				</lu:if>
+			</template>
 		`
 	}
 

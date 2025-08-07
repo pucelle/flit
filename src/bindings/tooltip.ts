@@ -36,7 +36,7 @@ const DefaultTooltipOptions: Partial<TooltipOptions> = {
 
 
 /**
- * A `:tooltip` binding can help to show a short text message besides a anchor element.
+ * A `:tooltip` binding can help to show a short text message besides bound element.
  * 
  * `:tooltip="message"`
  * `:tooltip=${message}`

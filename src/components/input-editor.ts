@@ -18,7 +18,7 @@ export interface InputEditorEvents {
 }
 
 
-/** Single line text editor. */
+/** Single line text editor, align with an editing element. */
 export class InputEditor extends Popup<InputEditorEvents> {
 
 	static style = css`

@@ -18,7 +18,7 @@ interface RadioEvents {
 }
 
 
-/** `<Radio>` is just like `<input type=radio>`, you can click to check one radio in a radio group. */
+/** `<Radio>` works just like `<input type=radio>`, you can click to check one radio in a radio group. */
 export class Radio<E = {}> extends Component<E & RadioEvents> {
 
 	static style = css`

@@ -4,8 +4,8 @@ import {Binding, Part} from '@pucelle/lupos.js'
 
 
 /**
- * `:scrollPersist` helps to persist scroll position of element,
- * and restore it after it gets re-connected.
+ * `:scrollPersist` helps to persist scroll position of bound element
+ * after it disconnected, and restore it after gets re-connected.
  */
 export class scrollPersist implements Binding, Part {
 

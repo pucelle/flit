@@ -79,7 +79,7 @@ interface DialogItem {
 
 
 /** 
- * `<Dialog>` shows blocking-level content on a overlay modal,
+ * `<Dialog>` renders blocking-level content on a overlay modal,
  * you must interact with it before continue.
  */
 export class Dialog<E = {}> extends Component<E> {
@@ -383,7 +383,7 @@ export class Dialog<E = {}> extends Component<E> {
 }
 
 
-export class TypedDialog {
+export class QuickDialog {
 
 	protected dialog!: Dialog
 
@@ -473,13 +473,18 @@ export class TypedDialog {
 
 
 /** A quick global API to show dialogs. */
-export const dialog = /*#__PURE__*/new TypedDialog()
+export const dialog = /*#__PURE__*/(() => {
+	let d = new QuickDialog()
+
+	/** Default transitions for `<Dialog>`. */
+	translations.add('en', {
+		ok: 'OK',
+		cancel: 'Cancel',
+		yes: 'Yes',
+		no: 'No',
+	})
+
+	return d
+})()
 
 
-/** Default transitions for `<Dialog>`. */
-/*#__PURE__*/translations.add('en', {
-	ok: 'OK',
-	cancel: 'Cancel',
-	yes: 'Yes',
-	no: 'No',
-})

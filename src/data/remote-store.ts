@@ -23,11 +23,11 @@ export interface RemoteStoreOptions<T> {
 
 
 /**
- * Compare to `Store`, `RemoteStore` loads data of one page each time.
- * And every time after data changed, it refreshes to reload data from server.
+ * `RemoteStore` loads one page of remote data each time,
+ * and automatically caches per page data.
  * 
- * You should extend this class to implement dataCount and dataGetter,
- * and may implement ordering and filtering,
+ * You should extend this class to implement `dataCountGetter` and `pageDataGetter`,
+ * and may also implement `applyOrder` and `applyFilter`,
  */
 export abstract class RemoteStore<T = any> implements RemoteStoreOptions<T>, Observed {
 
@@ -53,14 +53,14 @@ export abstract class RemoteStore<T = any> implements RemoteStoreOptions<T>, Obs
 
 	/** 
 	 * It should read `orderName` and `orderDirection` and apply ordering.
-	 * Need to be overwritten.
+	 * Need to be overwritten when required.
 	 */
 	@effect
 	applyOrder() {}
 
 	/** 
 	 * It should read `filterWord` and apply filtering.
-	 * Need to be overwritten.
+	 * Need to be overwritten when required.
 	 */
 	@effect
 	applyFilter() {}

@@ -1,7 +1,7 @@
 import {Component, css, html} from '@pucelle/lupos.js'
 
 
-/** `<Loader>` shows an loading animation to indicate resource is loading. */
+/** `<Loader>` displays a loading animation to indicate resource is loading. */
 export class Loader<E = {}> extends Component<E> {
 
 	static style = css`
@@ -9,21 +9,21 @@ export class Loader<E = {}> extends Component<E> {
 			display: inline-block;
 			vertical-align: top;
 			color: var(--primary-color);
-		}
-
-		.loader.as-cover{
-			position: absolute;
-			left: 0;
-			top: 0;
-			right: 0;
-			bottom: 0;
-			z-index: 10;
-			background: color-mix(in srgb, var(--text-color) 5%, transparent);
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			text-align: center;
+		
+			&.as-cover{
+				position: absolute;
+				left: 0;
+				top: 0;
+				right: 0;
+				bottom: 0;
+				z-index: 10;
+				background: color-mix(in srgb, var(--text-color) 5%, transparent);
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				text-align: center;
+			}
 		}
 
 		.loader svg{

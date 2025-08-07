@@ -6,7 +6,7 @@ import {IconClose} from '../icons'
 
 
 /** 
- * `<Modal>` shows blocking-level content and help to
+ * `<Modal>` displays blocking-level content and help to
  * complete a child task on a popup modal.
  * 
  * `:slot="action"` - single action button or action buttons container.

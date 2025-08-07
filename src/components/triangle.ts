@@ -1,7 +1,7 @@
 import {css, Component, html} from '@pucelle/lupos.js'
 
 
-/** `<Triangle>` represents a small triangle to be contained by popup or tooltip. */
+/** `<Triangle>` renders a small triangular indicator, typically used within `<Popup>` or `<Tooltip>`. */
 export class Triangle<E = {}> extends Component<E> {
 
 	static style = css`

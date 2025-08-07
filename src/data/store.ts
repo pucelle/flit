@@ -15,10 +15,7 @@ export interface StoreOptions<T> {
 }
 
 
-/**
- * Used to cache data items and support selection, ordering and filtering.
- * Normally use it as a part of table component.
- */
+/** `Store` can be used to cache data items while support ordering and filtering. */
 export class Store<T = any> implements StoreOptions<T>, Observed {
 	
 	filter: ((item: T) => boolean) | null = null

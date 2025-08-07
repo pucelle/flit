@@ -3,8 +3,8 @@ import {Input} from './input'
 
 
 /** 
- * `<Textarea>` works just like a `<textarea>`,
- * you can set validator to validate it's value, or set customized error message.
+ * `<Textarea>` works just like html `<textarea>` element,
+ * it supports custom validator or custom error message.
  */
 export class Textarea extends Input {
 

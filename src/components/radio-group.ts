@@ -18,7 +18,7 @@ interface RadioGroupEvents<T> {
 
 
 /** 
- * `<RadioGroup>` can contain several `<Radio>`s as it's child radios.
+ * `<RadioGroup>` can contain several `<Radio>` as it's child radios.
  * `<RadioGroup>` has no style specified by default.
  */
 export class RadioGroup<T = any, E = {}> extends Component<RadioGroupEvents<T> & E> {

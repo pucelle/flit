@@ -27,8 +27,8 @@ type RouterChangeType = 'redirect' | 'goto'
 
 
 /** 
- * `<Router>` can be used as topmost container to contains everything that should be routed, 
- * it chooses to render depends on current path.
+ * `<Router>` serves as the top-level container for all routable content,
+ * rendering things based on the current path.
  *
  * ```ts
  *   this.route('/user:id', ({id}) => {

@@ -14,8 +14,9 @@ export interface AsyncLiveRepeatEvents {
 
 
 /** 
- * Compare with `<LiveRepeat>`,
- * `<AsyncLiveRepeat>` can render remote data which was splitted to pages.
+ * `<AsyncLiveRepeat>` dynamically renders visible portions of remote data in list format.
+ * 
+ * Compare with `<LiveRepeat>`, `<AsyncLiveRepeat>` renders remote data which was splitted to pages.
  */
 export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & AsyncLiveRepeatEvents> {
 
