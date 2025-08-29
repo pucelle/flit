@@ -1,6 +1,6 @@
 # flit
 
-A lightweight Web UI system based on [lupos.js](https://github.com/pucelle/lupos.js) and [lupos](https://github.com/pucelle/lupos) compiler.
+A lightweight Web UI system based on [lupos.js](https://github.com/pucelle/lupos.js) and [lupos](https://github.com/pucelle/lupos).
 
 Here is the [Live Preview](https://pucelle.github.io/flit/docs/).
 
