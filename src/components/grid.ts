@@ -78,7 +78,7 @@ export class Col extends Component {
 	offset: number = 0
 	row!: Row
 
-	protected onConnected() {
+	onConnected() {
 		super.onConnected()
 
 		let row = Row.from(this.el.parentElement!)

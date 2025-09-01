@@ -72,7 +72,7 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 	 */
 	value: T | null = null
 
-	protected onConnected() {
+	onConnected() {
 		super.onConnected()
 
 		let group = CheckboxGroup.fromClosest(this.el.parentElement!)

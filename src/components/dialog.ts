@@ -297,7 +297,7 @@ export class Dialog<E = {}> extends Component<E> {
 		this.maskEl.remove()
 	}
 
-	protected onConnected() {
+	onConnected() {
 		super.onConnected()
 		
 		untilUpdateComplete().then(() => {
@@ -309,12 +309,13 @@ export class Dialog<E = {}> extends Component<E> {
 		DOMEvents.on(window, 'resize', this.onWindowResize, this)
 	}
 
-	protected onUpdated() {
-		this.toCenter()
+	onWillDisconnect() {
+		super.onWillDisconnect()
+		DOMEvents.off(window, 'resize', this.onWindowResize, this)
 	}
 
-	protected onDisconnected() {
-		DOMEvents.off(window, 'resize', this.onWindowResize, this)
+	protected onUpdated() {
+		this.toCenter()
 	}
 
 	protected onWindowResize() {

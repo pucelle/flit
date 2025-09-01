@@ -146,13 +146,18 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		}
 	}
 
-	protected onConnected(this: LiveRepeat<any, {}>) {
+	onConnected(this: LiveRepeat<any, {}>) {
 		super.onConnected()
 
 		this.initPlaceholder()
 		this.initRenderer()
 
 		this.renderer!.connect()
+	}
+	
+	onWillDisconnect() {
+		super.onWillDisconnect()
+		this.renderer!.disconnect()
 	}
 
 	protected initPlaceholder() {
@@ -187,11 +192,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.doa,
 			this.updateLiveData.bind(this)
 		)
-	}
-	
-	protected onWillDisconnect() {
-		super.onWillDisconnect()
-		this.renderer!.disconnect()
 	}
 
 	/** Check whether item at specified index is rendered. */

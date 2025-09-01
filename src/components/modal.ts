@@ -150,7 +150,7 @@ export class Modal<E = {}> extends Component<E> {
 		this.maskEl.remove()
 	}
 
-	protected onConnected() {
+	onConnected() {
 		super.onConnected()
 		
 		untilUpdateComplete().then(() => {
@@ -166,7 +166,7 @@ export class Modal<E = {}> extends Component<E> {
 		this.toCenter()
 	}
 
-	protected onDisconnected() {
+	onWillDisconnect() {
 		DOMEvents.off(window, 'resize', this.onWindowResize, this)
 	}
 

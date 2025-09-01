@@ -65,7 +65,7 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 		this.reload()
 	}
 
-	protected onConnected(): void {
+	onConnected(): void {
 		super.onConnected()
 
 		if (this.needsUpdateDataCount) {

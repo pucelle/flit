@@ -75,7 +75,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 	 */
 	value: any = null
 
-	protected onConnected() {
+	onConnected() {
 		super.onConnected()
 		
 		let group = RadioGroup.fromClosest(this.el.parentElement!, 3)
