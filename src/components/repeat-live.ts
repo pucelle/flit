@@ -155,7 +155,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.connect()
 	}
 	
-	onWillDisconnect() {
+	protected onWillDisconnect() {
 		super.onWillDisconnect()
 		this.renderer!.disconnect()
 	}

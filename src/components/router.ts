@@ -84,7 +84,7 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 	/** To indicate latest state index. */
 	protected latestStateIndex: number = 0
 
-	onConnected() {
+	protected onConnected() {
 		super.onConnected()
 
 		if (!this.path) {
@@ -101,7 +101,7 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 		DOMEvents.on(window, 'popstate', this.onWindowPopState as (e: Event) => void, this)
 	}
 
-	onWillDisconnect() {
+	protected onWillDisconnect() {
 		super.onWillDisconnect()
 		DOMEvents.off(window, 'popstate', this.onWindowPopState as (e: Event) => void, this)
 	}

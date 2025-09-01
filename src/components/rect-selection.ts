@@ -92,7 +92,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 	/** Whether started selecting. */
 	protected inSelecting: boolean = false
 
-	onConnected() {
+	protected onConnected() {
 		super.onConnected()
 		
 		this.scroller = this.el.parentElement

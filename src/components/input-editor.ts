@@ -107,14 +107,14 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		this.inputRef.select()
 	}
 
-	onConnected() {
+	protected onConnected() {
 		super.onConnected()
 		this.updatePosition()
 		RectWatcher.watch(this.editing, this.updatePosition, this)
 		DOMEvents.on(document, 'mousedown', this.onDOMMouseDown, this)
 	}
 
-	onWillDisconnect() {
+	protected onWillDisconnect() {
 		super.onWillDisconnect()
 		RectWatcher.unwatch(this.editing, this.updatePosition, this)
 		DOMEvents.off(document, 'mousedown', this.onDOMMouseDown, this)
