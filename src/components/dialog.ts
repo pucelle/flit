@@ -5,7 +5,7 @@ import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
 import {Button} from './button'
-import {tooltip, TooltipOptions} from '../bindings'
+import {tooltip} from '../bindings'
 import {IconConfirm} from '../icons'
 
 
@@ -261,7 +261,7 @@ export class Dialog<E = {}> extends Component<E> {
 			<Button class="dialog-action"
 				.primary=${!!action.primary}
 				:class.dialog-third=${action.third}
-				:tooltip=${action.tooltip ?? null, {position: 'b'} as Partial<TooltipOptions>}
+				:tooltip=${action.tooltip ?? null, {position: 'b'}}
 				@click=${() => this.onClickActionButton(action)}
 			>
 				${action.text}
@@ -487,5 +487,3 @@ export const dialog = /*#__PURE__*/(() => {
 
 	return d
 })()
-
-
