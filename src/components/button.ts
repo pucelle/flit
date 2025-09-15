@@ -2,7 +2,7 @@ import {Component, css, html, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 
 
-/** `<Button>` is nearly equals <button> element. */
+/** `<Button>` is nearly equals `<button>` element. */
 export class Button<E = {}> extends Component<E> {
 
 	static style = css`	

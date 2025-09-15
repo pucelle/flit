@@ -439,7 +439,7 @@ export class QuickDialog {
 				<Input class="dialog-input" 
 					.placeholder=${options.placeholder ?? ''}
 					.validator=${options.validator ?? null}
-					.type=${options.inputType as "text" | "password" || 'text'}
+					.type=${options.inputType as 'text' | 'password' | 'text'}
 					.value=${value}
 					:ref=${input!}
 					@input=${(v: string) => value = v}
