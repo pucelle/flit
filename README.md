@@ -11,7 +11,7 @@ Here is the [Live Preview](https://pucelle.github.io/flit/docs/).
 
 - **CSS**
 	- `css/base.css`: base css.
-	- `css/font.css`: roboto font.
+	- `css/font.css`: **Roboto** font.
 
 - **Bindings**
 	- `:contextmenu`: pops-up a context menu when right click bound element.
