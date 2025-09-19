@@ -45,7 +45,7 @@ Here is the [Live Preview](https://pucelle.github.io/flit/docs/).
 	- `<Loader>`: shows a loading animation to indicate resource is loading.
 	- `<Menu>`: shows a menu with a `<List>` or `<DropList>` inside.
 	- `<Modal>`: shows blocking-level content and help to complete a child task on a popup modal.
-	- `<Navigation>`: extends `<List>`, and can specifies title.
+	- `<Navigation>`: extends from `<List>`, and can specify title.
 	- `<Notification>`: displays a notification list of notification messages.
 	- `<Popover>`: displays content message on a popup besides it's trigger element.
 	- `<Popup>`: base class of all popup components.
