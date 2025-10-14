@@ -295,7 +295,10 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 */
 	rowRectSelectionIgnoreSelector: string | null = null
 
-	/** If provided and not 0, will use it and partial renderer has no need to read scroller size. */
+	/** 
+	 * If provided and not 0, will use it and partial renderer has no need to read scroller size.
+	 * Note this is the size of body, or whole table size excludes head.
+	 */
 	scrollSize: number = 0
 
 	/** 
