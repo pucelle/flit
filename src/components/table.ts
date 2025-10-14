@@ -209,10 +209,6 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 			&.selected{
 				background: color-mix(in srgb, var(--primary-color) 10%, var(--background-color));
 			}
-
-			&:last-child .table-cell{
-				border-bottom-color: transparent;
-			}
 		}
 
 		.table-cell{
@@ -298,6 +294,9 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * will not start selection.
 	 */
 	rowRectSelectionIgnoreSelector: string | null = null
+
+	/** If provided and not 0, will use it and partial renderer has no need to read scroller size. */
+	scrollSize: number = 0
 
 	/** 
 	 * Manage all selected items, exist when `rowSelectable` is true.
@@ -570,6 +569,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 					.reservedPixels=${this.reservedPixels}
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
+					.scrollSize=${this.scrollSize}
 					.dataLoader=${(this.store as RemoteStore).dataLoader}
 					@freshly-updated=${this.onLiveDataUpdated}
 				/>
@@ -580,8 +580,9 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 				<LiveRepeat tagName="tbody" :ref=${this.repeatRef}
 					.reservedPixels=${this.reservedPixels}
 					.renderFn=${this.renderRow.bind(this)}
-					.data=${this.store.currentData}
 					.scrollerSelector=".table-body"
+					.scrollSize=${this.scrollSize}
+					.data=${this.store.currentData}
 					@updated=${this.onLiveDataUpdated}
 				/>
 			`

@@ -158,6 +158,11 @@ export class PartialRendererMeasurement {
 		this.scrollerSize = this.doa.getClientSize(this.scroller)
 	}
 
+	/** Directly Set not read scroller size. */
+	setScrollerSize(size: number) {
+		this.scrollerSize = size
+	}
+
 	/* Whether has measured. */
 	hasMeasured(): boolean {
 		return this.getItemSize() > 0

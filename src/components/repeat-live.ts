@@ -27,6 +27,14 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 */
 	declare renderFn: RepeatRenderFn<T>
 
+	/** 
+	 * Whether partial rendering content as follower,
+	 * so the partial renderer only renders by current scroll position,
+	 * and will never cause scroll position change.
+	 * Normally can use it at secondary columns of waterfall layout.
+	 */
+	readonly asFollower: boolean = false
+
 	/**
 	* How many pixels to reserve to reduce update frequency when scrolling.
 	* On Windows, scroll for 100px each time.
@@ -36,14 +44,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	reservedPixels: number = 200
 
 	/** 
-	 * Whether partial rendering content as follower,
-	 * so the partial renderer only renders by current scroll position,
-	 * and will never cause scroll position change.
-	 * Normally can use it at secondary columns of waterfall layout.
-	 */
-	readonly asFollower: boolean = false
-
-	/** 
 	 * If provided, it specifies the suggested end position,
 	 * to indicate the size of each item.
 	 * The size has no need to represent real size,
@@ -51,6 +51,9 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * Which means: can ignores shared paddings or margins.
 	 */
 	preEndPositions: number[] | null = null
+
+	/** If provided and not 0, will use it and partial renderer has no need to read scroller size. */
+	scrollSize: number = 0
 
 	/** 
 	 * Placeholder element, sibling of slider.
@@ -83,16 +86,22 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.data.slice(this.startIndex, this.endIndex)
 	}
 
+	/** Apply `scrollSize` property to renderer. */
+	@effect
+	protected applyScrollSize() {
+		this.renderer!.setScrollerSize(this.scrollSize)
+	}
+
 	/** Apply `reservedPixels` property to renderer. */
 	@effect
 	protected applyReservedPixels() {
-		this.renderer!.setReservedPixels(this.reservedPixels)
+		this.renderer!.reservedPixels = this.reservedPixels
 	}
 
 	/** Apply `data` count to renderer. */
 	@effect
 	protected applyDataCount() {
-		this.renderer!.setDataCount(this.data.length)
+		this.renderer!.dataCount = this.data.length
 		this.willUpdate()
 	}
 

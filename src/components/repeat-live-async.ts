@@ -77,7 +77,7 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 	/** Apply data count to renderer. */
 	protected async updateDataCount() {
 		let dataCount = await this.dataLoader.getDataCount()
-		this.renderer!.setDataCount(dataCount)
+		this.renderer!.dataCount = dataCount
 		this.willUpdate()
 	}
 

@@ -67,21 +67,10 @@ export class PartialRenderer {
 	readonly doa: DirectionalOverflowAccessor
 
 	/** How many pixels to reserve to reduce update frequency when scrolling. */
-	private reservedPixels: number = 200
+	reservedPixels: number = 200
 
 	/** Total data count. */
-	private dataCount: number = 0
-
-	/** Enqueue rendering. */
-	private renderQueue: AsyncTaskQueue = new AsyncTaskQueue()
-
-	/** Indices and align direction that need to apply. */
-	private needToApply: NeedToApply | null = {
-		startIndex: 0,
-		endIndex: undefined,
-		alignDirection: 'start',
-		tryPersistScrollPosition: false,
-	}
+	dataCount: number = 0
 
 	/** 
 	 * The start index of the first item in the whole data.
@@ -103,6 +92,20 @@ export class PartialRenderer {
 	 */
 	alignDirection: 'start' | 'end' = 'start'
 
+	/** Enqueue rendering. */
+	private renderQueue: AsyncTaskQueue = new AsyncTaskQueue()
+
+	/** Indices and align direction that need to apply. */
+	private needToApply: NeedToApply | null = {
+		startIndex: 0,
+		endIndex: undefined,
+		alignDirection: 'start',
+		tryPersistScrollPosition: false,
+	}
+
+	/** If provided and not 0, will use it and not read scroller size. */
+	private directScrollerSize: number = 0
+
 	constructor(
 		scroller: HTMLElement,
 		slider: HTMLElement,
@@ -123,27 +126,15 @@ export class PartialRenderer {
 	}
 
 
-	/** 
-	 * Set latest `alignDirection`.
-	 * Normally should do it before update rendering.
-	 */
-	private setAlignDirection(direction: 'start' | 'end') {
-		this.alignDirection = direction
-	}
-
-	/** Set `reservedPixels` property. */
-	setReservedPixels(reservedPixels: number) {
-		this.reservedPixels = reservedPixels
-	}
-
-	/** Set total data count before updating. */
-	setDataCount(dataCount: number) {
-		this.dataCount = dataCount
-	}
-
 	/** Set `preEndPositions` before updating. */
 	setPreEndPositions(positions: number[] | null) {
 		this.measurement.setPreEndPositions(positions)
+	}
+
+	/** If provided and not 0, will use it and not read scroller size. */
+	setScrollerSize(size: number) {
+		this.directScrollerSize = size
+		this.measurement.setScrollerSize(size)
 	}
 
 	/** 
@@ -178,10 +169,12 @@ export class PartialRenderer {
 	/** After component that use this partial renderer get connected. */
 	async connect() {
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
-		
 		await untilFirstPaintCompleted()
-		await this.readScrollerSize()
-		ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
+
+		if (!this.directScrollerSize) {
+			await this.readScrollerSize()
+			ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
+		}
 	}
 
 	/** After component that use this partial renderer will get disconnected. */
@@ -197,7 +190,10 @@ export class PartialRenderer {
 		}
 
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
-		ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)
+
+		if (!this.directScrollerSize) {
+			ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)
+		}
 	}
 
 	/** On scroller scroll event. */
@@ -338,7 +334,7 @@ export class PartialRenderer {
 
 		// Reset scroll position, but will align item with index viewport edge.
 		this.setIndices(startIndex, endIndex)
-		this.setAlignDirection(alignDirection ?? 'start')
+		this.alignDirection = alignDirection ?? 'start'
 
 		// Barrier DOM Writing here.
 		await barrierDOMWriting()
@@ -368,8 +364,7 @@ export class PartialRenderer {
 		
 		// Required, may data count increase or decrease.
 		this.setIndices(this.startIndex)
-
-		this.setAlignDirection('start')
+		this.alignDirection = 'start'
 
 		// Barrier DOM Writing here.
 		await barrierDOMWriting()
@@ -513,7 +508,7 @@ export class PartialRenderer {
 				await barrierDOMWriting()
 
 				this.doa.setScrolled(this.scroller, scrolled)
-				this.setAlignDirection('start')
+				this.alignDirection = 'start'
 				this.setSliderPosition(0)
 			}
 
@@ -535,7 +530,7 @@ export class PartialRenderer {
 			this.doa.setScrolled(this.scroller, scrolled)
 			this.setPlaceholderSize(this.measurement.latestPlaceholderProperties.placeholderSize + moreSize)
 
-			this.setAlignDirection('start')
+			this.alignDirection = 'start'
 			this.setSliderPosition(newPosition)
 		}
 
@@ -732,8 +727,7 @@ export class PartialRenderer {
 	private async updatePersistScrollPosition() {
 		let newStartIndex = this.measurement.calcStartIndexByScrolled()
 		this.setIndices(newStartIndex)
-
-		this.setAlignDirection('start')
+		this.alignDirection = 'start'
 
 		// Barrier DOM Writing here.
 		await barrierDOMWriting()
@@ -747,7 +741,7 @@ export class PartialRenderer {
 	 * Barrier DOM Writing inside.
 	 */
 	private async updateBySliderPosition(direction: 'start' | 'end', position: number | null) {
-		this.setAlignDirection(direction)
+		this.alignDirection = direction
 
 		// Barrier DOM Writing here.
 		await barrierDOMWriting()
@@ -761,7 +755,7 @@ export class PartialRenderer {
 
 	/** Reset scroll position by current indices. */
 	private async updateByNewIndices() {
-		this.setAlignDirection('start')
+		this.alignDirection = 'start'
 
 		// Barrier DOM Writing here.
 		await barrierDOMWriting()
