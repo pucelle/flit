@@ -24,10 +24,6 @@ export function locateVisibleIndex(
 	let translated = sliderStartPosition - scrolled
 
 	let index = ListUtils.quickBinaryFindInsertIndex(els, function(el) {
-		if (el.localName === 'slot') {
-			el = el.firstElementChild as HTMLElement
-		}
-
 		let start = doa.getOffset(el) + translated
 		let size = doa.getOffsetSize(el)
 		let end = start + size

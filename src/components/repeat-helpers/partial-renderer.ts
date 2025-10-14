@@ -659,6 +659,10 @@ export class PartialRenderer {
 			else if (this.startIndex !== oldStartIndex) {
 				let elIndex = this.startIndex - oldStartIndex
 				let el = this.repeat.children[elIndex] as HTMLElement
+
+				if (el.localName === 'slot') {
+					el = el.firstElementChild as HTMLElement
+				}
 	
 				// Barrier DOM Writing here.
 				await barrierDOMReading()
@@ -683,6 +687,10 @@ export class PartialRenderer {
 			else if (this.endIndex !== oldEndIndex) {
 				let elIndex = this.endIndex - oldStartIndex - 1
 				let el = this.repeat.children[elIndex] as HTMLElement
+
+				if (el.localName === 'slot') {
+					el = el.firstElementChild as HTMLElement
+				}
 	
 				// Barrier DOM Writing here.
 				await barrierDOMReading()
@@ -769,9 +777,14 @@ export class PartialRenderer {
 	 * Must after update complete.
 	 */
 	locateVisibleIndex(direction: 'start' | 'end', minimumRatio: number = 0): number {
+		let children: ArrayLike<Element> = this.repeat.children
+		if (children.length > 0 && children[0].localName === 'slot') {
+			children = [...this.repeat.children].map(c => c.firstElementChild) as ArrayLike<Element>
+		}
+
 		let visibleIndex = locateVisibleIndex(
 			this.scroller,
-			this.repeat.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
+			children as ArrayLike<HTMLElement>,
 			this.doa,
 			this.measurement.latestSliderPositionProperties.startPosition,
 			direction,
