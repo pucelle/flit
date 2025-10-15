@@ -88,6 +88,9 @@ export class PartialRendererMeasurement {
 	/** Do additional item size statistic, guess additional item size. */
 	private preAdditionalStat: PartialRendererSizeStat | null = null
 
+	/** Initial item size, now valid after measured. */
+	private guessedItemSize: number = 0
+
 	/** 
 	 * Latest scroller size.
 	 * Readonly outside.
@@ -163,14 +166,22 @@ export class PartialRendererMeasurement {
 		this.scrollerSize = size
 	}
 
+	/** 
+	 * Guess an item size for first-time paint,
+	 * and avoid it checking for item-size and render twice.
+	 */
+	setGuessedItemSize(size: number) {
+		this.guessedItemSize = size
+	}
+
 	/* Whether has measured. */
 	hasMeasured(): boolean {
-		return this.getItemSize() > 0
+		return this.stat.getLatestSize() > 0
 	}
 
 	/** Get item size. */
 	private getItemSize(): number {
-		return this.stat.getLatestSize()
+		return this.stat.getLatestSize() || this.guessedItemSize
 	}
 
 	/** 

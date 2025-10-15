@@ -56,6 +56,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	scrollSize: number = 0
 
 	/** 
+	 * Guess an item size for first-time paint,
+	 * and avoid it checking for item-size and render twice.
+	 */
+	guessedItemSize: number = 0
+
+	/** 
 	 * Placeholder element, sibling of slider.
 	 * Since here it renders only partial content,
 	 * slider element has no enough size to expand scrolling area,
@@ -89,7 +95,13 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	/** Apply `scrollSize` property to renderer. */
 	@effect
 	protected applyScrollSize() {
-		this.renderer!.setScrollerSize(this.scrollSize)
+		this.renderer!.setScrollSize(this.scrollSize)
+	}
+
+	/** Apply `guessedItemSize` property to renderer. */
+	@effect
+	protected applyGuessedItemSize() {
+		this.renderer!.setGuessedItemSize(this.guessedItemSize)
 	}
 
 	/** Apply `reservedPixels` property to renderer. */

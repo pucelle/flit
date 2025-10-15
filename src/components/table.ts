@@ -300,6 +300,12 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * Note this is the size of body, or whole table size excludes head.
 	 */
 	scrollSize: number = 0
+	
+	/** 
+	 * Guess an item size for first-time paint,
+	 * and avoid it checking for item-size and render twice.
+	 */
+	guessedItemSize: number = 0
 
 	/** 
 	 * Manage all selected items, exist when `rowSelectable` is true.
@@ -573,6 +579,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
 					.scrollSize=${this.scrollSize}
+					.guessedItemSize=${this.guessedItemSize}
 					.dataLoader=${(this.store as RemoteStore).dataLoader}
 					@freshly-updated=${this.onLiveDataUpdated}
 				/>
@@ -585,6 +592,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 					.renderFn=${this.renderRow.bind(this)}
 					.scrollerSelector=".table-body"
 					.scrollSize=${this.scrollSize}
+					.guessedItemSize=${this.guessedItemSize}
 					.data=${this.store.currentData}
 					@updated=${this.onLiveDataUpdated}
 				/>

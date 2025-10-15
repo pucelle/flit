@@ -104,7 +104,7 @@ export class PartialRenderer {
 	}
 
 	/** If provided and not 0, will use it and not read scroller size. */
-	private directScrollerSize: number = 0
+	private directScrollSize: number = 0
 
 	constructor(
 		scroller: HTMLElement,
@@ -132,9 +132,17 @@ export class PartialRenderer {
 	}
 
 	/** If provided and not 0, will use it and not read scroller size. */
-	setScrollerSize(size: number) {
-		this.directScrollerSize = size
+	setScrollSize(size: number) {
+		this.directScrollSize = size
 		this.measurement.setScrollerSize(size)
+	}
+
+	/** 
+	 * Guess an item size for first-time paint,
+	 * and avoid it checking for item-size and render twice.
+	 */
+	setGuessedItemSize(size: number) {
+		this.measurement.setGuessedItemSize(size)
 	}
 
 	/** 
@@ -171,7 +179,7 @@ export class PartialRenderer {
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
 		await untilFirstPaintCompleted()
 
-		if (!this.directScrollerSize) {
+		if (!this.directScrollSize) {
 			await this.readScrollerSize()
 			ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
 		}
@@ -191,7 +199,7 @@ export class PartialRenderer {
 
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
 
-		if (!this.directScrollerSize) {
+		if (!this.directScrollSize) {
 			ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)
 		}
 	}
