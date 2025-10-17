@@ -1,4 +1,4 @@
-import {EventUtils, MouseLeaveControl} from '@pucelle/ff'
+import {MouseEventDelivery, EventUtils, MouseLeaveControl} from '@pucelle/ff'
 import {DOMEvents, EventFirer} from '@pucelle/lupos'
 
 
@@ -19,9 +19,6 @@ interface PopupTriggerEvents {
 	/** Like will show soon, but mouse leave to cancel it. */
 	'cancel-show': () => void
 
-	/** Like trigger element become out-view, and need to hide immediately. */
-	'immediate-hide': () => void
-
 	/** Toggle opened state and show or hide popup immediately. */
 	'toggle-show-hide': () => void
 }
@@ -37,7 +34,11 @@ const enum BoundMask {
 /** Helps to bind popup events. */
 export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
+	/** Readonly outside */
 	trigger: TriggerType = 'hover'
+
+	/** Whether click content cause hiding. */
+	clickToHide: boolean = false
 
 	private matchSelector: string | undefined = undefined
 	private el: Element
@@ -213,12 +214,16 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	/** Bind events to hide popup element after mouse leave both trigger and popup element. */
 	protected bindMouseLeave(hideDelay: number, popupEl: Element) {
 		this.unwatchLeave = MouseLeaveControl.on(this.el, popupEl,
-			() => {
-				this.fire('immediate-hide')
-			},
+			() => {},
 			{
 				delay: hideDelay,
 				mouseIn: true,
+				onEntered: () => {
+					this.fire('will-show')
+				},
+				onLeaved: () => {
+					this.fire('will-hide')
+				},
 			}
 		)
 	}
@@ -227,7 +232,11 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	private onDocMouseDownOrTouch(e: Event) {
 		let target = e.target as Element
 		
-		if (!this.content || !this.content.contains(target)) {
+		if (!this.content
+			|| this.clickToHide
+			|| !this.content.contains(target)
+				&& !MouseEventDelivery.hasDeliveredFrom(this.content, target)
+			) {
 			this.fire('will-hide')
 		}
 	}

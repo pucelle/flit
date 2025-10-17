@@ -1,5 +1,5 @@
 import {Component, html, css} from '@pucelle/lupos.js'
-import {MouseLeaveControl, NumberUtils} from '@pucelle/ff'
+import {NumberUtils} from '@pucelle/ff'
 import {DOMEvents} from '@pucelle/lupos'
 import {tooltip, TooltipOptions} from '../bindings'
 
@@ -248,9 +248,6 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 	protected onMouseDown(this: Slider, e: MouseEvent) {
 		let rect = this.grooveEl.getBoundingClientRect()
 
-		// Avoid mouse leave to cause it hide.
-		MouseLeaveControl.lock(this.el)
-
 		this.dragging = true
 
 		// If clicked the ball, not move; only move when clicked the groove.
@@ -267,8 +264,6 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 		DOMEvents.on(document, 'mousemove', onMouseMove as (e: Event) => void)
 
 		DOMEvents.once(document, 'mouseup', () => {
-			MouseLeaveControl.unlock(this.el)
-
 			DOMEvents.off(document, 'mousemove', onMouseMove as (e: Event) => void)
 
 			this.dragging = false

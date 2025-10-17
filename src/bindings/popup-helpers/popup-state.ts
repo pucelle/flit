@@ -29,11 +29,18 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 	/** Be a `Timeout` after decided to close popup but not yet. */
 	private hideTimeout: Timeout | null = null
 
+	/** Whether will open and will not hide. */
+	isOpenAndWillNotHide() {
+		return this.opened && !this.willHideSoon
+	}
+
 	/** 
 	 * Send a request to show popup after a few milliseconds delay.
-	 * Returns whether the request sent.
+	 * Returns whether the request truly sent.
 	 */
 	willShow(showDelay: number): boolean {
+		this.willNotHide()
+
 		if (this.opened || this.willShowSoon) {
 			return false
 		}
@@ -49,7 +56,7 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 		return true
 	}
 
-	/** Cancel `will-show`. */
+	/** Cancels `will-show`. */
 	willNotShow() {
 		this.showTimeout?.cancel()
 		this.willShowSoon = false
@@ -57,9 +64,11 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 
 	/** 
 	 * Send a request to hide popup after a few milliseconds delay.
-	 * Returns whether the request is the first request.
+	 * Returns whether the request truly sent.
 	 */
 	willHide(hideDelay: number): boolean {
+		this.willNotShow()
+
 		if (!this.opened || this.willHideSoon) {
 			return false
 		}
@@ -76,7 +85,7 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 		return true
 	}
 
-	/** Cancel `will hide`. */
+	/** Cancels `will hide`. */
 	willNotHide() {
 		this.hideTimeout?.cancel()
 		this.hideTimeout = null

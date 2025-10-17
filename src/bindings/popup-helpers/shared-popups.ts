@@ -1,4 +1,4 @@
-import {ListMap, MouseLeaveControl} from '@pucelle/ff'
+import {ListMap, MouseEventDelivery} from '@pucelle/ff'
 import {RenderedComponentLike} from '@pucelle/lupos.js'
 import {Popup} from '../../components'
 import {popup} from '../popup'
@@ -75,7 +75,7 @@ function findCache(key: string): RenderedComponentLike | null {
 			continue
 		}
 
-		if (MouseLeaveControl.checkLocked(popup.el)) {
+		if (MouseEventDelivery.hasAnyDeliveredTo(popup.el)) {
 			continue
 		}
 

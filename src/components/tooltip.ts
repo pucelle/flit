@@ -49,7 +49,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 			}
 		}
 
-		.tooltip.type-default{
+		.tooltip-type-default{
 			background: color-mix(in srgb, var(--popup-background-color) 95%, var(--text-color));
 			color: var(--text-color);
 
@@ -58,7 +58,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 			}
 		}
 
-		.tooltip.type-prompt{
+		.tooltip-type-prompt{
 			background: var(--text-color);
 			color: var(--background-color);
 			pointer-events: auto;
@@ -68,7 +68,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 			}
 		}
 
-		.tooltip.type-error{
+		.tooltip-type-error{
 			background: var(--error-color);
 			color: #fff;
 
@@ -92,7 +92,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 
 	protected render() {
 		return html`
-			<template class="popup tooltip size-${this.size} type-${this.type}"
+			<template class="popup tooltip size-${this.size} tooltip-type-${this.type}"
 				:transition.immediate=${fade()}
 			>
 				<lu:if ${this.triangle}>

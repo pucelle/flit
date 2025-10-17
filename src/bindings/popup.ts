@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, IntersectionWatcher, MouseLeaveControl} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, IntersectionWatcher, MouseEventDelivery} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -76,6 +76,9 @@ export interface PopupOptions extends AnchorAlignerOptions {
 	 */
 	autoFocus: boolean
 
+	/** If specified as `true`, popup get hidden after click at. */
+	autoHide: boolean
+
 	/** 
 	 * Whether the popup element is pointable and can interact with mouse.
 	 * If specifies as `false`, popup element will be applied `pointer-events: none`.
@@ -130,6 +133,7 @@ export const DefaultPopupOptions: PopupOptions = {
 	hideDelay: 100,
 	showImmediately: false,
 	autoFocus: false,
+	autoHide: false,
 	pointable: true,
 	cacheable: false,
 	keepVisible: false,
@@ -180,7 +184,8 @@ export class popup implements Binding, Part {
 		return this.state.opened
 	}
 
-	afterConnectCallback() {
+	async afterConnectCallback() {
+		this.binder.clickToHide = this.options.autoHide
 		this.binder.setTriggerType(this.options.trigger)
 		this.binder.setMatchSelector(this.options.matchSelector)
 		this.binder.bindEnter()
@@ -218,7 +223,6 @@ export class popup implements Binding, Part {
 		this.binder.on('will-show', this.onWillShow, this)
 		this.binder.on('will-hide', this.onWillHide, this)
 		this.binder.on('cancel-show', this.onCancelShow, this)
-		this.binder.on('immediate-hide', this.onImmediateHide, this)
 		this.binder.on('toggle-show-hide', this.onToggleShowHide, this)
 
 		this.state.on('do-show', this.doShowPopup, this)
@@ -252,15 +256,6 @@ export class popup implements Binding, Part {
 		}
 	}
 
-	/** Like trigger element become out-view, and need to hide immediately. */
-	protected onImmediateHide() {
-		if (this.shouldKeepVisible()) {
-			return
-		}
-
-		this.hidePopup()
-	}
-
 	/** Toggle opened state and show or hide popup content immediately. */
 	protected onToggleShowHide() {
 		if (this.opened) {
@@ -281,7 +276,7 @@ export class popup implements Binding, Part {
 		let key = this.options.key
 
 		// If can reuse exist, show without delay.
-		if (key && SharedPopups.isCacheOpened(key)) {
+		if (key && showDelay > 0 && SharedPopups.isCacheOpened(key)) {
 			showDelay = 0
 		}
 
@@ -301,7 +296,7 @@ export class popup implements Binding, Part {
 		if (!this.renderer) {
 			return
 		}
-		
+
 		this.state.show()
 	}
 
@@ -313,12 +308,11 @@ export class popup implements Binding, Part {
 
 		this.options.onOpenedChange?.(true)
 
-		// Must lock before requesting to find cache in update process.
-		MouseLeaveControl.lock(this.el)
-		
 		await this.createPopupAndUntilUpdated()
 		
 		if (this.opened) {
+			MouseEventDelivery.add(this.el, this.popup!.el)
+			
 			this.appendPopup()
 			this.alignPopup()
 			this.binder.bindLeave(this.options.hideDelay, this.popup!.el)
@@ -346,7 +340,7 @@ export class popup implements Binding, Part {
 		this.binder.unbindLeave()
 
 		IntersectionWatcher.unwatch(this.el)
-		MouseLeaveControl.unlock(this.el)
+		MouseEventDelivery.release(this.el)
 
 		// Only remove popup is not enough.
 		// Rendered content to be referenced as a slot content by popup,
@@ -381,17 +375,14 @@ export class popup implements Binding, Part {
 
 	/** Merge several update request, e.g., from enter event and renderer update. */
 	protected async updatePopupAndUntil() {
-		if (this.updateComplete) {
-			return this.updateComplete
+
+		// Update process can't go parallel.
+		while (this.updateComplete) {
+			await this.updateComplete
 		}
 
 		let {promise, resolve} = promiseWithResolves()
 		this.updateComplete = promise
-
-		// Not wait for update complete,
-		// or for outer context it will can't capture the time point
-		// that current popup get update complete.
-		await Promise.resolve()
 
 		await this.updatePopup()
 		this.updateComplete = null
@@ -407,7 +398,10 @@ export class popup implements Binding, Part {
 		rendered.context = this.context
 
 		// Connect rendered without appending it to document.
-		await rendered.connectManually()
+		let connected = await rendered.connectManually()
+		if (!connected) {
+			return
+		}
 
 		// Wait for child Popup component get initialized.
 		await untilUpdateComplete()
@@ -572,9 +566,13 @@ export class popup implements Binding, Part {
 		if (!this.options.key) {
 			return false
 		}
+
+		if (this.state.isOpenAndWillNotHide()) {
+			return false
+		}
 		
 		if (this.shouldKeepVisible()) {
-			return !this.opened
+			return false
 		}
 
 		return true
