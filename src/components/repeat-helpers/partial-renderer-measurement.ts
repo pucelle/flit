@@ -176,7 +176,7 @@ export class PartialRendererMeasurement {
 
 	/* Whether has measured. */
 	hasMeasured(): boolean {
-		return this.stat.getLatestSize() > 0
+		return this.getItemSize() > 0
 	}
 
 	/** Get item size. */

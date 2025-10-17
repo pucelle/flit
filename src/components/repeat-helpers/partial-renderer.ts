@@ -240,6 +240,7 @@ export class PartialRenderer {
 		if (needToApply) {
 
 			// Barrier DOM Writing inside.
+			// `continuouslyUpdated` means did `measureAfterRendered`.
 			continuouslyUpdated = await this.updateByApplyingIndices(needToApply)
 			this.needToApply = null
 		}
