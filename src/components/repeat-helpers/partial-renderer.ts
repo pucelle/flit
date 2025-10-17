@@ -238,11 +238,11 @@ export class PartialRenderer {
 
 		// Adjust scroll position by specified indices.
 		if (needToApply) {
+			this.needToApply = null
 
 			// Barrier DOM Writing inside.
 			// `continuouslyUpdated` means did `measureAfterRendered`.
 			continuouslyUpdated = await this.updateByApplyingIndices(needToApply)
-			this.needToApply = null
 		}
 
 		// Data changed, try persist start index and scroll position.
@@ -252,24 +252,20 @@ export class PartialRenderer {
 			await this.updateWithStartIndexPersist()
 		}
 
-		if (hasMeasuredBefore) {
-			this.setPlaceholderSizeProgressively()
-		}
-
 		if (!continuouslyUpdated) {
 
 			// Barrier DOM Reading here.
 			await barrierDOMReading()
 			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
 
+			// Barrier DOM Writing here.
+			await barrierDOMWriting()
+
+			// Must update placeholder size firstly, or may can't set scroll position correctly.
+			this.setPlaceholderSizeProgressively()
+
 			// If newly measured, and render from a non-zero index, re-render after measured.
 			if (needToApply && !hasMeasuredBefore && needToApply.startIndex) {
-
-				// Barrier DOM Writing here.
-				await barrierDOMWriting()
-
-				// Must update placeholder size firstly, or may can't set scroll position correctly.
-				this.setPlaceholderSizeProgressively()
 
 				// Barrier DOM Reading and Writing inside.
 				await this.updateByApplyingIndices(needToApply)
