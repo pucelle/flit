@@ -222,6 +222,7 @@ export class popup implements Binding, Part {
 	protected initEvents() {
 		this.binder.on('will-show', this.onWillShow, this)
 		this.binder.on('will-hide', this.onWillHide, this)
+		this.binder.on('should-hide', this.onShouldHide, this)
 		this.binder.on('cancel-show', this.onCancelShow, this)
 		this.binder.on('toggle-show-hide', this.onToggleShowHide, this)
 
@@ -241,6 +242,15 @@ export class popup implements Binding, Part {
 		}
 
 		this.hidePopupLater()
+	}
+
+	/** Like trigger element become out-view, and need to hide immediately. */
+	protected onShouldHide() {
+		if (this.shouldKeepVisible()) {
+			return
+		}
+
+		this.hidePopup()
 	}
 
 	/** 
@@ -567,10 +577,13 @@ export class popup implements Binding, Part {
 			return false
 		}
 
-		if (this.state.isOpenAndWillNotHide()) {
+		// opened, and mouse still in.
+		if (this.opened
+			&& MouseEventDelivery.isFullyActivated(this.el)
+		) {
 			return false
 		}
-		
+
 		if (this.shouldKeepVisible()) {
 			return false
 		}

@@ -16,6 +16,9 @@ interface PopupTriggerEvents {
 	/** Like mouse leave, and need to hide soon. */
 	'will-hide': () => void
 
+	/** Like mouse leave control, and need to hide immediately. */
+	'should-hide': () => void
+
 	/** Like will show soon, but mouse leave to cancel it. */
 	'cancel-show': () => void
 
@@ -214,16 +217,12 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	/** Bind events to hide popup element after mouse leave both trigger and popup element. */
 	protected bindMouseLeave(hideDelay: number, popupEl: Element) {
 		this.unwatchLeave = MouseLeaveControl.on(this.el, popupEl,
-			() => {},
+			() => {
+				this.fire('should-hide')
+			},
 			{
 				delay: hideDelay,
 				mouseIn: true,
-				onEntered: () => {
-					this.fire('will-show')
-				},
-				onLeaved: () => {
-					this.fire('will-hide')
-				},
 			}
 		)
 	}
