@@ -235,7 +235,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
-			this.renderer!.measurement.latestSliderPositionProperties.startPosition,
+			this.renderer!.measurement.latestSliderProperties.startPosition,
 			offset
 		)
 		

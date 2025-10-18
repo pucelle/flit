@@ -1,4 +1,4 @@
-import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, ResizeWatcher} from '@pucelle/ff'
+import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, ResizeWatcher, sleep} from '@pucelle/ff'
 import {locateVisibleIndex} from './visible-index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialRendererMeasurement} from './partial-renderer-measurement'
@@ -51,7 +51,7 @@ export class PartialRenderer {
 	readonly slider: HTMLElement
 	readonly repeat: HTMLElement
 	readonly placeholder: HTMLDivElement
-	readonly updateRendering: () => void
+	readonly updateCallback: () => void
 
 	/** 
 	 * Whether partial rendering content as follower,
@@ -106,6 +106,9 @@ export class PartialRenderer {
 	/** If provided and not 0, will use it and not read scroller size. */
 	private directScrollSize: number = 0
 
+	/** If slider size updating come from own updating, prevent it. */
+	private preventingSliderSizeUpdate: boolean = true
+
 	constructor(
 		scroller: HTMLElement,
 		slider: HTMLElement,
@@ -113,7 +116,7 @@ export class PartialRenderer {
 		placeholder: HTMLDivElement,
 		asFollower: boolean,
 		doa: DirectionalOverflowAccessor,
-		updateRendering: () => void
+		updateCallback: () => void
 	) {
 		this.scroller = scroller
 		this.slider = slider
@@ -121,7 +124,7 @@ export class PartialRenderer {
 		this.placeholder = placeholder
 		this.asFollower = asFollower
 		this.doa = doa
-		this.updateRendering = updateRendering
+		this.updateCallback = updateCallback
 		this.measurement = new PartialRendererMeasurement(scroller, slider, doa)
 	}
 
@@ -183,6 +186,8 @@ export class PartialRenderer {
 			await this.readScrollerSize()
 			ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
 		}
+
+		ResizeWatcher.watch(this.slider, this.onSliderSizeUpdated, this)
 	}
 
 	/** After component that use this partial renderer will get disconnected. */
@@ -202,6 +207,8 @@ export class PartialRenderer {
 		if (!this.directScrollSize) {
 			ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)
 		}
+
+		ResizeWatcher.unwatch(this.slider, this.onSliderSizeUpdated, this)
 	}
 
 	/** On scroller scroll event. */
@@ -216,6 +223,34 @@ export class PartialRenderer {
 		await barrierDOMReading()
 
 		this.measurement.readScrollerSize()
+	}
+
+	/** 
+	 * When slider size updated,
+	 * it should either ignore if update come from inside,
+	 * or check coverage and re-measure item-size if update come from outside.
+	 */
+	private async onSliderSizeUpdated() {
+		if (!this.preventingSliderSizeUpdate) {
+
+			// Break continuous render range.
+			this.measurement.breakContinuousRenderRange()
+
+			// Re-measure item size.
+			await barrierDOMReading()
+			this.measurement.measureAfterRendered(this.startIndex, this.endIndex, this.alignDirection)
+
+			// Finally check coverage.
+			this.checkCoverage()
+		}
+	}
+
+	/** Calls `updateCallback`. */
+	private async updateRendering() {
+		this.updateCallback()
+		this.preventingSliderSizeUpdate = true
+		await sleep(0)
+		this.preventingSliderSizeUpdate = false
 	}
 
 	/** Update from applying start index or updating data. */
@@ -504,7 +539,7 @@ export class PartialRenderer {
 			// means have 10px higher than start,
 			// reset to start position 0 cause this 10px get removed,
 			// And we need to scroll up (element down) for 10px.
-			let moreSize = -this.measurement.latestSliderPositionProperties.startPosition
+			let moreSize = -this.measurement.latestSliderProperties.startPosition
 			
 			if (moreSize !== 0) {
 				let scrolled = this.doa.getScrolled(this.scroller) + moreSize
@@ -522,11 +557,11 @@ export class PartialRenderer {
 		}
 
 		// When reach scroll index but not start index.
-		else if (this.measurement.latestSliderPositionProperties.startPosition <= 0) {
+		else if (this.measurement.latestSliderProperties.startPosition <= 0) {
 
 			// Guess size of items before, and add missing size of current rendering.
 			let newPosition = this.measurement.calcSliderPositionByIndex(this.startIndex, 'start')
-			let moreSize = newPosition - this.measurement.latestSliderPositionProperties.startPosition
+			let moreSize = newPosition - this.measurement.latestSliderProperties.startPosition
 			let scrolled = this.doa.getScrolled(this.scroller) + moreSize
 
 			// Barrier DOM Writing here.
@@ -543,11 +578,11 @@ export class PartialRenderer {
 		if (this.endIndex === this.dataCount) {
 
 			// Placeholder size is too large and should be shrink.
-			if (this.measurement.latestPlaceholderProperties.placeholderSize > this.measurement.latestSliderPositionProperties.endPosition) {
+			if (this.measurement.latestPlaceholderProperties.placeholderSize > this.measurement.latestSliderProperties.endPosition) {
 
 				// Barrier DOM Writing here.
 				await barrierDOMWriting()
-				this.setPlaceholderSize(this.measurement.latestSliderPositionProperties.endPosition)
+				this.setPlaceholderSize(this.measurement.latestSliderProperties.endPosition)
 			}
 		}
 
@@ -647,6 +682,11 @@ export class PartialRenderer {
 
 		this.setIndices(newStartIndex, newEndIndex)
 
+		// When render from start index, align at start position.
+		if (newStartIndex === 0) {
+			alignDirection = 'start'
+		}
+
 		// Has no intersection.
 		if (Math.min(this.endIndex, oldEndIndex) - Math.max(this.startIndex, oldStartIndex) <= 0) {
 			needReset = true
@@ -674,7 +714,7 @@ export class PartialRenderer {
 
 				// If el located at start, it will move by slider padding top,
 				// to keep it's position, should remove slider padding.
-				position = this.measurement.latestSliderPositionProperties.startPosition
+				position = this.measurement.latestSliderProperties.startPosition
 					+ this.doa.getOuterOffset(el)
 					- this.doa.getStartPadding(this.slider)
 			}
@@ -702,7 +742,7 @@ export class PartialRenderer {
 
 				// If el located at end, it will move up by slider padding bottom,
 				// to keep it's position, should add slider bottom padding.
-				position = this.measurement.latestSliderPositionProperties.startPosition
+				position = this.measurement.latestSliderProperties.startPosition
 					+ this.doa.getEndOuterOffset(el)
 					+ this.doa.getEndPadding(this.slider)
 			}
@@ -791,7 +831,7 @@ export class PartialRenderer {
 			this.scroller,
 			children as ArrayLike<HTMLElement>,
 			this.doa,
-			this.measurement.latestSliderPositionProperties.startPosition,
+			this.measurement.latestSliderProperties.startPosition,
 			direction,
 			minimumRatio
 		)

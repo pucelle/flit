@@ -77,8 +77,8 @@ export class PartialRendererMeasurement {
 	private continuousRenderRange: ContinuousRenderRange | null = null
 	
 	/** 
-	 * If provided, it specifies the suggested end position,
-	 * to indicate the size of each item.
+	 * If provided, it specifies the suggested end position of each item,
+	 * to indicate the base size of each item.
 	 * The size has no need to represent real size,
 	 * only represents the mutable part would be enough.
 	 * Which means: can ignores shared paddings or margins.
@@ -112,7 +112,7 @@ export class PartialRendererMeasurement {
 	 * Latest slider position properties use when last time updating,
 	 * thus, can reuse it to do continuous layout measurement.
 	 */
-	latestSliderPositionProperties: LatestSliderPositionProperties = {
+	latestSliderProperties: LatestSliderPositionProperties = {
 		startIndex: 0,
 		endIndex: 0,
 		startPosition: 0,
@@ -144,12 +144,12 @@ export class PartialRendererMeasurement {
 	/** Set new slider position. */
 	cacheSliderPosition(index: number, position: number, alignDirection: 'start' | 'end') {
 		if (alignDirection === 'start') {
-			this.latestSliderPositionProperties.startIndex = index
-			this.latestSliderPositionProperties.startPosition = position
+			this.latestSliderProperties.startIndex = index
+			this.latestSliderProperties.startPosition = position
 		}
 		else {
-			this.latestSliderPositionProperties.endIndex = index
-			this.latestSliderPositionProperties.endPosition = position
+			this.latestSliderProperties.endIndex = index
+			this.latestSliderProperties.endPosition = position
 		}
 	}
 
@@ -161,14 +161,14 @@ export class PartialRendererMeasurement {
 		this.scrollerSize = this.doa.getClientSize(this.scroller)
 	}
 
-	/** Directly Set not read scroller size. */
+	/** Directly set but not read scroller size. */
 	setScrollerSize(size: number) {
 		this.scrollerSize = size
 	}
 
 	/** 
 	 * Guess an item size for first-time paint,
-	 * and avoid it checking for item-size and render twice.
+	 * and avoid it checking for item-size and render twice when initialization.
 	 */
 	setGuessedItemSize(size: number) {
 		this.guessedItemSize = size
@@ -265,34 +265,35 @@ export class PartialRendererMeasurement {
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
 		let paddingSize = sliderClientSize - sliderInnerSize
+		let properties = this.latestSliderProperties
 
 		// Measure for unknown end position.
 		if (alignDirection === 'start') {
-			this.latestSliderPositionProperties.endIndex = endIndex
-			this.latestSliderPositionProperties.endPosition = this.latestSliderPositionProperties.startPosition + sliderClientSize
+			properties.endIndex = endIndex
+			properties.endPosition = properties.startPosition + sliderClientSize
 		}
 		else {
-			this.latestSliderPositionProperties.startIndex = startIndex
-			this.latestSliderPositionProperties.startPosition = this.latestSliderPositionProperties.endPosition - sliderClientSize
+			properties.startIndex = startIndex
+			properties.startPosition = properties.endPosition - sliderClientSize
 		}
 
 		if (this.continuousRenderRange) {
 			if (startIndex <= this.continuousRenderRange.startIndex) {
 				this.continuousRenderRange.startIndex = startIndex
-				this.continuousRenderRange.startPosition = this.latestSliderPositionProperties.startPosition
+				this.continuousRenderRange.startPosition = properties.startPosition
 			}
 
 			if (endIndex >= this.continuousRenderRange.endIndex) {
 				this.continuousRenderRange.endIndex = endIndex
-				this.continuousRenderRange.endPosition = this.latestSliderPositionProperties.endPosition
+				this.continuousRenderRange.endPosition = properties.endPosition
 			}
 		}
 		else {
 			this.continuousRenderRange = {
 				startIndex,
 				endIndex,
-				startPosition: this.latestSliderPositionProperties.startPosition,
-				endPosition: this.latestSliderPositionProperties.endPosition
+				startPosition: properties.startPosition,
+				endPosition: properties.endPosition
 			}
 		}
 
@@ -323,15 +324,21 @@ export class PartialRendererMeasurement {
 			return true
 		}
 
-		// When scrolling up, not update.
+		// Normally a line appears.
+		let newItemSize = this.getItemSize()
+		if (Math.abs(newItemSize - this.latestPlaceholderProperties.itemSize) > 10) {
+			return true
+		}
+
+		// When scrolling up, no need to update.
 		let scrollingDown = endIndex > this.latestPlaceholderProperties.endIndex
 		if (!scrollingDown) {
 			return false
 		}
 
 		let newPlaceholderSize = this.calcPlaceholderSize(dataCount)
-		let guessSizeAfterEnd = newPlaceholderSize - this.latestSliderPositionProperties.endPosition
-		let currentSizeAfterEnd = this.latestPlaceholderProperties.placeholderSize - this.latestSliderPositionProperties.endPosition
+		let guessSizeAfterEnd = newPlaceholderSize - this.latestSliderProperties.endPosition
+		let currentSizeAfterEnd = this.latestPlaceholderProperties.placeholderSize - this.latestSliderProperties.endPosition
 		let sizeChangedMuch = Math.abs(guessSizeAfterEnd - currentSizeAfterEnd) / Math.max(guessSizeAfterEnd, currentSizeAfterEnd) > 0.333
 
 		return sizeChangedMuch
@@ -351,14 +358,14 @@ export class PartialRendererMeasurement {
 		}
 
 		let itemSize = this.getItemSize()
-		let positionProperties = this.latestSliderPositionProperties
+		let positionProperties = this.latestSliderProperties
 
 		// Can reuse previous measured end slider position properties.
 		if (positionProperties.endIndex <= dataCount
 			&& positionProperties.endIndex > 0
 			&& positionProperties.endPosition > 0
 		) {
-			return this.latestSliderPositionProperties.endPosition + itemSize * (dataCount - positionProperties.endIndex)
+			return this.latestSliderProperties.endPosition + itemSize * (dataCount - positionProperties.endIndex)
 		}
 
 		// Can reuse previous measured start slider position properties.
@@ -366,7 +373,7 @@ export class PartialRendererMeasurement {
 			&& positionProperties.startIndex > 0
 			&& positionProperties.startPosition > 0
 		) {
-			return this.latestSliderPositionProperties.startPosition + itemSize * (dataCount - positionProperties.startIndex)
+			return this.latestSliderProperties.startPosition + itemSize * (dataCount - positionProperties.startIndex)
 		}
 
 		return itemSize * dataCount
@@ -376,7 +383,7 @@ export class PartialRendererMeasurement {
 	cachePlaceholderProperties(endIndex: number, dataCount: number, placeholderSize: number) {
 		this.latestPlaceholderProperties = {
 			endIndex,
-			itemSize: this.stat.getLatestSize(),
+			itemSize: this.getItemSize(),
 			dataCount,
 			placeholderSize,
 		}
@@ -390,7 +397,7 @@ export class PartialRendererMeasurement {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)
 		let scrolled = this.doa.getScrolled(this.scroller)
-		let sliderStart = this.latestSliderPositionProperties.startPosition - scrolled
+		let sliderStart = this.latestSliderProperties.startPosition - scrolled
 		let sliderEnd = sliderStart + sliderSize
 		let unexpectedScrollStart = scrolled === 0 && startIndex > 0
 
