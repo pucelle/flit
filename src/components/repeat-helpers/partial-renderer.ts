@@ -634,12 +634,23 @@ export class PartialRenderer {
 			// Scrolling down, render more at end.
 			if (alignDirection === 'start') {
 				newStartIndex = visibleIndex
+				newEndIndex = newStartIndex + this.endIndex - this.startIndex
+
+				// First item may be very large and can't skip it, but we must render more at end.
+				if (newEndIndex === this.endIndex) {
+					newEndIndex++
+				}
 			}
 
 			// Scrolling up, render more at end.
 			else {
 				newEndIndex = visibleIndex
 				newStartIndex = this.startIndex - this.endIndex + newEndIndex
+
+				// Last item may be very large and can't skip it, but we must render more at start.
+				if (newStartIndex === this.startIndex) {
+					newStartIndex--
+				}
 			}
 
 			// Barrier DOM Writing and reading inside.
