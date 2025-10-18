@@ -391,6 +391,10 @@ export class popup implements Binding, Part {
 			await this.updateComplete
 		}
 
+		if (!this.opened) {
+			return
+		}
+
 		let {promise, resolve} = promiseWithResolves()
 		this.updateComplete = promise
 
@@ -436,10 +440,8 @@ export class popup implements Binding, Part {
 		}
 
 		// Update popup properties.
-		if (this.opened) {
-			popup.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toBoxOffsetKey()!
-			popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
-		}
+		popup.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toBoxOffsetKey()!
+		popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
 	}
 
 	/** 
