@@ -682,11 +682,6 @@ export class PartialRenderer {
 
 		this.setIndices(newStartIndex, newEndIndex)
 
-		// When render from start index, align at start position.
-		if (newStartIndex === 0) {
-			alignDirection = 'start'
-		}
-
 		// Has no intersection.
 		if (Math.min(this.endIndex, oldEndIndex) - Math.max(this.startIndex, oldStartIndex) <= 0) {
 			needReset = true
