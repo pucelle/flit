@@ -600,7 +600,5 @@ export class popup implements Binding, Part {
 
 		this.rendered = null
 		this.popup = null
-		this.aligner?.stop()
-		this.aligner = null
 	}
 }
