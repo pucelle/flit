@@ -173,10 +173,19 @@ export class popup implements Binding, Part {
 	constructor(el: Element, context: any) {
 		this.el = el as HTMLElement
 		this.context = context
-		this.binder = new PopupTriggerBinder(this.el)
-		this.state = new PopupState()
 
-		this.initEvents()
+		this.binder = new PopupTriggerBinder(this.el, {
+			onWillShow: this.onWillShow.bind(this),
+			onWillHide: this.onWillHide.bind(this),
+			onImmediateHide: this.onImmediateHide.bind(this),
+			onCancelShow: this.onCancelShow.bind(this),
+			onToggleShowHide: this.onToggleShowHide.bind(this),
+		})
+
+		this.state = new PopupState({
+			onShow: this.doShowPopup.bind(this),
+			onHide: this.doHidePopup.bind(this),
+		})
 	}
 
 	/** Whether popup content is opened. */
@@ -219,17 +228,6 @@ export class popup implements Binding, Part {
 		return this.options.keepVisible
 	}
 
-	protected initEvents() {
-		this.binder.on('will-show', this.onWillShow, this)
-		this.binder.on('will-hide', this.onWillHide, this)
-		this.binder.on('should-hide', this.onShouldHide, this)
-		this.binder.on('cancel-show', this.onCancelShow, this)
-		this.binder.on('toggle-show-hide', this.onToggleShowHide, this)
-
-		this.state.on('do-show', this.doShowPopup, this)
-		this.state.on('do-hide', this.doHidePopup, this)
-	}
-
 	/** Like mouse enter, and need to show soon. */
 	protected onWillShow() {
 		this.showPopupLater()
@@ -245,7 +243,7 @@ export class popup implements Binding, Part {
 	}
 
 	/** Like trigger element become out-view, and need to hide immediately. */
-	protected onShouldHide() {
+	protected onImmediateHide() {
 		if (this.shouldKeepVisible()) {
 			return
 		}
@@ -317,11 +315,13 @@ export class popup implements Binding, Part {
 		}
 
 		this.options.onOpenedChange?.(true)
-
-		await this.createPopupAndUntilUpdated()
+		this.createRendered()
+		
+		// Wait until update complete
+		await this.updatePopupQueued()
 		
 		if (this.opened) {
-			MouseEventDelivery.add(this.el, this.popup!.el)
+			MouseEventDelivery.attach(this.el, this.popup!.el)
 			
 			this.appendPopup()
 			this.alignPopup()
@@ -347,6 +347,7 @@ export class popup implements Binding, Part {
 	protected doHidePopup() {
 		this.options.onOpenedChange?.(false)
 		this.aligner?.stop()
+		this.binder.unbindLeaveBeforeShow()
 		this.binder.unbindLeave()
 
 		IntersectionWatcher.unwatch(this.el)
@@ -379,12 +380,43 @@ export class popup implements Binding, Part {
 		
 		// If popup has popped-up, should update it.
 		else if (this.opened && renderer) {
-			this.updatePopupAndUntil()
+			this.updatePopupQueued()
+		}
+	}
+
+	/** 
+	 * Create rendered and popup property, and wait for it update complete.
+	 * Returned promise to be resolved by whether reusing popup is in document before.
+	 */
+	protected createRendered() {
+		let rendered = this.rendered
+
+		// Find cache, even if current rendered and popup existing, still needs to clear existing cache.
+		if (!rendered) {
+			let cache = this.options.key ? SharedPopups.getCache(this.options.key) : null
+			if (cache) {
+				rendered = cache
+			}
+			else {
+				rendered = render(this.renderer, this.context)
+
+				if (this.options.key) {
+					SharedPopups.addCache(this.options.key, rendered)
+				}
+			}
+
+			this.rendered = rendered
+			SharedPopups.setCacheUser(rendered, this)
+		}
+
+		// Same key cache exists, clear it.
+		else if (this.options.key) {
+			SharedPopups.clearCache(this.options.key, this)
 		}
 	}
 
 	/** Merge several update request, e.g., from enter event and renderer update. */
-	protected async updatePopupAndUntil() {
+	protected async updatePopupQueued() {
 
 		// Update process can't go parallel.
 		while (this.updateComplete) {
@@ -411,13 +443,13 @@ export class popup implements Binding, Part {
 		rendered.renderer = this.renderer
 		rendered.context = this.context
 
-		// Connect rendered without appending it to document.
+		// Connect rendered if not have without appending it to document.
 		let connected = await rendered.connectManually()
 		if (!connected) {
 			return
 		}
 
-		// Wait for child Popup component get initialized.
+		// Wait for child Popup component get updated.
 		await untilUpdateComplete()
 
 		// Immediately hide.
@@ -433,49 +465,15 @@ export class popup implements Binding, Part {
 			return
 		}
 
+		// Update popup properties.
+		popup.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toBoxOffsetKey()!
+		popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
+
 		// Update popup property and related transition.
 		if (popup !== this.popup) {
 			this.popup = popup
 			SharedPopups.setPopupUser(popup, this)
 		}
-
-		// Update popup properties.
-		popup.triangleDirection = AnchorAligner.getAnchorFaceDirection(this.options.position).opposite.toBoxOffsetKey()!
-		popup.el.style.pointerEvents = this.options.pointable ? '' : 'none'
-	}
-
-	/** 
-	 * Create rendered and popup property, and wait for it update complete.
-	 * Returned promise to be resolved by whether reusing popup is in document before.
-	 */
-	protected async createPopupAndUntilUpdated() {
-		let rendered = this.rendered
-
-		// Find cache, even if current rendered and popup existing, still needs to clear existing cache.
-		if (!rendered) {
-			let cache = this.options.key ? SharedPopups.getCache(this.options.key) : null
-			if (cache) {
-				rendered = cache
-			}
-			else {
-				rendered = render(this.renderer, this.context)
-
-				if (this.options.key) {
-					SharedPopups.addCache(this.options.key, rendered)
-				}
-			}
-
-			this.rendered = rendered
-			SharedPopups.setCacheUser(rendered, this)
-		}
-
-		// Same key cache exists, clear it.
-		else if (this.options.key) {
-			SharedPopups.clearCache(this.options.key, this)
-		}
-
-		// Wait until update complete
-		await this.updatePopupAndUntil()
 	}
 
 	/** Append popup element into document. */
@@ -529,7 +527,7 @@ export class popup implements Binding, Part {
 		else {
 			this.aligner.alignTo(anchor)
 		}
-}
+	}
 
 	/** Get element popup will align to. */
 	protected getAlignAnchorElement(): Element {

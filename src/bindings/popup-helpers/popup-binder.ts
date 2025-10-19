@@ -1,5 +1,5 @@
 import {MouseEventDelivery, EventUtils, MouseLeaveControl} from '@pucelle/ff'
-import {DOMEvents, EventFirer} from '@pucelle/lupos'
+import {DOMEvents} from '@pucelle/lupos'
 
 
 /** 
@@ -8,22 +8,22 @@ import {DOMEvents, EventFirer} from '@pucelle/lupos'
  */
 export type TriggerType = 'hover' | 'click' | 'mousedown' | 'focus' | 'contextmenu' | 'none'
 
-interface PopupTriggerEvents {
+interface PopupTriggerCallbacks {
 
 	/** Like mouse enter, and need to show soon. */
-	'will-show': () => void
+	onWillShow: () => void
 
 	/** Like mouse leave, and need to hide soon. */
-	'will-hide': () => void
+	onWillHide: () => void
 
 	/** Like mouse leave control, and need to hide immediately. */
-	'should-hide': () => void
+	onImmediateHide: () => void
 
 	/** Like will show soon, but mouse leave to cancel it. */
-	'cancel-show': () => void
+	onCancelShow: () => void
 
 	/** Toggle opened state and show or hide popup immediately. */
-	'toggle-show-hide': () => void
+	onToggleShowHide: () => void
 }
 
 
@@ -35,7 +35,7 @@ const enum BoundMask {
 
 
 /** Helps to bind popup events. */
-export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
+export class PopupTriggerBinder {
 
 	/** Readonly outside */
 	trigger: TriggerType = 'hover'
@@ -43,6 +43,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	/** Whether click content cause hiding. */
 	clickToHide: boolean = false
 
+	private callbacks: PopupTriggerCallbacks
 	private matchSelector: string | undefined = undefined
 	private el: Element
 	private content: Element | null = null
@@ -50,9 +51,9 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	private bound: BoundMask | 0 = 0
 	private latestTriggerEvent: MouseEvent | null = null
 
-	constructor(el: Element) {
-		super()
-		this.el = el	
+	constructor(el: Element, options: PopupTriggerCallbacks) {
+		this.el = el
+		this.callbacks = options
 	}
 
 	/** Get trigger event to align with it. */
@@ -101,7 +102,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 			DOMEvents.on(this.el, 'focus', this.triggerWithDelay, this)
 
 			if (this.el.contains(document.activeElement)) {
-				this.fire('will-show')
+				this.callbacks.onWillShow()
 			}
 		}
 
@@ -136,7 +137,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		e.preventDefault()
 		e.stopPropagation()
 		this.latestTriggerEvent = e as MouseEvent
-		this.toggleShowHide()
+		this.callbacks.onToggleShowHide()
 	}
 
 	private triggerWithDelay(e: Event) {
@@ -147,12 +148,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		
 		e.stopPropagation()
 		this.latestTriggerEvent = e as MouseEvent
-		this.fire('will-show')
-	}
-
-	/** Toggle opened state and show or hide popup immediately. */
-	private toggleShowHide() {
-		this.fire('toggle-show-hide')
+		this.callbacks.onWillShow()
 	}
 
 	/** Bind events to handle canceling show before popup showed. */
@@ -183,7 +179,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 
 	/** Like will show soon, but mouse leave to cancel it. */
 	private cancelShowPopup() {
-		this.fire('cancel-show')
+		this.callbacks.onCancelShow()
 	}
 
 	/** Bind events to hide popup content if haven't bound. */
@@ -218,11 +214,10 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 	protected bindMouseLeave(hideDelay: number, popupEl: Element) {
 		this.unwatchLeave = MouseLeaveControl.on(this.el, popupEl,
 			() => {
-				this.fire('should-hide')
+				this.callbacks.onImmediateHide()
 			},
 			{
 				delay: hideDelay,
-				mouseIn: true,
 			}
 		)
 	}
@@ -236,7 +231,7 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 			|| !this.content.contains(target)
 				&& !MouseEventDelivery.hasDeliveredFrom(this.content, target)
 			) {
-			this.fire('will-hide')
+			this.callbacks.onWillHide()
 		}
 	}
 
@@ -248,12 +243,12 @@ export class PopupTriggerBinder extends EventFirer<PopupTriggerEvents> {
 		let target = e.target as Element
 
 		if (!this.content?.contains(target)) {
-			this.fire('will-hide')
+			this.callbacks.onWillHide()
 		}
 	}
 
 	private hidePopupLater() {
-		this.fire('will-hide')
+		this.callbacks.onWillHide()
 	}
 
 	/** Unbind events to hide popup if bound. */

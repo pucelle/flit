@@ -1,10 +1,9 @@
 import {Timeout} from '@pucelle/ff'
-import {EventFirer} from '@pucelle/lupos'
 
 
-interface PopupStateEvents {
-	'do-show': () => void
-	'do-hide': () => void
+interface PopupStateCallbacks {
+	onShow: () => void
+	onHide: () => void
 }
 
 
@@ -12,10 +11,13 @@ interface PopupStateEvents {
  * Manages popup state for a popup-binding.
  * Popup state is complex, so have a class for it.
  */
-export class PopupState extends EventFirer<PopupStateEvents> {
+export class PopupState {
 
 	/** Be `true` after opened popup. */
 	opened: boolean = false
+
+	/** Callbacks. */
+	private callbacks: PopupStateCallbacks
 
 	/** When decided to open popup. */
 	private willShowSoon: boolean = false
@@ -28,6 +30,10 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 
 	/** Be a `Timeout` after decided to close popup but not yet. */
 	private hideTimeout: Timeout | null = null
+
+	constructor(callbacks: PopupStateCallbacks) {
+		this.callbacks = callbacks
+	}
 
 	/** Whether will open and will not hide. */
 	isOpenAndWillNotHide() {
@@ -99,7 +105,7 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 
 		if (!this.opened) {
 			this.opened = true
-			this.fire('do-show')
+			this.callbacks.onShow()
 		}
 	}
 
@@ -110,7 +116,7 @@ export class PopupState extends EventFirer<PopupStateEvents> {
 
 		if (this.opened) {
 			this.opened = false
-			this.fire('do-hide')
+			this.callbacks.onHide()
 		}
 	}
 }
