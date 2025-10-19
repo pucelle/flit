@@ -190,10 +190,6 @@ class DragDropRelationship {
 		this.movement = null
 		this.activeDrop = null
 
-		if (activeDrop) {
-			this.enteredDroppable.delete(activeDrop)
-		}
-
 		if (this.followElementRendered) {
 			this.followElementRendered.remove()
 			this.followElementRendered = null
