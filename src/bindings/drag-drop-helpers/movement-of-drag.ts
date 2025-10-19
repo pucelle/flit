@@ -179,6 +179,8 @@ export class DragMovement {
 
 		if (this.startStyleText) {
 			this.draggingEl.style.cssText = this.startStyleText
+
+			// Normally anchor-alignment has been removed now.
 			this.draggingEl.style.removeProperty('anchor-name')
 		}
 	}
