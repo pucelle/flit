@@ -1,5 +1,5 @@
 import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, IntersectionWatcher, MouseEventDelivery} from '@pucelle/ff'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, MouseEventDelivery} from '@pucelle/ff'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
@@ -184,7 +184,7 @@ export class popup implements Binding, Part {
 
 		this.state = new PopupState({
 			onDoShow: this.onDoShow.bind(this),
-			onDoHide: this.doDoHide.bind(this),
+			onDoHide: this.onDoHide.bind(this),
 		})
 	}
 
@@ -344,12 +344,11 @@ export class popup implements Binding, Part {
 	 * Do hide popup action.
 	 * If `forReuse`, will leave element in document.
 	 */
-	protected doDoHide() {
+	protected onDoHide() {
 		this.options.onOpenedChange?.(false)
 		this.binder.unbindLeaveBeforeShow()
 		this.binder.unbindLeave()
 
-		IntersectionWatcher.unwatch(this.el)
 		MouseEventDelivery.release(this.el)
 
 		// Only remove popup is not enough.

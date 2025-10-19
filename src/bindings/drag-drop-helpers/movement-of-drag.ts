@@ -40,13 +40,13 @@ export class DragMovement {
 		this.dragging = dragging
 		this.draggingEl = draggingEl
 
+		if (applyDraggingStyle && dragging.mode === 'order') {
+			this.startStyleText = this.draggingEl.style.cssText
+		}
+
 		this.setBaseDraggingStyle(mousePosition)
 
 		if (applyDraggingStyle) {
-			if (dragging.mode === 'order') {
-				this.startStyleText = this.draggingEl.style.cssText
-			}
-
 			this.setAdditionalDraggingStyle()
 		}
 
@@ -179,6 +179,7 @@ export class DragMovement {
 
 		if (this.startStyleText) {
 			this.draggingEl.style.cssText = this.startStyleText
+			this.draggingEl.style.removeProperty('anchor-name')
 		}
 	}
 }

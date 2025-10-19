@@ -6,7 +6,7 @@ import {DragMovement} from './movement-of-drag'
 import {orderable} from '../orderable'
 
 
-/** To handle orderable element movements */
+/** To handle orderable element movements. */
 export class OrderMovement extends DragMovement {
 
 	declare protected readonly dragging: orderable
@@ -61,6 +61,9 @@ export class OrderMovement extends DragMovement {
 	constructor(drag: orderable, drop: droppable | null) {
 		let elRect = drag.el.getBoundingClientRect()
 		let placeholder = drag.el.cloneNode() as HTMLElement
+
+		// May anchor aligning on it.
+		placeholder.style.removeProperty('anchor-name')
 
 		super(
 			drag,
@@ -163,7 +166,7 @@ export class OrderMovement extends DragMovement {
 
 		let transform = translateDirection !== 0
 			? `${transformProperty}(${translatePixels}px)`
-			: 'none'
+			: ''
 
 		if (playTransition) {
 			this.playTransitionTo(el, {transform})
@@ -196,9 +199,18 @@ export class OrderMovement extends DragMovement {
 	
 		el.style.pointerEvents = 'none'
 
+		// `none` is transition-able.
+		if (endFrame.transform === '') {
+			endFrame.transform = 'none'
+		}
+
 		let finish = await transition.playTo(endFrame, true)
 		if (finish) {
 			el.style.pointerEvents = ''
+
+			if (endFrame.transform === 'none') {
+				el.style.transform = ''
+			}
 		}
 	}
 
@@ -387,7 +399,7 @@ export class OrderMovement extends DragMovement {
 				this.moveSiblingsToGiveSpace(true)
 			}
 
-			await this.playTransitionTo(this.draggingEl, {transform: 'none'})
+			await this.playTransitionTo(this.draggingEl, {transform: ''})
 		}
 
 		this.restoreMovedElements(false)
@@ -440,7 +452,7 @@ export class OrderMovement extends DragMovement {
 	private restoreMovedElements(playTransition: boolean) {
 		for (let el of this.translatedElements.keys()) {
 			if (playTransition) {
-				this.playTransitionTo(el, {transform: 'none'})
+				this.playTransitionTo(el, {transform: ''})
 			}
 			else {
 				el.style.transform = ''
