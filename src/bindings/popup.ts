@@ -183,8 +183,8 @@ export class popup implements Binding, Part {
 		})
 
 		this.state = new PopupState({
-			onShow: this.doShowPopup.bind(this),
-			onHide: this.doHidePopup.bind(this),
+			onDoShow: this.onDoShow.bind(this),
+			onDoHide: this.doDoHide.bind(this),
 		})
 	}
 
@@ -309,7 +309,7 @@ export class popup implements Binding, Part {
 	}
 
 	/** Do show popup action. */
-	protected async doShowPopup() {
+	protected async onDoShow() {
 		if (!this.renderer) {
 			return
 		}
@@ -344,7 +344,7 @@ export class popup implements Binding, Part {
 	 * Do hide popup action.
 	 * If `forReuse`, will leave element in document.
 	 */
-	protected doHidePopup() {
+	protected doDoHide() {
 		this.options.onOpenedChange?.(false)
 		this.aligner?.stop()
 		this.binder.unbindLeaveBeforeShow()
@@ -491,16 +491,6 @@ export class popup implements Binding, Part {
 
 		// Get focus if needed.
 		this.mayGetFocus()
-	}
-
-	/** After trigger element position changed. */
-	protected onElIntersectionChanged(entry: IntersectionObserverEntry) {
-		if (entry.intersectionRatio === 0) {
-			this.hidePopup()
-		}
-		else {
-			this.alignPopup()
-		}
 	}
 
 	/** Align popup content, returns whether align successfully. */

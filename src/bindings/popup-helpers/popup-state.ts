@@ -2,8 +2,8 @@ import {Timeout} from '@pucelle/ff'
 
 
 interface PopupStateCallbacks {
-	onShow: () => void
-	onHide: () => void
+	onDoShow: () => void
+	onDoHide: () => void
 }
 
 
@@ -105,7 +105,7 @@ export class PopupState {
 
 		if (!this.opened) {
 			this.opened = true
-			this.callbacks.onShow()
+			this.callbacks.onDoShow()
 		}
 	}
 
@@ -116,7 +116,7 @@ export class PopupState {
 
 		if (this.opened) {
 			this.opened = false
-			this.callbacks.onHide()
+			this.callbacks.onDoHide()
 		}
 	}
 }
