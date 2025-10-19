@@ -346,7 +346,6 @@ export class popup implements Binding, Part {
 	 */
 	protected doDoHide() {
 		this.options.onOpenedChange?.(false)
-		this.aligner?.stop()
 		this.binder.unbindLeaveBeforeShow()
 		this.binder.unbindLeave()
 
@@ -356,8 +355,17 @@ export class popup implements Binding, Part {
 		// Only remove popup is not enough.
 		// Rendered content to be referenced as a slot content by popup,
 		// it's as part of `rendered`, not `popup`.
-		this.popup?.remove(true)
+		let popup = this.popup
+		let promise = popup?.remove(true)
 		this.rendered?.remove()
+
+		// After transition end, stop alignment.
+		promise?.then(() => {
+			if (!this.opened) {
+				this.aligner?.stop()
+				this.aligner = null
+			}
+		})
 	}
 
 	update(renderer: RenderResultRenderer | null, options: Partial<PopupOptions> = {}) {
@@ -593,6 +601,7 @@ export class popup implements Binding, Part {
 
 		this.rendered = null
 		this.popup = null
+		this.aligner?.stop()
 		this.aligner = null
 	}
 }
