@@ -1,6 +1,6 @@
 import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {binaryFindInsertIndexWithAdditionSize} from './binary-find'
+import {ValueListUtils} from '@pucelle/ff'
 
 
 export type UnCoveredSituation =
@@ -85,9 +85,6 @@ export class PartialRendererMeasurement {
 	 */
 	private preEndPositions: number[] | null = null
 
-	/** Do additional item size statistic, guess additional item size. */
-	private preAdditionalStat: PartialRendererSizeStat | null = null
-
 	/** Initial item size, now valid after measured. */
 	private guessedItemSize: number = 0
 
@@ -132,13 +129,6 @@ export class PartialRendererMeasurement {
 	/** Set `preEndPositions` before updating. */
 	setPreEndPositions(positions: number[] | null) {
 		this.preEndPositions = positions
-
-		if (positions && !this.preAdditionalStat) {
-			this.preAdditionalStat = new PartialRendererSizeStat()
-		}
-		else if (!positions && this.preAdditionalStat) {
-			this.preAdditionalStat = null
-		}
 	}
 
 	/** Set new slider position. */
@@ -213,15 +203,13 @@ export class PartialRendererMeasurement {
 	/** Calc new slider position by start and end indices. */
 	calcSliderPositionByIndex(startOrEndIndex: number, alignDirection: 'start' | 'end'): number {
 		if (this.preEndPositions) {
-			let preAdditionalSize = this.preAdditionalStat!.getLatestSize()
-
 			if (alignDirection === 'start') {
 				let start = startOrEndIndex > 0 ? this.preEndPositions[startOrEndIndex - 1] : 0
-				return start + preAdditionalSize * startOrEndIndex
+				return start
 			}
 			else {
 				let end = startOrEndIndex > 0 ? this.preEndPositions[startOrEndIndex - 1] : 0
-				return end + preAdditionalSize * startOrEndIndex
+				return end
 			}
 		}
 		else {
@@ -239,9 +227,7 @@ export class PartialRendererMeasurement {
 		let scrolled = this.doa.getScrolled(this.scroller)
 
 		if (this.preEndPositions) {
-			let preAdditionalSize = this.preAdditionalStat!.getLatestSize()
-			let startIndex = binaryFindInsertIndexWithAdditionSize(this.preEndPositions, preAdditionalSize, scrolled)
-
+			let startIndex = ValueListUtils.binaryFindInsertIndex(this.preEndPositions, scrolled)
 			return startIndex
 		}
 		else {
@@ -304,13 +290,6 @@ export class PartialRendererMeasurement {
 		if (renderCount > 0 && renderSize > 0) {
 			this.stat.update(renderCount, renderSize, true)
 		}
-
-		if (renderCount > 0 && this.preEndPositions) {
-			let start = startIndex > 0 ? this.preEndPositions[startIndex - 1] : 0
-			let end = endIndex > 0 ? this.preEndPositions[endIndex - 1] : 0
-
-			this.preAdditionalStat!.update(renderCount, sliderInnerSize - (end - start), false)
-		}
 	}
 
 	/** 
@@ -352,9 +331,7 @@ export class PartialRendererMeasurement {
 	calcPlaceholderSize(dataCount: number) {
 		if (this.preEndPositions) {
 			let end = this.preEndPositions.length > 0 ? this.preEndPositions[this.preEndPositions.length - 1] : 0
-			let additionalItemSize = this.preAdditionalStat!.getLatestSize()
-
-			return end + additionalItemSize * dataCount
+			return end
 		}
 
 		let itemSize = this.getItemSize()
