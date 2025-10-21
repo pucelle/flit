@@ -50,7 +50,7 @@ export class PartialRenderer {
 	readonly scroller: HTMLElement
 	readonly slider: HTMLElement
 	readonly repeat: HTMLElement
-	readonly placeholder: HTMLDivElement
+	readonly placeholder: HTMLDivElement | null
 	readonly updateCallback: () => void
 
 	/** 
@@ -113,7 +113,7 @@ export class PartialRenderer {
 		scroller: HTMLElement,
 		slider: HTMLElement,
 		repeat: HTMLElement,
-		placeholder: HTMLDivElement,
+		placeholder: HTMLDivElement | null,
 		asFollower: boolean,
 		doa: DirectionalOverflowAccessor,
 		updateCallback: () => void

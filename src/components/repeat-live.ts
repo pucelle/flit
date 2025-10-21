@@ -160,10 +160,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		super.beforeDisconnectCallback(param)
 
 		// If remove current component from parent, remove placeholder also.
-		if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) > 0) {
-			this.placeholder!.remove()
-			this.placeholder = null
-			this.renderer = null
+		if (this.placeholder) {
+			if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) > 0 || this.asFollower) {
+				this.placeholder.remove()
+				this.placeholder = null
+				this.renderer = null
+			}
 		}
 	}
 
@@ -182,6 +184,10 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	protected initPlaceholder() {
+		if (this.asFollower) {
+			return
+		}
+
 		if (this.placeholder) {
 			return
 		}
@@ -208,7 +214,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.scroller!,
 			slider,
 			this.el,
-			this.placeholder!,
+			this.placeholder,
 			this.asFollower,
 			this.doa,
 			this.updateLiveData.bind(this)
