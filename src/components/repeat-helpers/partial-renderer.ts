@@ -454,8 +454,8 @@ export class PartialRenderer {
 		this.measurement.breakContinuousRenderRange()
 
 		if (needResetScrollOffset && !this.asFollower) {
-			alignToStartIndex = Math.max(alignToStartIndex, this.startIndex)
-			alignToEndIndex = Math.min(alignToEndIndex, this.endIndex)
+			alignToStartIndex = Math.min(Math.max(alignToStartIndex, this.startIndex), this.endIndex - 1)
+			alignToEndIndex = Math.max(Math.min(alignToEndIndex, this.endIndex), this.startIndex)
 	
 			// Align scroller start with slider start.
 			let scrollPosition = this.measurement.calcSliderPositionByIndex(
@@ -490,7 +490,7 @@ export class PartialRenderer {
 		}
 
 		let index = this.alignDirection === 'start' ? this.startIndex : this.endIndex
-		this.measurement.cacheSliderPosition(index, position, this.alignDirection)
+		this.measurement.cacheSliderPosition(this.alignDirection, index, position)
 	}
 
 	/** 
@@ -825,6 +825,7 @@ export class PartialRenderer {
 
 	/** 
 	 * Locate start or after end index at which the item is visible in viewport.
+	 * Note it's returned index can be `0~list.length`.
 	 * Must after update complete.
 	 */
 	locateVisibleIndex(direction: 'start' | 'end', minimumRatio: number = 0): number {

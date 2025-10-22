@@ -132,7 +132,7 @@ export class PartialRendererMeasurement {
 	}
 
 	/** Set new slider position. */
-	cacheSliderPosition(index: number, position: number, alignDirection: 'start' | 'end') {
+	cacheSliderPosition(alignDirection: 'start' | 'end', index: number, position: number) {
 		if (alignDirection === 'start') {
 			this.latestSliderProperties.startIndex = index
 			this.latestSliderProperties.startPosition = position

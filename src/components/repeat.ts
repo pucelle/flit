@@ -80,7 +80,10 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return index >= this.getStartVisibleIndex(minimumRatio) && index <= this.getEndVisibleIndex(minimumRatio)
 	}
 	
-	/** Get the index of the first visible item. */
+	/** 
+	 * Get the index of the first visible item.
+	 * Note it's returned index can be `0~list.length`.
+	 */
 	getStartVisibleIndex(minimumRatio: number = 0): number {
 		return locateVisibleIndex(
 			this.scroller,
@@ -92,7 +95,10 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		)
 	}
 
-	/** Get the index after the last visible item. */
+	/** 
+	 * Get the index after the last visible item.
+	 * Note it's returned index can be `0~list.length`.
+	 */
 	getEndVisibleIndex(minimumRatio: number = 0): number {
 		return locateVisibleIndex(
 			this.scroller,
