@@ -9,16 +9,16 @@ export class PartialRendererSizeStat {
 	}
 
 	/** After every time rendered, update indices and sizes. */
-	update(count: number, renderedSize: number, increaseSlowly: boolean) {
+	update(count: number, renderedSize: number) {
 		if (count === 0 || renderedSize === 0) {
 			return
 		}
 
 		let size = renderedSize / count
 
-		// Not decreasing immediately, avoid rendering too many items after a small item rendering.
-		if (increaseSlowly && size < this.latestSize / 2) {
-			size = this.latestSize / 2
+		// Mix with old size, to make sure it doesn't change too much.
+		if (this.latestSize > 0) {
+			size = size * 0.5 + this.latestSize * 0.5
 		}
 
 		this.latestSize = size

@@ -288,7 +288,7 @@ export class PartialRendererMeasurement {
 
 		// Avoid update when hidden.
 		if (renderCount > 0 && renderSize > 0) {
-			this.stat.update(renderCount, renderSize, true)
+			this.stat.update(renderCount, renderSize)
 		}
 	}
 

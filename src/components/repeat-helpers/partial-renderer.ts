@@ -451,7 +451,10 @@ export class PartialRenderer {
 		let newSliderPosition = this.measurement.calcSliderPositionByIndex(this.alignDirection === 'start' ? this.startIndex : this.endIndex, this.alignDirection)
 		
 		this.setSliderPosition(newSliderPosition)
-		this.measurement.breakContinuousRenderRange()
+
+		// We'd better not break continuous range here, or drag scroll thumb
+		// you will find scroll thumb jump when item size is not stable.
+		//this.measurement.breakContinuousRenderRange()
 
 		if (needResetScrollOffset && !this.asFollower) {
 			alignToStartIndex = Math.min(Math.max(alignToStartIndex, this.startIndex), this.endIndex - 1)

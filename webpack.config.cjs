@@ -12,10 +12,7 @@ module.exports = {
 		usedExports: true,
 		sideEffects: false,
 	},
-	plugins: [
-		// Required when use `ts-loader`.
-		//new ForkTsCheckerWebpackPlugin()
-	],
+	plugins: [],
 	devServer: {
 		static: {
 			directory: __dirname,
@@ -39,15 +36,6 @@ module.exports = {
 				options: {
 					mainColor: '#000000',
 				}
-			},
-
-			// Ensure can read `.js` omitted module imports that compiled by typescript.
-			{
-				test: /\.m?js/,
-				type: 'javascript/auto',
-				resolve: {
-					fullySpecified: false,
-				},
 			},
 		],
 	},
