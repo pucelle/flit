@@ -19,7 +19,7 @@ export interface DroppableOptions<T> {
 	/** Add this class name after mouse enter, and remove it after mouse leave. */
 	readonly enterClassName?: string
 
-	/** A class name to find closest ancestor, the found element will be applied `enterClassName`. */
+	/** A query selector to find closest ancestor, the found element will be applied `enterClassName`. */
 	readonly enterClassNameApplyTo?: string
 
 	/** 
