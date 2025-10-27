@@ -76,7 +76,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	size: ThemeSize = 'default'
 
 	/** Input type, same with `<input type=...>`. */
-	type: 'text' | 'password' = 'text'
+	type: 'text' | 'password' | 'number' = 'text'
 
 	/** Whether get focus after been inserted into document. */
 	autoFocus: boolean = false

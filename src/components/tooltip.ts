@@ -21,7 +21,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 	static style = css`
 		.tooltip{
 			display: flex;
-			max-width: 15em;
+			max-width: 16em;
 			padding: 0.4em 0.8em;
 			line-height: 1.4;
 		}
