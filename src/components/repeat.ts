@@ -65,9 +65,12 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 * 
 	 * If `preferUpper` specifies as true (by default), and offset located at the
 	 * margin between two elements, return the index of the larger one.
+	 * 
+	 * If `preferUpper`, returned index in range `0~els.length`.
+	 * If `preferLower`, returned index in range `-1~els.length-1`.
 	 */
-	getIndexAtOffset(offset: number, preferUpper: boolean = true): number {
-		let index = locateVisibleIndexAtOffset(
+	getIndexAtOffset(offset: number, preferUpper: boolean = true): {index: number, within: boolean} {
+		return locateVisibleIndexAtOffset(
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
@@ -75,8 +78,6 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 			offset,
 			preferUpper
 		)
-
-		return index
 	}
 
 	/** Check whether item at specified index is visible. */

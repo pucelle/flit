@@ -16,6 +16,10 @@ export function locateVisibleIndex(
 	direction: 'start' | 'end',
 	minimumRatio: number = 0
 ): number {
+	if (els.length > 0 && els[0].localName === 'slot') {
+		els = [...els as HTMLElement[]].map(c => c.firstElementChild as HTMLElement)
+	}
+
 	let scrollerSize = doa.getClientSize(scroller)
 	let scrolled = doa.getScrolled(scroller)
 	let preferFlag = direction === 'end' ? -1 : 1
@@ -54,7 +58,12 @@ export function locateVisibleIndex(
 
 /** 
  * Locate the element in els that is in specified offset position.
- * May returns value in range `0~els.length-1`.
+ * 
+ * If `preferUpper` specifies as true (by default), and offset located at the
+ * margin between two elements, return the index of the larger one.
+ * 
+ * If `preferUpper`, returned index in range `0~els.length`.
+ * If `preferLower`, returned index in range `-1~els.length-1`.
  */
 export function locateVisibleIndexAtOffset(
 	scroller: HTMLElement,
@@ -63,7 +72,11 @@ export function locateVisibleIndexAtOffset(
 	sliderStartPosition: number,
 	offset: number,
 	preferUpper: boolean
-): number {
+): {index: number, within: boolean} {
+	if (els.length > 0 && els[0].localName === 'slot') {
+		els = [...els as HTMLElement[]].map(c => c.firstElementChild as HTMLElement)
+	}
+
 	let scrolled = doa.getScrolled(scroller)
 
 	// In scroller origin.
@@ -71,6 +84,8 @@ export function locateVisibleIndexAtOffset(
 
 	// Turn slider origin to scroller origin.
 	let translated = sliderStartPosition - scrolled
+
+	let within = false
 
 	function flag(el: HTMLElement) {
 		let start = doa.getOffset(el) + translated
@@ -91,14 +106,16 @@ export function locateVisibleIndexAtOffset(
 	}
 
 	let index = ListUtils.quickBinaryFindLowerInsertIndex(els, flag)
-	if (index === els.length) {
-		index = els.length - 1
-	}
 
 	// Move to left when in the space between two.
-	if (!preferUpper && index > 0 && flag(els[index]) === 1) {
-		index--
+	if (index >= 0 && index < els.length) {
+		let flagValue = flag(els[index])
+		within = flagValue === 0
+
+		if (!preferUpper && flagValue === 1) {
+			index--
+		}
 	}
 
-	return index
+	return {index, within}
 }

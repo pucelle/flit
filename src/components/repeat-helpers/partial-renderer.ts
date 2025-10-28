@@ -833,9 +833,6 @@ export class PartialRenderer {
 	 */
 	locateVisibleIndex(direction: 'start' | 'end', minimumRatio: number = 0): number {
 		let children: ArrayLike<Element> = this.repeat.children
-		if (children.length > 0 && children[0].localName === 'slot') {
-			children = [...this.repeat.children].map(c => c.firstElementChild) as ArrayLike<Element>
-		}
 
 		let visibleIndex = locateVisibleIndex(
 			this.scroller,
