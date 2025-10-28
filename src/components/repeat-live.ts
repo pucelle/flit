@@ -4,6 +4,7 @@ import {PartialRenderer} from './repeat-helpers/partial-renderer'
 import {effect, untilUpdateComplete} from '@pucelle/lupos'
 import {html} from '@pucelle/lupos.js'
 import {locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
+import {LowerIndexWithin} from '../tools'
 
 
 /** 
@@ -237,7 +238,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * e.g. it out of partial rendering range because of away from viewport much.
 	 * Would can't get right index result.
 	 */
-	getIndexAtOffset(offset: number): {index: number, within: boolean} {
+	getIndexAtOffset(offset: number): LowerIndexWithin {
 		let indexAndWithin = locateVisibleIndexAtOffset(
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,

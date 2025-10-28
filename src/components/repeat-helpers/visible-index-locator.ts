@@ -1,5 +1,6 @@
 import {ListUtils} from '@pucelle/ff'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
+import {LowerIndexWithin} from '../../tools'
 
 
 /** 
@@ -66,7 +67,7 @@ export function locateVisibleIndexAtOffset(
 	doa: DirectionalOverflowAccessor,
 	sliderStartPosition: number,
 	offset: number,
-): {index: number, within: boolean} {
+): LowerIndexWithin {
 	if (els.length > 0 && els[0].localName === 'slot') {
 		els = [...els as HTMLElement[]].map(c => c.firstElementChild as HTMLElement)
 	}

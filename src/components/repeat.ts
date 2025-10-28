@@ -3,7 +3,7 @@ import {PerFrameTransitionEasingName, Component, html, RenderResult} from '@puce
 import {locateVisibleIndex, locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
 import {DirectionalOverflowAccessor} from './repeat-helpers/directional-overflow-accessor'
 import {HVDirection} from '@pucelle/ff'
-import {DOMScroll} from '../tools'
+import {DOMScroll, LowerIndexWithin} from '../tools'
 
 
 /** To render each item. */
@@ -65,7 +65,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 * 
 	 * Returned index in range `0~els.length`.
 	 */
-	getIndexAtOffset(offset: number): {index: number, within: boolean} {
+	getIndexAtOffset(offset: number): LowerIndexWithin {
 		return locateVisibleIndexAtOffset(
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
