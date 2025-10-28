@@ -90,7 +90,7 @@ export function locateVisibleIndexAtOffset(
 		}
 	}
 
-	let index = ListUtils.quickBinaryFindInsertIndex(els, flag)
+	let index = ListUtils.quickBinaryFindLowerInsertIndex(els, flag)
 	if (index === els.length) {
 		index = els.length - 1
 	}
