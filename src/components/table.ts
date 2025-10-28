@@ -10,8 +10,7 @@ import {AsyncLiveRepeat} from './repeat-live-async'
 import {Icon} from './icon'
 import {RectSelection} from './rect-selection'
 import {IconOrderAsc, IconOrderDefault, IconOrderDesc} from '../icons'
-import {LowerIndexWithin} from '../tools/selection-utils'
-import {SelectionUtils} from '../tools'
+import {SelectionUtils, LowerIndexWithin} from '../tools'
 
 
 export interface TableEvents {
