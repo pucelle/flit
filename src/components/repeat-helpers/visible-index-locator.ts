@@ -103,7 +103,8 @@ export function locateVisibleIndexAtOffset(
 
 	// Move to left when in the space between two.
 	if (index >= 0 && index < els.length) {
-		within = flag(els[index]) === 0
+		let flagValue = flag(els[index])
+		within = flagValue === 0
 	}
 
 	return {index, within}

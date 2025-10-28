@@ -10,6 +10,8 @@ import {AsyncLiveRepeat} from './repeat-live-async'
 import {Icon} from './icon'
 import {RectSelection} from './rect-selection'
 import {IconOrderAsc, IconOrderDefault, IconOrderDesc} from '../icons'
+import {LowerIndexWithin} from '../tools/selection-utils'
+import {SelectionUtils} from '../tools'
 
 
 export interface TableEvents {
@@ -324,7 +326,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	protected repeatRef!: Repeat<T> | LiveRepeat<T> | AsyncLiveRepeat<T>
 
 	/** The start row index when starting row rect selection. */
-	protected rectSelectionStartRowIndex: number = 0
+	protected rectSelectionStartRow: LowerIndexWithin | null = null
 
 	/** The selection results when rect selection started. */
 	protected rectStartSelections: T[] | null = null
@@ -728,7 +730,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	}
 
 	protected onRectSelectStarted(startOffset: DOMPoint, e: MouseEvent) {
-		this.rectSelectionStartRowIndex = this.repeatRef.getIndexAtOffset(startOffset.y)
+		this.rectSelectionStartRow = this.repeatRef.getIndexAtOffset(startOffset.y)
 
 		if (e.ctrlKey || e.shiftKey) {
 			this.rectStartSelections = [...this.selections!.getSelected()]
@@ -740,7 +742,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
 	protected onRectSelectEnded() {
 		this.rectStartSelections = null
-		this.rectSelectionStartRowIndex = 0
+		this.rectSelectionStartRow = null
 		this.preventingLoseSelections = true
 
 		sleep(0).then(() => {
@@ -749,19 +751,20 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	}
 
 	protected onRectSelectUpdate(endOffset: DOMPoint) {
-		let startRowIndex = this.rectSelectionStartRowIndex
-		let endRowIndex = this.repeatRef.getIndexAtOffset(endOffset.y)
+		let startRow = this.rectSelectionStartRow
+		let endRow = this.repeatRef.getIndexAtOffset(endOffset.y)
 
-		if (startRowIndex === -1 || endRowIndex === -1) {
+		if (startRow === null || endRow === null) {
 			return
 		}
 
-		if (startRowIndex > endRowIndex) {
-			[startRowIndex, endRowIndex] = [endRowIndex, startRowIndex]
+		if (startRow > endRow) {
+			[startRow, endRow] = [endRow, startRow]
 		}
 
+		let [startRowIndex, endRowIndex] = SelectionUtils.getRange(startRow, endRow)
 		let allData = (this.store as Store).currentData
-		let items = allData.slice(startRowIndex, endRowIndex + 1)
+		let items = allData.slice(startRowIndex, endRowIndex)
 
 		items.push(...this.rectStartSelections!)
 		this.selections!.selectOnly(...items)
