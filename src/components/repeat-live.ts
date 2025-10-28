@@ -228,28 +228,22 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/** 
 	 * Get the element index at specified offset.
-	 * The offset value is the offset position relative to scroller,
-	 * may return value in range `0~els.length-1`.
+	 * The offset value is the offset position relative to scroller.
 	 * it's not affected by scroll position.
+	 * 
+	 * Returned index in range `0~data.length`.
 	 * 
 	 * Note if content in target offset has not been rendered,
 	 * e.g. it out of partial rendering range because of away from viewport much.
 	 * Would can't get right index result.
-	 * 
-	 * If `preferUpper` specifies as true (by default), and offset located at the
-	 * margin between two elements, return the index of the larger one.
-	 * 
-	 * If `preferUpper`, returned index in range `0~els.length`.
-	 * If `preferLower`, returned index in range `-1~els.length-1`.
 	 */
-	getIndexAtOffset(offset: number, preferUpper: boolean = true): {index: number, within: boolean} {
+	getIndexAtOffset(offset: number): {index: number, within: boolean} {
 		let indexAndWithin = locateVisibleIndexAtOffset(
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
 			this.renderer!.measurement.latestSliderProperties.startPosition,
-			offset,
-			preferUpper
+			offset
 		)
 
 		indexAndWithin.index += this.startIndex

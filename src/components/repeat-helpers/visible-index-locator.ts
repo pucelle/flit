@@ -58,12 +58,7 @@ export function locateVisibleIndex(
 
 /** 
  * Locate the element in els that is in specified offset position.
- * 
- * If `preferUpper` specifies as true (by default), and offset located at the
- * margin between two elements, return the index of the larger one.
- * 
- * If `preferUpper`, returned index in range `0~els.length`.
- * If `preferLower`, returned index in range `-1~els.length-1`.
+ * Returned index in range `0~els.length`.
  */
 export function locateVisibleIndexAtOffset(
 	scroller: HTMLElement,
@@ -71,7 +66,6 @@ export function locateVisibleIndexAtOffset(
 	doa: DirectionalOverflowAccessor,
 	sliderStartPosition: number,
 	offset: number,
-	preferUpper: boolean
 ): {index: number, within: boolean} {
 	if (els.length > 0 && els[0].localName === 'slot') {
 		els = [...els as HTMLElement[]].map(c => c.firstElementChild as HTMLElement)
@@ -109,12 +103,7 @@ export function locateVisibleIndexAtOffset(
 
 	// Move to left when in the space between two.
 	if (index >= 0 && index < els.length) {
-		let flagValue = flag(els[index])
-		within = flagValue === 0
-
-		if (!preferUpper && flagValue === 1) {
-			index--
-		}
+		within = flag(els[index]) === 0
 	}
 
 	return {index, within}

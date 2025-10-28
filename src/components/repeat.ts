@@ -63,20 +63,15 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 * The offset value is the offset position relative to scroller,
 	 * it's not affected by scroll position.
 	 * 
-	 * If `preferUpper` specifies as true (by default), and offset located at the
-	 * margin between two elements, return the index of the larger one.
-	 * 
-	 * If `preferUpper`, returned index in range `0~els.length`.
-	 * If `preferLower`, returned index in range `-1~els.length-1`.
+	 * Returned index in range `0~els.length`.
 	 */
-	getIndexAtOffset(offset: number, preferUpper: boolean = true): {index: number, within: boolean} {
+	getIndexAtOffset(offset: number): {index: number, within: boolean} {
 		return locateVisibleIndexAtOffset(
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
 			0,
-			offset,
-			preferUpper
+			offset
 		)
 	}
 
