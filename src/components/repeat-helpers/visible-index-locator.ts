@@ -18,7 +18,7 @@ export function locateVisibleIndex(
 ): number {
 	let scrollerSize = doa.getClientSize(scroller)
 	let scrolled = doa.getScrolled(scroller)
-	let locateLast = direction === 'end' ? -1 : 1
+	let preferFlag = direction === 'end' ? -1 : 1
 
 	// Turn slider origin to scroller origin.
 	let translated = sliderStartPosition - scrolled
@@ -44,7 +44,7 @@ export function locateVisibleIndex(
 
 		// Move to right if `locateLast` is `1`.
 		else {
-			return locateLast
+			return preferFlag
 		}
 	})
 
@@ -61,7 +61,8 @@ export function locateVisibleIndexAtOffset(
 	els: ArrayLike<HTMLElement>,
 	doa: DirectionalOverflowAccessor,
 	sliderStartPosition: number,
-	offset: number
+	offset: number,
+	preferUpper: boolean
 ): number {
 	let scrolled = doa.getScrolled(scroller)
 
@@ -71,7 +72,7 @@ export function locateVisibleIndexAtOffset(
 	// Turn slider origin to scroller origin.
 	let translated = sliderStartPosition - scrolled
 
-	let index = ListUtils.quickBinaryFindLowerInsertIndex(els, function(el) {
+	function flag(el: HTMLElement) {
 		let start = doa.getOffset(el) + translated
 		let size = doa.getOffsetSize(el)
 		let end = start + size
@@ -87,10 +88,16 @@ export function locateVisibleIndexAtOffset(
 		else {
 			return 0
 		}
-	})
+	}
 
+	let index = ListUtils.quickBinaryFindInsertIndex(els, flag)
 	if (index === els.length) {
 		index = els.length - 1
+	}
+
+	// Move to left when in the space between two.
+	if (!preferUpper && index > 0 && flag(els[index]) === 1) {
+		index--
 	}
 
 	return index
