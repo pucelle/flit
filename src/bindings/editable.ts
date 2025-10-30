@@ -1,5 +1,5 @@
 import {Binding, Component, render, RenderedComponentLike, RenderResultRenderer} from '@pucelle/lupos.js'
-import {BoxOffsets, DOMUtils, RectWatcher, StylePropertyName} from '@pucelle/ff'
+import {BoxOffsets, DOMUtils, MouseEventDelivery, RectWatcher, StylePropertyName} from '@pucelle/ff'
 import {DOMEvents, EventKeys, untilUpdateComplete} from '@pucelle/lupos'
 import {Input, Popup, Select} from '../components'
 
@@ -120,8 +120,10 @@ export class editable<T> implements Binding {
 		this.inputSelectRef.select()
 
 		if (this.inputSelectRef instanceof Select) {
-			this.inputSelectRef.showPopup()
+			this.inputSelectRef.opened = true
 		}
+
+		MouseEventDelivery.attach(this.el, popup.el)
 	}
 
 	hidePopup() {
@@ -138,6 +140,7 @@ export class editable<T> implements Binding {
 
 		RectWatcher.unwatch(this.el, this.updateSizePosition, this)
 		DOMEvents.off(document, 'mousedown', this.onDOMMouseDown, this)
+		MouseEventDelivery.detach(this.el)
 	}
 
 	protected updateValue() {
@@ -206,7 +209,8 @@ export class editable<T> implements Binding {
 
 	protected onDOMMouseDown(e: MouseEvent) {
 		let target = e.target as HTMLElement
-		if (!this.el.contains(target) && !this.popup?.el.contains(target)) {
+
+		if (!MouseEventDelivery.hasDeliveredFrom(this.el, target)) {
 			let value = this.inputSelectRef!.value
 			this.options.onCommit?.(value, () => this.reshowPopup(value))
 			this.hidePopup()

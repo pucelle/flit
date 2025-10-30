@@ -229,9 +229,8 @@ export class PopupTriggerBinder {
 		
 		if (!this.content
 			|| this.clickToHide
-			|| !this.content.contains(target)
-				&& !MouseEventDelivery.hasDeliveredFrom(this.content, target)
-			) {
+			|| !MouseEventDelivery.hasDeliveredFrom(this.content, target)
+		) {
 			this.callbacks.onWillHide()
 		}
 	}

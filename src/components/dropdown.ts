@@ -53,7 +53,10 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 	 */
 	popupRenderer: RenderResultRenderer | null = null
 
-	/** Apply popup binding after been controlled by it. */
+	/** 
+	 * Apply popup binding after been controlled by it.
+	 * You should reference to make it in derived classes.
+	 */
 	protected binding: popup | null = null
 
 	private _opened: boolean = false

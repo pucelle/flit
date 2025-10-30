@@ -168,9 +168,6 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	/** Whether in editing mode, in which mode you can input text to filter list items. */
 	protected editing: boolean = false
 
-	/** Popup binding referenced. */
-	protected popupBinding: popup | null = null
-
 	protected async onPopupOpenedChange(opened: boolean) {
 		super.onPopupOpenedChange(opened)
 
@@ -204,7 +201,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 				:class.opened=${this.opened}
 				:class.cant-input=${!this.searchable}
 				:popup=${this.renderPopup, this.popupOptions}
-				:ref.binding=${this.popupBinding}
+				:ref.binding=${this.binding}
 				@click=${this.onClick}
 			>
 				${this.renderDisplayOrInput()}
@@ -362,16 +359,6 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 
 	protected clearInputtedText() {
 		this.inputtedText = ''
-	}
-
-	/** Show popup immediately. */
-	showPopup() {
-		this.popupBinding?.showPopup()
-	}
-
-	/** Hide popup immediately. */
-	hidePopup() {
-		this.popupBinding?.hidePopup()
 	}
 
 	/** Focus on input field. */
