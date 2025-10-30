@@ -42,7 +42,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 	/** Which element is in editing. */
 	editing!: HTMLElement
 
-	/** Specifies width. */
+	/** Specifies width to cover using width of editing element. */
 	width: number | null = null
 
 	/** Additional padding values. */

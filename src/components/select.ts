@@ -77,6 +77,15 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 			text-overflow: ellipsis;
 			box-shadow: none;
 
+			/** Ensure to inherit <Input> element. */
+			color: inherit;
+			font-family: inherit;
+			font-size: inherit;
+			font-weight: inherit;
+			font-style: inherit;
+			text-align: inherit;
+			line-height: inherit;
+
 			&:focus{
 				box-shadow: none;
 			}
@@ -148,7 +157,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	protected popupEl: HTMLElement | null = null
 
 	/** Input element to input text to filter list items. */
-	protected inputEl: HTMLInputElement | null = null
+	protected inputRef: HTMLInputElement | null = null
 
 	/** List element. */
 	protected listEl: HTMLElement | null = null
@@ -159,7 +168,9 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	/** Whether in editing mode, in which mode you can input text to filter list items. */
 	protected editing: boolean = false
 
-	
+	/** Popup binding referenced. */
+	protected popupBinding: popup | null = null
+
 	protected async onPopupOpenedChange(opened: boolean) {
 		super.onPopupOpenedChange(opened)
 
@@ -193,6 +204,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 				:class.opened=${this.opened}
 				:class.cant-input=${!this.searchable}
 				:popup=${this.renderPopup, this.popupOptions}
+				:ref.binding=${this.popupBinding}
 				@click=${this.onClick}
 			>
 				${this.renderDisplayOrInput()}
@@ -215,7 +227,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 				<input type="text" autofocus
 					class="select-input"
 					autocomplete="chrome-off"
-					:ref=${this.inputEl}
+					:ref=${this.inputRef}
 					.value=${this.inputtedText}
 					.placeholder=${this.placeholder}
 					@input=${this.onInput}
@@ -253,7 +265,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 					.textRenderer=${this.textRenderer}
 					.selected=${(this.multiple ? this.value : this.value === null ? [] : [this.value])}
 					.multipleSelect=${this.multiple}
-					.keyComeFrom=${this.inputEl}
+					.keyComeFrom=${this.inputRef}
 					@select=${this.onSelected}
 				/>
 			</>
@@ -329,8 +341,8 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	}
 
 	protected mayFocusInput() {
-		if (this.editing && this.inputEl) {
-			this.inputEl.focus()
+		if (this.editing && this.inputRef) {
+			this.inputRef.focus()
 		}
 	}
 	
@@ -344,11 +356,31 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	}
 
 	protected onInput() {
-		this.inputtedText = this.inputEl!.value
+		this.inputtedText = this.inputRef!.value
 		this.opened = true
 	}
 
 	protected clearInputtedText() {
 		this.inputtedText = ''
+	}
+
+	/** Show popup immediately. */
+	showPopup() {
+		this.popupBinding?.showPopup()
+	}
+
+	/** Hide popup immediately. */
+	hidePopup() {
+		this.popupBinding?.hidePopup()
+	}
+
+	/** Focus on input field. */
+	focus() {
+		this.inputRef?.focus()
+	}
+
+	/** Select all input text. */
+	select() {
+		this.inputRef?.select()
 	}
 }

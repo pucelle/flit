@@ -55,6 +55,15 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 			min-width: 0;
 			border: none;
 			background: none;
+
+			/** Ensure to inherit <Input> element. */
+			color: inherit;
+			font-family: inherit;
+			font-size: inherit;
+			font-weight: inherit;
+			font-style: inherit;
+			text-align: inherit;
+			line-height: inherit;
 		}
 
 		.input-valid-icon{
@@ -101,6 +110,9 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	 * Can also returns `null` and later set `error` asynchronously.
 	 */
 	validator: ((value: string) => string | null) | null = null
+
+	/** Format whole input value, like trimming. */
+	formatter: ((value: string) => string) | null = null
 
 	/** Show custom error message. */
 	errorMessage: string | null = ''
@@ -188,6 +200,9 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		}
 
 		let value = this.fieldRef.value
+		if (this.formatter) {
+			value = this.formatter(value)
+		}
 
 		// Clear validate result after input.
 		if (this.validator) {
@@ -199,8 +214,12 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	}
 
 	protected onChange(this: Input) {
-		let value = this.value = this.fieldRef.value
+		let value = this.fieldRef.value
+		if (this.formatter) {
+			value = this.formatter(value)
+		}
 
+		this.value = value
 		this.validate()
 		this.fire('change', value, this.valid, () => this.fieldRef.focus())
 	}
@@ -222,6 +241,11 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 				this.valid = !error
 			}
 		}
+	}
+
+	/** Focus on input field. */
+	focus() {
+		this.fieldRef.focus()
 	}
 
 	/** Select all text. */

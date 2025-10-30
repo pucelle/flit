@@ -11,6 +11,7 @@ import {Icon} from './icon'
 import {RectSelection} from './rect-selection'
 import {IconOrderAsc, IconOrderDefault, IconOrderDesc} from '../icons'
 import {SelectionUtils, LowerIndexWithin} from '../tools'
+import {editable} from '../bindings'
 
 
 export interface TableEvents {
@@ -74,7 +75,19 @@ export interface TableColumn<T = any> extends Observed {
 	 * Renderer to render each cell of current column.
 	 * It should render content like html`<td>...</td>`.
 	 */
-	renderer?: (this: Table<T>, item: T, index: number) => RenderResult
+	renderer?: (item: T, index: number) => RenderResult
+
+	/** Editor to edit column value, it should render a `<Input>` or `<Select>`. */
+	editor?: (item: T, index: number) => RenderResult
+
+	/** 
+	 * On commit edited value.
+	 * Calls `reshow` if failed to commit and want to re-edit.
+	 */
+	onEditorCommit?: (item: T, value: any, reshow: () => void) => void
+
+	/** On cancel editing value. */
+	onEditorCancel?: () => void
 
 	/** 
 	 * Specifies cell content alignment.
@@ -630,21 +643,27 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	/** Render all cells within a row. */
 	protected renderCells(item: T, index: number) {
 		index += this.startIndex
-
-		let cells = this.columns.map(column => {
-			let result = column.renderer ? column.renderer.call(this, item, index) : '\xa0'
-
-			return html`
-				<td class="table-cell"
-					:class=${column.className ?? ''}
-					:style.text-align=${column.align || ''}
-				>
-					${result}
-				</td>
-			`
-		})
-
+		let cells = this.columns.map(column => this.renderCell(item, index, column))
 		return cells
+	}
+
+	/** Render each cell within a row. */
+	protected renderCell(item: T, index: number, column: TableColumn<T>) {
+		let result = column.renderer ? column.renderer(item, index) : '\xa0'
+		let editor = column.editor
+
+		return html`
+			<td class="table-cell"
+				:class=${column.className ?? ''}
+				:style.text-align=${column.align || ''}
+				?:editable=${editor, () => editor!(item, index), {
+					onCommit: (value: any, reshow: () => void) => column.onEditorCommit?.(item, value, reshow),
+					onCancel: column.onEditorCancel,
+				}}
+			>
+				${result}
+			</td>
+		`
 	}
 
 	/** Triggers `liveDataUpdated` event. */
