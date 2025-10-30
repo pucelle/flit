@@ -349,6 +349,7 @@ export class popup implements Binding, Part {
 		this.binder.unbindLeaveBeforeShow()
 		this.binder.unbindLeave()
 
+		// Release trigger element.
 		MouseEventDelivery.release(this.el)
 
 		// Only remove popup is not enough.
@@ -552,6 +553,7 @@ export class popup implements Binding, Part {
 			flipDirection: this.options?.flipDirection,
 			fixedTriangle: this.options?.fixedTriangle,
 			triangle: triangle ?? undefined,
+			onStop: this.hidePopup.bind(this),
 		}
 	}
 
