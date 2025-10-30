@@ -350,7 +350,7 @@ export class popup implements Binding, Part {
 		this.binder.unbindLeave()
 
 		// Release trigger element.
-		MouseEventDelivery.release(this.el)
+		MouseEventDelivery.detach(this.el)
 
 		// Only remove popup is not enough.
 		// Rendered content to be referenced as a slot content by popup,
