@@ -140,6 +140,7 @@ export class editable<T> implements Binding {
 
 		RectWatcher.unwatch(this.el, this.updateSizePosition, this)
 		DOMEvents.off(document, 'mousedown', this.onDOMMouseDown, this)
+		DOMEvents.off(document, 'keydown', this.onDOMKeyDown, this)
 		MouseEventDelivery.detach(this.el)
 	}
 
