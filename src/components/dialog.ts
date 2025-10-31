@@ -1,6 +1,6 @@
 import {css, html, Component, fade, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
 import {AnchorAligner, t, translations} from '@pucelle/ff'
-import {DOMEvents, promiseWithResolves, untilUpdateComplete} from '@pucelle/lupos'
+import {DOMEvents, EventKeys, promiseWithResolves, untilUpdateComplete} from '@pucelle/lupos'
 import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
@@ -347,7 +347,25 @@ export class Dialog<E = {}> extends Component<E> {
 			this.show()
 		}
 
+		DOMEvents.on(document, 'keydown', this.onDOMKeyDown, this)
+
 		return promise 
+	}
+
+	protected onDOMKeyDown(e: KeyboardEvent) {
+		let key = EventKeys.getShortcutKey(e)
+		if (key === 'Enter') {
+			let okAction = this.options?.actions?.find(a => a.value === 'ok')
+			if (okAction) {
+				this.onClickActionButton(okAction)
+			}
+		}
+		else if (key === 'Escape') {
+			let cancelAction = this.options?.actions?.find(a => a.value === 'cancel')
+			if (cancelAction) {
+				this.onClickActionButton(cancelAction)
+			}
+		}
 	}
 
 	/** Show current dialog. */
@@ -438,7 +456,6 @@ export class QuickDialog {
 					.validator=${options.validator ?? null}
 					.value=${value}
 					:ref=${input!}
-					@input=${(v: string) => {value = v}}
 				/>
 			</lu:if>
 			<lu:else>
@@ -448,13 +465,11 @@ export class QuickDialog {
 					.type=${options.inputType as 'text' | 'password' | 'text'}
 					.value=${value}
 					:ref=${input!}
-					@input=${(v: string) => value = v}
-					@keydown.enter=${() => this.dialog.triggerAction('ok')}
 				/>
 			</lu:else>
 		`
 
-		let btn = await this.addOptions({
+		let promise = this.addOptions({
 			message: messageOverwritten,
 			actions: [
 				{value: 'cancel', text: t('cancel')},
@@ -470,8 +485,13 @@ export class QuickDialog {
 			...options,
 		})
 
+		await untilUpdateComplete()
+		input!.focus()
+		input!.select()
+
+		let btn = await promise
 		if (btn === 'ok') {
-			return value
+			return input!.value
 		}
 
 		return undefined
