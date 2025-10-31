@@ -355,16 +355,12 @@ export class Dialog<E = {}> extends Component<E> {
 	protected onDOMKeyDown(e: KeyboardEvent) {
 		let key = EventKeys.getShortcutKey(e)
 		if (key === 'Enter') {
-			let okAction = this.options?.actions?.find(a => a.value === 'ok')
-			if (okAction) {
-				this.onClickActionButton(okAction)
-			}
+			e.stopImmediatePropagation()
+			this.triggerAction('ok')
 		}
 		else if (key === 'Escape') {
-			let cancelAction = this.options?.actions?.find(a => a.value === 'cancel')
-			if (cancelAction) {
-				this.onClickActionButton(cancelAction)
-			}
+			e.stopImmediatePropagation()
+			this.triggerAction('cancel')
 		}
 	}
 
@@ -488,6 +484,10 @@ export class QuickDialog {
 		await untilUpdateComplete()
 		input!.focus()
 		input!.select()
+
+		input!.on('change', () => {
+			this.dialog.triggerAction('ok')
+		})
 
 		let btn = await promise
 		if (btn === 'ok') {

@@ -6,6 +6,8 @@ import {Binding, Part} from '@pucelle/lupos.js'
 /**
  * `:scrollPersist` helps to persist scroll position of bound element
  * after it disconnected, and restore it after gets re-connected.
+ * 
+ * If `direction` is not specified, will try detect itself.
  */
 export class scrollPersist implements Binding, Part {
 
@@ -44,5 +46,7 @@ export class scrollPersist implements Binding, Part {
 		}
 	}
 
-	update() {}
+	update(direction: 'horizontal' | 'vertical' | 'none' | null = null) {
+		this.direction = direction
+	}
 }

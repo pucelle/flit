@@ -126,7 +126,8 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 		DOMModifiableEvents.off(document, 'keydown', this.onEnter, this)
 	}
 
-	protected onEnter() {
+	protected onEnter(e: KeyboardEvent) {
+		e.stopPropagation()
 		this.getChecked()
 	}
 }

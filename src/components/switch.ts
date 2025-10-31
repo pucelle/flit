@@ -101,18 +101,20 @@ export class Switch<E = {}> extends Component<E & SwitchEvents> {
 	protected onKeyDown(e: KeyboardEvent) {
 		let key = EventKeys.getShortcutKey(e)
 		if (key === 'Enter') {
-			e.preventDefault()
+			e.stopPropagation()
 			this.toggleValue()
 		}
 		else if (key === 'ArrowLeft') {
 			if (this.value) {
 				e.preventDefault()
+				e.stopPropagation()
 				this.setValue(false)
 			}
 		}
 		else if (key === 'ArrowRight') {
 			if (!this.value) {
 				e.preventDefault()
+				e.stopPropagation()
 				this.setValue(true)
 			}
 		}

@@ -177,7 +177,8 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 		DOMModifiableEvents.on(document, 'keydown', ['Enter'], this.onEnter, this)
 	}
 
-	protected onEnter(_e: KeyboardEvent) {
+	protected onEnter(e: Event) {
+		e.stopPropagation()
 		this.onChange()
 	}
 

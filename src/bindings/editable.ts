@@ -230,10 +230,12 @@ export class editable<T> implements Binding {
 	protected onDOMKeyDown(e: KeyboardEvent) {
 		let key = EventKeys.getShortcutKey(e)
 		if (key === 'Enter') {
+			e.stopImmediatePropagation()
 			let value = this.inputSelectRef!.value
 			this.onValueChange(value)
 		}
 		else if (key === 'Escape') {
+			e.stopImmediatePropagation()
 			this.options.onCancel?.()
 			this.hidePopup()
 		}
