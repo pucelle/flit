@@ -111,9 +111,10 @@ export class editable<T> implements Binding {
 		this.updateStyle()
 		this.updateSizePosition()
 
-		RectWatcher.watch(this.el, this.updateSizePosition, this)
 		DOMEvents.on(document, 'mousedown', this.onDOMMouseDown, this)
 		DOMEvents.on(document, 'keydown', this.onDOMKeyDown, this)
+		
+		RectWatcher.watch(this.el, this.updateSizePosition, this)
 
 		// Select all after ready.
 		popup.appendTo(document.body)
@@ -121,6 +122,10 @@ export class editable<T> implements Binding {
 
 		if (this.inputSelectRef instanceof Select) {
 			this.inputSelectRef.opened = true
+			this.inputSelectRef.on('change', this.onValueChange, this)
+		}
+		else {
+			this.inputSelectRef.on('change', this.onValueChange, this)
 		}
 
 		MouseEventDelivery.attach(this.el, popup.el)
@@ -208,25 +213,25 @@ export class editable<T> implements Binding {
 		}
 	}
 
+	protected onValueChange(value: any) {
+		this.options.onCommit?.(value, () => this.reshowPopup(value))
+		this.hidePopup()
+	}
+
 	protected onDOMMouseDown(e: MouseEvent) {
 		let target = e.target as HTMLElement
 
 		if (!MouseEventDelivery.hasDeliveredFrom(this.el, target)) {
 			let value = this.inputSelectRef!.value
-			this.options.onCommit?.(value, () => this.reshowPopup(value))
-			this.hidePopup()
+			this.onValueChange(value)
 		}
 	}
 
 	protected onDOMKeyDown(e: KeyboardEvent) {
-		e.stopPropagation()
-
 		let key = EventKeys.getShortcutKey(e)
-
 		if (key === 'Enter') {
 			let value = this.inputSelectRef!.value
-			this.options.onCommit?.(value, () => this.reshowPopup(value))
-			this.hidePopup()
+			this.onValueChange(value)
 		}
 		else if (key === 'Escape') {
 			this.options.onCancel?.()
