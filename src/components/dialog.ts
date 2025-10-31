@@ -405,7 +405,10 @@ export class QuickDialog {
 		})
 	}
 
-	/** Show confirm type dialog or add it to dialog stack. */
+	/** 
+	 * Show confirm type dialog or add it to dialog stack.
+	 * Have 'ok' and 'cancel' action by default.
+	 */
 	confirm(message: RenderResultRenderer, options: DialogOptions = {}): Promise<string | undefined> {
 		return this.addOptions({
 			icon: IconConfirm,
@@ -418,7 +421,10 @@ export class QuickDialog {
 		})
 	}
 
-	/** Show prompt type dialog or add it to dialog stack. */
+	/** 
+	 * Show prompt type dialog or add it to dialog stack.
+	 * Have 'ok' and 'cancel' action by default.
+	 */
 	async prompt(message: RenderResultRenderer, options: PromptDialogOptions = {}): Promise<string | undefined> {
 		let value: string = options.defaultValue ? String(options.defaultValue) : ''
 		let input: Input | Textarea
@@ -453,7 +459,7 @@ export class QuickDialog {
 			actions: [
 				{value: 'cancel', text: t('cancel')},
 				{value: 'ok', text: t('ok'), primary: true, handler() {
-					if (!input!.touched || !input!.valid) {
+					if (!input!.touched || input!.valid === false) {
 						input!.touched = true
 						return true
 					}
