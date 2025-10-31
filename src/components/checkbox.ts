@@ -121,7 +121,8 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 		DOMModifiableEvents.on(document, 'keydown', ['Enter'], this.onEnter, this)
 	}
 
-	protected onEnter(_e: Event) {
+	protected onEnter(e: Event) {
+		e.stopImmediatePropagation()
 		this.toggleChecked()
 	}
 

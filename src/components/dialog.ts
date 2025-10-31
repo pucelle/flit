@@ -347,8 +347,6 @@ export class Dialog<E = {}> extends Component<E> {
 			this.show()
 		}
 
-		DOMEvents.on(document, 'keydown', this.onDOMKeyDown, this)
-
 		return promise 
 	}
 
@@ -371,6 +369,7 @@ export class Dialog<E = {}> extends Component<E> {
 		}
 
 		this.opened = true
+		DOMEvents.on(document, 'keydown', this.onDOMKeyDown, this)
 		this.appendTo(document.body)
 	}
 
@@ -381,6 +380,7 @@ export class Dialog<E = {}> extends Component<E> {
 		}
 
 		this.opened = false
+		DOMEvents.off(document, 'keydown', this.onDOMKeyDown, this)
 		this.remove(true)
 	}
 
