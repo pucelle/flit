@@ -56,13 +56,11 @@ interface ContinuousRenderRange {
 
 
 /**
- * It help to do measurement for PartialRenderer,
- * and cache latest render result of a partial renderer.
+ * It help to do measurement for LiveRenderer,
+ * and cache latest render result of a LiveRenderer.
  * And help to assist next time rendering.
- * 
- * It only get dom properties, never set.
  */
-export class LiveRendererMeasurement {
+export class LiveMeasurement {
 
 	private readonly scroller: HTMLElement
 	private readonly slider: HTMLElement

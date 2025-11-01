@@ -1,7 +1,7 @@
 import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, ResizeWatcher, sleep} from '@pucelle/ff'
 import {locateVisibleIndex} from './index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {LiveRendererMeasurement} from './live-renderer-measurement'
+import {LiveMeasurement} from './live-measurement'
 import {DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
 
 
@@ -42,8 +42,8 @@ interface NeedToApply {
  * - Validate scroll viewport coverage and re-render if required.
  * 
  * When scrolling up or down / left or right:
- * - Update scroll direction.
- * - Validate scroll viewport coverage and adjust `startIndex` or `endIndex` a little if not fully covered.
+ * - Validate scroll viewport coverage and adjust `startIndex`
+ *   or `endIndex` a little if not fully covered.
  */
 export class LiveRenderer {
 
@@ -61,7 +61,7 @@ export class LiveRenderer {
 	readonly asFollower: boolean
 
 	/** Do rendered items measurement. */
-	readonly measurement: LiveRendererMeasurement
+	readonly measurement: LiveMeasurement
 
 	/** Help to get and set based on overflow direction. */
 	readonly doa: DirectionalOverflowAccessor
@@ -125,7 +125,7 @@ export class LiveRenderer {
 		this.asFollower = asFollower
 		this.doa = doa
 		this.updateCallback = updateCallback
-		this.measurement = new LiveRendererMeasurement(scroller, slider, doa)
+		this.measurement = new LiveMeasurement(scroller, slider, doa)
 	}
 
 
