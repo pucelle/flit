@@ -66,19 +66,17 @@ export class ColumnWidthResizer {
 
 		await barrierDOMReading()
 
-		//// Now can read dom properties.
 		let headAvailableWidth = this.head.clientWidth
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingLeft')
 			- DOMUtils.getNumericStyleValue(this.head, 'paddingRight')
 
-
-		//// Now can write dom properties.
-		await barrierDOMWriting()
-		this.updateColumnWidthsByAvailable(headAvailableWidth)
+		await this.updateColumnWidthsByAvailable(headAvailableWidth)
 	}
 
 	/** Update column widths after knows available head width. */
-	private updateColumnWidthsByAvailable(availableWidth: number) {
+	private async updateColumnWidthsByAvailable(availableWidth: number) {
+		await barrierDOMWriting()
+
 		let widthAndFlexArray = this.columns.map((column: TableColumn, index) => {
 			let {flex, width} = column
 			let baseWidthInColumnConfig = Math.max(width || 0, this.minColumnWidth)

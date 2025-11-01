@@ -1,6 +1,6 @@
 import {PartialRendererSizeStat} from './partial-renderer-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {ValueListUtils} from '@pucelle/ff'
+import {barrierDOMReading, ValueListUtils} from '@pucelle/ff'
 
 
 export type UnCoveredSituation =
@@ -62,7 +62,7 @@ interface ContinuousRenderRange {
  * 
  * It only get dom properties, never set.
  */
-export class PartialRendererMeasurement {
+export class LiveRendererMeasurement {
 
 	private readonly scroller: HTMLElement
 	private readonly slider: HTMLElement
@@ -143,11 +143,9 @@ export class PartialRendererMeasurement {
 		}
 	}
 
-	/** 
-	 * Read new scroller size.
-	 * Ensure to barrier DOM Reading before calling it.
-	 */
-	readScrollerSize() {
+	/** Read new scroller size. */
+	async readScrollerSize() {
+		await barrierDOMReading()
 		this.scrollerSize = this.doa.getClientSize(this.scroller)
 	}
 
@@ -243,11 +241,10 @@ export class PartialRendererMeasurement {
 		this.continuousRenderRange = null
 	}
 
-	/** 
-	 * Every time after update complete, do measurement.
-	 * Ensure to barrier DOM Reading before call it.
-	 */
-	measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
+	/** Every time after update complete, do measurement. */
+	async measureAfterRendered(startIndex: number, endIndex: number, alignDirection: 'start' | 'end') {
+		await barrierDOMReading()
+
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
 		let paddingSize = sliderClientSize - sliderInnerSize
@@ -366,11 +363,10 @@ export class PartialRendererMeasurement {
 		}
 	}
 
-	/** 
-	 * Check cover situation and decide where to render more contents.
-	 * Ensure to barrier DOM Reading before call it.
-	 */
-	checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number): UnCoveredSituation | null {
+	/** Check cover situation and decide where to render more contents. */
+	async checkUnCoveredSituation(startIndex: number, endIndex: number, dataCount: number): Promise<UnCoveredSituation | null> {
+		await barrierDOMReading()
+
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)
 		let scrolled = this.doa.getScrolled(this.scroller)

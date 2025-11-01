@@ -1,6 +1,6 @@
 import {computed} from '@pucelle/lupos'
 import {PerFrameTransitionEasingName, Component, html, RenderResult} from '@pucelle/lupos.js'
-import {locateVisibleIndex, locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
+import {locateVisibleIndex, locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
 import {DirectionalOverflowAccessor} from './repeat-helpers/directional-overflow-accessor'
 import {HVDirection} from '@pucelle/ff'
 import {DOMScroll, LowerIndexWithin} from '../tools'
@@ -16,7 +16,7 @@ export type RepeatRenderFn<T> = (item: T, index: number) => RenderResult
  */
 export class Repeat<T = any, E = {}> extends Component<E> {
 
-	/** Current data list to repeat. */
+	/** Current data list to repeat with. */
 	data: T[] = []
 
 	/** Render function to generate render result by each item. */

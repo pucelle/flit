@@ -1,9 +1,9 @@
 import {PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
 import {Repeat, RepeatRenderFn} from './repeat'
-import {PartialRenderer} from './repeat-helpers/partial-renderer'
+import {LiveRenderer} from './repeat-helpers/live-renderer'
 import {effect, untilUpdateComplete} from '@pucelle/lupos'
 import {html} from '@pucelle/lupos.js'
-import {locateVisibleIndexAtOffset} from './repeat-helpers/visible-index-locator'
+import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
 import {LowerIndexWithin} from '../tools'
 
 
@@ -40,7 +40,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	* How many pixels to reserve to reduce update frequency when scrolling.
 	* On Windows, scroll for 100px each time.
 	* So `200px` is a reasonable value.
-	* For larger area scrolling, you may set this value to `500~600`.
+	* For faster scrolling, you may set this value to `500~600`.
 	*/
 	reservedPixels: number = 200
 
@@ -71,7 +71,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	protected placeholder: HTMLDivElement | null = null
 
 	/** Partial content renderer. */
-	protected renderer: PartialRenderer | null = null as any
+	protected renderer: LiveRenderer | null = null as any
 
 	/** The start index of the first item. */
 	get startIndex(): number {
@@ -211,7 +211,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			slider = slider.parentElement!
 		}
 
-		this.renderer = new PartialRenderer(
+		this.renderer = new LiveRenderer(
 			this.scroller!,
 			slider,
 			this.el,
