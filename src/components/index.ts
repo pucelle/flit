@@ -1,6 +1,6 @@
 export * from './repeat'
-export * from './repeat-live'
-export * from './repeat-live-async'
+export * from './live-repeat'
+export * from './live-repeat-async'
 
 export * from './button'
 export * from './button-group'
