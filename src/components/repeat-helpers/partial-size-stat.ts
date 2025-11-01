@@ -1,4 +1,4 @@
-export class PartialRendererSizeStat {
+export class PartialSizeStat {
 
 	/** Latest rendered item size. */
 	private latestSize: number = 0

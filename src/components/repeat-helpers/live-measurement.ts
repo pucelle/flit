@@ -1,4 +1,4 @@
-import {PartialRendererSizeStat} from './partial-renderer-size-stat'
+import {PartialSizeStat} from './partial-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {barrierDOMReading, ValueListUtils} from '@pucelle/ff'
 
@@ -66,7 +66,7 @@ export class LiveMeasurement {
 	private readonly slider: HTMLElement
 
 	/** Do rendered item size statistic, guess item size. */
-	private readonly stat: PartialRendererSizeStat = new PartialRendererSizeStat()
+	private readonly stat: PartialSizeStat = new PartialSizeStat()
 
 	/** Help to get and set based on overflow direction. */
 	private readonly doa: DirectionalOverflowAccessor
