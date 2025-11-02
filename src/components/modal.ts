@@ -13,7 +13,7 @@ import {IconClose} from '../icons'
  */
 export class Modal<E = {}> extends Component<E> {
 
-	static style = css`
+	static override style = css`
 		.modal{
 			position: fixed;
 			display: flex;
@@ -98,7 +98,7 @@ export class Modal<E = {}> extends Component<E> {
 	/** Whether modal opened. */
 	opened: boolean = false
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template tabindex="0" autofocus
 				class="modal"
@@ -150,7 +150,7 @@ export class Modal<E = {}> extends Component<E> {
 		this.maskEl.remove()
 	}
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 		
 		untilUpdateComplete().then(() => {
@@ -162,11 +162,11 @@ export class Modal<E = {}> extends Component<E> {
 		DOMEvents.on(window, 'resize', this.onWindowResize, this)
 	}
 
-	protected onUpdated() {
+	protected override onUpdated() {
 		this.toCenter()
 	}
 
-	protected onWillDisconnect() {
+	protected override onWillDisconnect() {
 		DOMEvents.off(window, 'resize', this.onWindowResize, this)
 	}
 

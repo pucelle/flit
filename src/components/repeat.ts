@@ -54,7 +54,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 			: this.el.parentElement!
 	}
 
-	protected render() {
+	protected override render() {
 		return html`<lu:for ${this.data}>${this.renderFn}</lu:for>`
 	}
 

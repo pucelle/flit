@@ -110,7 +110,7 @@ export interface TableColumn<T = any> extends Observed {
  */
 export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 
-	static style = css`
+	static override style = css`
 		.table{
 			display: flex;
 			flex-direction: column;
@@ -454,20 +454,17 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		return (this.repeatRef as LiveRepeat<T>).alignDirection
 	}
 
-	protected onCreated() {
-		super.onCreated()
-	}
-
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 		ResizeWatcher.watch(this.el, this.onSizeChange, this)
 	}
 
-	protected onWillDisconnect() {
+	protected override onWillDisconnect() {
+		super.onWillDisconnect()
 		ResizeWatcher.unwatch(this.el, this.onSizeChange, this)
 	}
 
-	protected onReady() {
+	protected override onReady() {
 		this.initColumnResizer()
 	}
 
@@ -490,7 +487,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 		)
 	}
 
-	protected render(): TemplateResult {
+	protected override render(): TemplateResult {
 		return html`
 		<template class="table" @mousedown=${this.onMouseDown}>
 			${this.renderHead()}

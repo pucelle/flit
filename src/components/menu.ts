@@ -7,7 +7,7 @@ import {ThemeSize} from '../style'
 /** `<Menu>` displays a menu with a `<List>` or `<DropList>` inside. */
 export class Menu<E = {}> extends Popup<E> {
 
-	static style = css`
+	static override style = css`
 		.menu{
 			min-width: 15em;
 			max-width: 30em;
@@ -48,7 +48,7 @@ export class Menu<E = {}> extends Popup<E> {
 	/** Menu title. */
 	title: string = ''
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="popup menu size-${this.size}"
 				:transition.immediate=${fade()}

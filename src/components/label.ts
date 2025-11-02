@@ -4,7 +4,7 @@ import {Component, html, css} from '@pucelle/lupos.js'
 /** `<Label>` displays a text label. */
 export class Label<Events = any> extends Component<Events> {
 
-	static style = css`
+	static override style = css`
 		.label{
 			font-weight: bold;
 			font-size: 0.928em;
@@ -29,7 +29,7 @@ export class Label<Events = any> extends Component<Events> {
 	/** Whether label is required. */
 	required: boolean = false
 	
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="label"
 				:class.required=${this.required}

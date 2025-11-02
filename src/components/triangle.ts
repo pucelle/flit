@@ -4,7 +4,7 @@ import {css, Component, html} from '@pucelle/lupos.js'
 /** `<Triangle>` renders a small triangular indicator, typically used within `<Popup>` or `<Tooltip>`. */
 export class Triangle<E = {}> extends Component<E> {
 
-	static style = css`
+	static override style = css`
 		.triangle{
 			position: absolute;
 		}
@@ -28,7 +28,7 @@ export class Triangle<E = {}> extends Component<E> {
 	/** The direction triangle's acute angle point to. */
 	direction: 'top' | 'bottom' | 'left' | 'right' = 'top'
 
-	protected render() {
+	protected override render() {
 		let w = this.width
 		let h = this.height
 		let outputWidth = this.direction === 'top' || this.direction === 'bottom' ? w : h

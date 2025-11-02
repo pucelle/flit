@@ -31,7 +31,7 @@ interface SelectEvents<T, M extends boolean> {
  */
 export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown<E & SelectEvents<T, M>> {
 	
-	static style = css`
+	static override style = css`
 		.select{
 			display: inline-flex;
 			vertical-align: top;
@@ -114,10 +114,10 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 
 	size: ThemeSize = 'default'
 
-	trigger: 'click' | 'contextmenu' | undefined = 'click'
-	showDelay: number | undefined = 0
-	hideDelay: number | undefined = 0
-	gaps: number | number[] | undefined = 0
+	override trigger: 'click' | 'contextmenu' | undefined = 'click'
+	override showDelay: number | undefined = 0
+	override hideDelay: number | undefined = 0
+	override gaps: number | number[] | undefined = 0
 	
 	/** Whether shows triangle. Default value is `false`. */
 	triangle: boolean = false
@@ -168,7 +168,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 	/** Whether in editing mode, in which mode you can input text to filter list items. */
 	protected editing: boolean = false
 
-	protected async onPopupOpenedChange(opened: boolean) {
+	protected override async onPopupOpenedChange(opened: boolean) {
 		super.onPopupOpenedChange(opened)
 
 		// End editing after closed popup.
@@ -184,7 +184,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 		}
 	}
 
-	protected onPopupWillAlign() {
+	protected override onPopupWillAlign() {
 		this.syncPopupWidth()
 	}
 
@@ -195,7 +195,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 		}
 	}
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="dropdown select"
 				:class.opened=${this.opened}
@@ -246,7 +246,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 		}
 	}
 
-	protected renderPopup() {
+	protected override renderPopup() {
 		let data = this.getFilteredData()
 
 		return html`

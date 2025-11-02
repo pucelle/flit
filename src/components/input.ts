@@ -26,7 +26,7 @@ interface InputEvents {
  */
 export class Input<E = {}> extends Component<InputEvents & E> {
 
-	static style = css`
+	static override style = css`
 		.input{
 			display: inline-flex;
 			align-items: stretch;
@@ -129,7 +129,7 @@ export class Input<E = {}> extends Component<InputEvents & E> {
 	/** Input field element reference. */
 	protected fieldRef!: HTMLInputElement | HTMLTextAreaElement
 	
-	protected render() {
+	protected override render() {
 		return html`
 			<template class=${this.renderClassName()}
 				:class.focus=${this.focusGot}

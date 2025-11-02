@@ -11,7 +11,7 @@ import {IconDown} from '../icons'
 /** `<Dropdown>` contains trigger element and popup content.  */
 export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptions> {
 
-	static style = css`
+	static override style = css`
 		.dropdown{
 			display: inline-flex;
 
@@ -78,7 +78,7 @@ export class Dropdown<E = {}> extends Component<E> implements Partial<PopupOptio
 		}
 	}
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="dropdown"
 				:class.opened=${this.opened}

@@ -13,7 +13,7 @@ interface SwitchEvents {
 /** `<Switch>` allows users to toggle between on and off states. */
 export class Switch<E = {}> extends Component<E & SwitchEvents> {
 
-	static style = css`
+	static override style = css`
 		.switch{
 			display: inline-block;
 			vertical-align: top;
@@ -62,7 +62,7 @@ export class Switch<E = {}> extends Component<E & SwitchEvents> {
 	/** Whether the switch is in on state. */
 	value: boolean = false
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template tabindex="0"
 				class="switch size-${this.size}"

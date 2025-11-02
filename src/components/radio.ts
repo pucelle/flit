@@ -21,7 +21,7 @@ interface RadioEvents {
 /** `<Radio>` works just like `<input type=radio>`, you can click to check one radio in a radio group. */
 export class Radio<E = {}> extends Component<E & RadioEvents> {
 
-	static style = css`
+	static override style = css`
 		.radio{
 			display: inline-flex;
 			vertical-align: top;
@@ -75,7 +75,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 	 */
 	value: any = null
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 		
 		let group = RadioGroup.fromClosest(this.el.parentElement!, 3)
@@ -86,7 +86,7 @@ export class Radio<E = {}> extends Component<E & RadioEvents> {
 		}
 	}
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template
 				tabindex="0"

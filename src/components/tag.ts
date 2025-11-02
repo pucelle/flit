@@ -14,7 +14,7 @@ interface TagEvents {
 /** `<Tag>` is typically used to categorize content with a text label. */
 export class Tag<E = {}> extends Component<E & TagEvents> {
 
-	static style = css`
+	static override style = css`
 		.tag{
 			display: inline-flex;
 			border: 1px solid var(--border-color);
@@ -64,7 +64,7 @@ export class Tag<E = {}> extends Component<E & TagEvents> {
 	 */
 	closable: boolean = false
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="tag">
 				<span class="tag-label"><slot /></span>

@@ -21,7 +21,7 @@ export interface InputEditorEvents {
 /** Single line text editor, align with an editing element. */
 export class InputEditor extends Popup<InputEditorEvents> {
 
-	static style = css`
+	static override style = css`
 		.input-editor{
 			position: fixed;
 			border: 1px solid var(--border-color);
@@ -67,7 +67,7 @@ export class InputEditor extends Popup<InputEditorEvents> {
 	protected endedInputting: boolean = false
 	protected inputStyle: Partial<CSSStyleDeclaration> = {}
 
-	protected render() {
+	protected override render() {
 		let text = this.value ?? this.editing.textContent
 
 		return html`
@@ -100,21 +100,21 @@ export class InputEditor extends Popup<InputEditorEvents> {
 		}
 	}
 
-	protected async onReady() {
+	protected override async onReady() {
 		super.onReady()
 	
 		// Select all after ready.
 		this.inputRef.select()
 	}
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 		this.updatePosition()
 		RectWatcher.watch(this.editing, this.updatePosition, this)
 		DOMEvents.on(document, 'mousedown', this.onDOMMouseDown, this)
 	}
 
-	protected onWillDisconnect() {
+	protected override onWillDisconnect() {
 		super.onWillDisconnect()
 		RectWatcher.unwatch(this.editing, this.updatePosition, this)
 		DOMEvents.off(document, 'mousedown', this.onDOMMouseDown, this)

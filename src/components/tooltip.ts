@@ -18,7 +18,7 @@ export type TooltipType = 'default' | 'prompt' | 'error'
 /** `<Tooltip>` displays a short text or html content beside it's trigger element. */
 export class Tooltip<E = {}> extends Popup<E> {
 
-	static style = css`
+	static override style = css`
 		.tooltip{
 			display: flex;
 			max-width: 16em;
@@ -90,7 +90,7 @@ export class Tooltip<E = {}> extends Popup<E> {
 	 */
 	type: TooltipType = 'default'
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="popup tooltip size-${this.size} tooltip-type-${this.type}"
 				:transition.immediate=${fade()}

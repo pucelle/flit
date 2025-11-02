@@ -6,7 +6,7 @@ import {css, html} from '@pucelle/lupos.js'
 /** `<Resizer>` will resize it's parent by dragging it. */
 export class ParentalResizer<E = {}> extends Resizer<E> {
 
-	static style = css`
+	static override style = css`
 		.parental-resizer{
 			position: absolute;
 			z-index: 100;
@@ -51,13 +51,13 @@ export class ParentalResizer<E = {}> extends Resizer<E> {
 
 	protected startParentSize: SizeLike | null = null
 
-	protected onCreated(this: ParentalResizer) {
+	protected override onCreated(this: ParentalResizer) {
 		super.onCreated()
 		this.on('resize-start', this.onResizeStart, this)
 		this.on('resize-move', this.onResizeMoves, this)
 	}
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="resizer parental-resizer resizer-${this.position}"
 				@mousedown=${this.onMouseDown}

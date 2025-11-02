@@ -8,7 +8,7 @@ import {List, ListItem} from './list'
  */
 export class Navigation<T> extends List<T> {
 
-	static style = css`
+	static override style = css`
 		.navigation{
 			padding: 0.6em 1.2em;
 			border-bottom: none;
@@ -41,7 +41,7 @@ export class Navigation<T> extends List<T> {
 	/** Navigation title. */
 	title: string = ''
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="list navigation">
 				<lu:if ${this.title}>
@@ -54,7 +54,7 @@ export class Navigation<T> extends List<T> {
 		`
 	}
 
-	protected renderSelectedIcon(_item: ListItem<T>) {
+	protected override renderSelectedIcon(_item: ListItem<T>) {
 		return null
 	}
 }

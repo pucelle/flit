@@ -6,7 +6,7 @@ import {parseSVGCode} from '../icons'
 /** `<Icon>` renders a specified svg icon. */
 export class Icon<Events = any> extends Component<Events> {
 
-	static style = css`
+	static override style = css`
 		.icon{
 			display: inline-flex;
 			stroke: currentColor;
@@ -30,7 +30,7 @@ export class Icon<Events = any> extends Component<Events> {
 	 */
 	icon: string = ''
 	
-	protected render() {
+	protected override render() {
 		let parsed = parseSVGCode(this.icon)
 		if (!parsed) {
 			return null

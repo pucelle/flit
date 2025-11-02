@@ -20,7 +20,7 @@ interface SliderEvents {
 /** `<Slider>` provides a range selection control that allows value selection through drag interaction. */
 export class Slider<E = {}> extends Component<E & SliderEvents> {
 
-	static style = css`
+	static override style = css`
 		.slider{
 			--groove-size: 1px;
 			--ball-size: 15px;
@@ -154,7 +154,7 @@ export class Slider<E = {}> extends Component<E & SliderEvents> {
 	/** Whether in dragging ball. */
 	protected dragging: boolean = false
 
-	protected render() {
+	protected override render() {
 		let tooltipOptions: Partial<TooltipOptions> = {
 			position: this.vertical ? 'r' : 't',
 			alignTo: '.slider-ball',

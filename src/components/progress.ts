@@ -5,7 +5,7 @@ import {tooltip, TooltipOptions} from '../bindings'
 /** `<Progress>` displays a progress indicator in percentage, just like `<input type=progress>`. */
 export class Progress<E = {}> extends Component<E> {
 
-	static style = css`
+	static override style = css`
 		.progress{
 			display: inline-flex;
 			align-items: center;
@@ -46,7 +46,7 @@ export class Progress<E = {}> extends Component<E> {
 	 */
 	decimalCount: number | null = null
 
-	protected render() {
+	protected override render() {
 		let tooltipOptions: Partial<TooltipOptions> = {
 			position: 'bc-tr',
 			alignTo: '.progress-progress',

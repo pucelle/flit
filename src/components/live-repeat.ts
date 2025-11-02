@@ -96,7 +96,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	/** Apply `scrollSize` property to renderer. */
 	@effect
 	protected applyScrollSize() {
-		this.renderer!.setScrollSize(this.scrollSize)
+		this.renderer!.setDirectScrollSize(this.scrollSize)
 	}
 
 	/** Apply `guessedItemSize` property to renderer. */
@@ -125,7 +125,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	/** Update after data change. */
-	update() {
+	override update() {
 
 		// `this.$needsUpdate` here is required.
 		// component map disconnect and connect soon, so will be enqueued for multiple times.
@@ -148,7 +148,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		super.update()
 	}
 
-	protected render() {
+	protected override render() {
 		return html`<lu:for ${this.liveData}>${this.renderLiveFn.bind(this)}</lu:for>`
 	}
 
@@ -157,7 +157,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.renderFn(item, this.startIndex + index)
 	}
 
-	beforeDisconnectCallback(param: PartCallbackParameterMask): void {
+	override beforeDisconnectCallback(param: PartCallbackParameterMask): void {
 		super.beforeDisconnectCallback(param)
 
 		// If remove current component from parent, remove placeholder also.
@@ -170,7 +170,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		}
 	}
 
-	onConnected(this: LiveRepeat<any, {}>) {
+	protected override onConnected(this: LiveRepeat<any, {}>) {
 		super.onConnected()
 
 		this.initPlaceholder()
@@ -179,7 +179,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.connect()
 	}
 	
-	protected onWillDisconnect() {
+	protected override onWillDisconnect() {
 		super.onWillDisconnect()
 		this.renderer!.disconnect()
 	}
@@ -238,12 +238,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * e.g. it out of partial rendering range because of away from viewport much.
 	 * Would can't get right index result.
 	 */
-	getIndexAtOffset(offset: number): LowerIndexWithin {
+	override getIndexAtOffset(offset: number): LowerIndexWithin {
 		let indexAndWithin = locateVisibleIndexAtOffset(
 			this.scroller,
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.doa,
-			this.renderer!.measurement.latestSliderProperties.startPosition,
+			this.renderer!.measurement.sliderProperties.startPosition,
 			offset
 		)
 
@@ -252,11 +252,11 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return indexAndWithin
 	}
 
-	getStartVisibleIndex(minimumRatio: number = 0): number {
+	override getStartVisibleIndex(minimumRatio: number = 0): number {
 		return this.renderer!.locateVisibleIndex('start', minimumRatio)
 	}
 
-	getEndVisibleIndex(minimumRatio: number = 0): number {
+	override getEndVisibleIndex(minimumRatio: number = 0): number {
 		return this.renderer!.locateVisibleIndex('end', minimumRatio)
 	}
 
@@ -266,11 +266,11 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * You can safely call this before update complete, no additional rendering will cost.
 	 */
 	setStartVisibleIndex(startIndex: number) {
-		this.renderer!.setRenderIndices(startIndex)
+		this.renderer!.setRenderIndices('start', startIndex)
 		this.willUpdate()
 	}
 
-	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
+	override async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		// No need to worry about coverage, set scroll position cause scroll event emitted.
 
 		if (!this.isIndexRendered(index)) {
@@ -301,7 +301,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			}
 		}
 
-		this.renderer!.setRenderIndices(startIndex, endIndex, alignDirection, true)
+		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
 		this.willUpdate()
 
 		// Wait for two loops, may check after first rendering and re-render.
@@ -309,7 +309,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		await untilUpdateComplete()
 	}
 
-	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
+	override async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		if (!this.isIndexRendered(index)) {
 			let alignDirection: 'start' | 'end' = index >= this.startIndex ? 'start' : 'end'
 			await this.toRenderItemAtIndex(index, alignDirection)

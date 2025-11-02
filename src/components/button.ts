@@ -5,7 +5,7 @@ import {ThemeSize} from '../style'
 /** `<Button>` is nearly equals `<button>` element. */
 export class Button<E = {}> extends Component<E> {
 
-	static style = css`	
+	static override style = css`	
 		.button{
 			display: inline-flex;
 			justify-content: center;
@@ -101,7 +101,7 @@ export class Button<E = {}> extends Component<E> {
 	/** Whether be flat style, has no border. */
 	flat: boolean = false
 
-	protected render(): TemplateResult {
+	protected override render(): TemplateResult {
 		return html`
 			<template
 				class="button size-${this.size}"

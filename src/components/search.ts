@@ -18,7 +18,7 @@ interface SearchEvents {
  */
 export class Search<E = {}> extends Component<SearchEvents & E> {
 
-	static style = css`
+	static override style = css`
 		.search{
 			display: inline-flex;
 			align-items: center;
@@ -88,7 +88,7 @@ export class Search<E = {}> extends Component<SearchEvents & E> {
 	/** When in composition inputting. */
 	protected inCompositionInputting: boolean = false
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="search size-${this.size}">
 				<Icon class="search-icon" .icon=${IconSearch} .size="inherit" />
@@ -110,7 +110,7 @@ export class Search<E = {}> extends Component<SearchEvents & E> {
 		`
 	}
 
-	protected onReady() {
+	protected override onReady() {
 		super.onReady()
 		this.bindInputEvents(true)
 	}

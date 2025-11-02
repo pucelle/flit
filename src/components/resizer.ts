@@ -26,7 +26,7 @@ export type ResizerPosition = 'top' | 'right' | 'bottom' | 'left'
  */
 export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 	
-	static style = css`
+	static override style = css`
 		.resizer{
 			flex: none;
 			position: relative;
@@ -80,7 +80,7 @@ export class Resizer<E = {}> extends Component<E & ResizerEvents> {
 	/** Which position should align resizer relative to it's parent. */
 	position: ResizerPosition = 'right'
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="resizer resizer-${this.position}"
 				@mousedown=${this.onMouseDown}

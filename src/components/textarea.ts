@@ -8,7 +8,7 @@ import {Input} from './input'
  */
 export class Textarea extends Input {
 
-	static style = css`
+	static override style = css`
 		.textarea{
 			height: auto;
 			padding: 0.4em 0.6em;
@@ -32,11 +32,11 @@ export class Textarea extends Input {
 	/** Textarea columns to control width. */
 	cols: number | null = null
 
-	protected renderClassName() {
+	protected override renderClassName() {
 		return 'input textarea'
 	}
 
-	protected renderField() {
+	protected override renderField() {
 		return html`
 			<textarea class="input-field"
 				placeholder=${this.placeholder}
@@ -55,11 +55,11 @@ export class Textarea extends Input {
 		`
 	}
 
-	protected onFocus() {
+	protected override onFocus() {
 		this.focusGot = true
 	}
 
-	protected onBlur() {
+	protected override onBlur() {
 		this.focusGot = false
 		this.touched = true
 		this.validate()

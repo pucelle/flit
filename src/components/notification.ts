@@ -63,7 +63,7 @@ interface NotificationItem extends NotificationOptions {
 /** `<Notification>` displays a notification list of notification messages. */
 export class Notification<E = {}> extends Component<E> {
 
-	static style = css`
+	static override style = css`
 		.notification{
 			position: fixed;
 			right: 1em;
@@ -201,7 +201,7 @@ export class Notification<E = {}> extends Component<E> {
 	protected seed: number = 1
 	protected items: NotificationItem[] = []
 
-	protected render() {
+	protected override render() {
 		return html`
 		<template class="notification">
 			<lu:for ${this.items}>${(item: NotificationItem) => html`
@@ -253,7 +253,7 @@ export class Notification<E = {}> extends Component<E> {
 		}
 	}
 
-	protected onUpdated() {
+	protected override onUpdated() {
 		super.onUpdated()
 
 		// If a wide item disappear, all other narrow items become narrower.

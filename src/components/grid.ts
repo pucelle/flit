@@ -8,7 +8,7 @@ import {Component, css, html} from '@pucelle/lupos.js'
  */
 export class Row extends Component {
 
-	static style = css`
+	static override style = css`
 		.row{
 			display: flex;
 			flex-wrap: wrap;
@@ -27,7 +27,7 @@ export class Row extends Component {
 	/** All columns. */
 	readonly cols: Col[] = []
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="row" 
 				:style.justify-content="flex-${this.justify}"
@@ -68,7 +68,7 @@ export class Row extends Component {
 /** `<Col>` is used within a <Row> to create grid layouts. */
 export class Col extends Component {
 
-	static style = css`
+	static override style = css`
 		.col{}
 	`
 
@@ -78,7 +78,7 @@ export class Col extends Component {
 	offset: number = 0
 	row!: Row
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 
 		let row = Row.from(this.el.parentElement!)
@@ -90,7 +90,7 @@ export class Col extends Component {
 		this.row = row
 	}
 
-	protected render() {
+	protected override render() {
 		let marginLeft = this.getMarginLeft()
 		let width = this.getWidth()
 

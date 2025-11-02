@@ -39,7 +39,7 @@ type RouterChangeType = 'redirect' | 'goto'
 export class Router<E = {}> extends Component<RouterEvents & E> {
 
 	/** `Router.fromClosest` can locate original component when within popup content. */
-	static fromClosest<C extends {new(...args: any): any}>(this: C, element: Element, searchDepth: number = 50): InstanceType<C> | null {
+	static override fromClosest<C extends {new(...args: any): any}>(this: C, element: Element, searchDepth: number = 50): InstanceType<C> | null {
 		let parent: Element | null = element
 		let depth = 0
 
@@ -84,7 +84,7 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 	/** To indicate latest state index. */
 	protected latestStateIndex: number = 0
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 
 		if (!this.path) {
@@ -101,7 +101,7 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 		DOMEvents.on(window, 'popstate', this.onWindowPopState as (e: Event) => void, this)
 	}
 
-	protected onWillDisconnect() {
+	protected override onWillDisconnect() {
 		super.onWillDisconnect()
 		DOMEvents.off(window, 'popstate', this.onWindowPopState as (e: Event) => void, this)
 	}

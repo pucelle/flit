@@ -5,7 +5,7 @@ import {Popup} from './popup'
 /** `<Contextmenu>` to render a simple context menu with a `<List>` or `<DropList>` inside. */
 export class ContextMenu<E = {}> extends Popup<E> {
 
-	static style = css`
+	static override style = css`
 		.contextmenu{
 			position: fixed;
 			border-radius: 0;
@@ -21,9 +21,9 @@ export class ContextMenu<E = {}> extends Popup<E> {
 	`
 
 	
-	readonly triangle: boolean = false
+	override readonly triangle: boolean = false
 
-	protected render(): RenderResult {
+	protected override render(): RenderResult {
 		return html`
 			<template class="popup contextmenu" tabindex="0"
 				:transition.immediate=${fade()}

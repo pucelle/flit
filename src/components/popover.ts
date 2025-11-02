@@ -13,7 +13,7 @@ import {IconClose} from '../icons'
  */
 export class Popover<E = {}> extends Popup<E> {
 
-	static style = css`
+	static override style = css`
 		.popover{
 			padding: 0.6em 1em;
 			min-width: 15em;
@@ -86,7 +86,7 @@ export class Popover<E = {}> extends Popup<E> {
 	/** Whether displays a close icon to quickly close current popover. */
 	closable: boolean = false
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="popup popover size-${this.size}"
 				:transition.immediate=${fade()}

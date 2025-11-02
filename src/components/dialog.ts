@@ -84,7 +84,7 @@ interface DialogItem {
  */
 export class Dialog<E = {}> extends Component<E> {
 	
-	static style = css`
+	static override style = css`
 		.dialog{
 			z-index: 1000;
 			width: 30em;
@@ -191,7 +191,7 @@ export class Dialog<E = {}> extends Component<E> {
 	/** Whether dialog opened. */
 	protected opened: boolean = false
 
-	protected render(): RenderResult {
+	protected override render(): RenderResult {
 		let options = this.options
 		if (!options) {
 			return null
@@ -297,7 +297,7 @@ export class Dialog<E = {}> extends Component<E> {
 		this.maskEl.remove()
 	}
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 		
 		untilUpdateComplete().then(() => {
@@ -309,12 +309,12 @@ export class Dialog<E = {}> extends Component<E> {
 		DOMEvents.on(window, 'resize', this.onWindowResize, this)
 	}
 
-	protected onWillDisconnect() {
+	protected override onWillDisconnect() {
 		super.onWillDisconnect()
 		DOMEvents.off(window, 'resize', this.onWindowResize, this)
 	}
 
-	protected onUpdated() {
+	protected override onUpdated() {
 		this.toCenter()
 	}
 

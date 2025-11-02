@@ -4,7 +4,7 @@ import {Component, css, html, TemplateResult} from '@pucelle/lupos.js'
 /** `<ButtonGroup>` can contain several `<Button>` elements as a button group. */
 export class ButtonGroup<E = {}> extends Component<E> {
 
-	static style = css`
+	static override style = css`
 		.button-group{
 			display: inline-flex;
 			vertical-align: top;
@@ -34,7 +34,7 @@ export class ButtonGroup<E = {}> extends Component<E> {
 		}
 	`
 
-	protected render(): TemplateResult {
+	protected override render(): TemplateResult {
 		return html`
 			<template class="button-group" />
 		`

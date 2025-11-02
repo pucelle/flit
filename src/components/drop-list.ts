@@ -9,7 +9,7 @@ import {IconRight} from '../icons'
 /** `<DropList>` renders sub list as popup content. */
 export class DropList<T> extends List<T> {
 
-	static style = css`
+	static override style = css`
 		.drop-list{
 			padding: 2px 0.8em;
 			border-bottom: none;
@@ -35,7 +35,7 @@ export class DropList<T> extends List<T> {
 	/** Additional class name which will apply to popup subsection. */
 	subsectionClassName: string = ''
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="list drop-list">
 				${this.renderItems(this.data)}
@@ -43,7 +43,7 @@ export class DropList<T> extends List<T> {
 		`
 	}
 
-	protected renderItem(item: ListItem<T>): RenderResult {
+	protected override renderItem(item: ListItem<T>): RenderResult {
 		let children = item.children
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)

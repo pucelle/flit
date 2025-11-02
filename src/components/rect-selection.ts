@@ -36,7 +36,7 @@ export interface RectSelectionEvents {
  */
 export class RectSelection extends Component<RectSelectionEvents> {
 
-	static style = css`
+	static override style = css`
 		.rect-selection{
 			position: absolute;
 			border: 1px solid var(--primary-color);
@@ -92,7 +92,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 	/** Whether started selecting. */
 	protected inSelecting: boolean = false
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 		
 		this.scroller = this.el.parentElement
@@ -285,7 +285,7 @@ export class RectSelection extends Component<RectSelectionEvents> {
 		}
 	}
 
-	protected render(): RenderResult {
+	protected override render(): RenderResult {
 		let style: Record<string, string> = {}
 
 		if (this.inSelecting) {

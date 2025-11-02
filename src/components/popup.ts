@@ -9,7 +9,7 @@ import {Triangle} from './triangle'
  */
 export class Popup<E = {}> extends Component<E> {
 
-	static style = css`
+	static override style = css`
 		.popup{
 
 			/* Recently, until chrome 133, fixed layout with anchor positioning is not work when page can scroll. */
@@ -58,7 +58,7 @@ export class Popup<E = {}> extends Component<E> {
 		}
 	}
 
-	protected render(): RenderResult {
+	protected override render(): RenderResult {
 		return html`
 			<template class="popup" tabindex="0"
 				:transition.immediate=${fade()}

@@ -18,7 +18,7 @@ interface CheckboxEvents {
  */
 export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 
-	static style = css`
+	static override style = css`
 		.checkbox{
 			display: inline-flex;
 			vertical-align: top;
@@ -72,7 +72,7 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 	 */
 	value: T | null = null
 
-	protected onConnected() {
+	protected override onConnected() {
 		super.onConnected()
 
 		let group = CheckboxGroup.fromClosest(this.el.parentElement!)
@@ -83,7 +83,7 @@ export class Checkbox<T = any, E = {}> extends Component<E & CheckboxEvents> {
 		}
 	}
 
-	protected render() {
+	protected override render() {
 		let icon = this.checked
 			? IconCheckboxChecked
 			: this.indeterminate

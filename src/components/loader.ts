@@ -4,7 +4,7 @@ import {Component, css, html} from '@pucelle/lupos.js'
 /** `<Loader>` displays a loading animation to indicate resource is loading. */
 export class Loader<E = {}> extends Component<E> {
 
-	static style = css`
+	static override style = css`
 		.loader{
 			display: inline-block;
 			vertical-align: top;
@@ -66,7 +66,7 @@ export class Loader<E = {}> extends Component<E> {
 
 	protected snakeEl!: SVGPathElement
 
-	protected render() {
+	protected override render() {
 		let size = this.size
 		let strokeWidth = this.strokeSize
 		let halfWidth = strokeWidth / 2
@@ -87,7 +87,7 @@ export class Loader<E = {}> extends Component<E> {
 		`
 	}
 
-	protected onReady() {
+	protected override onReady() {
 		let size = this.size
 		let strokeWidth = this.strokeSize
 
