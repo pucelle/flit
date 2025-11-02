@@ -4,7 +4,7 @@ import {Component, html, css} from '@pucelle/lupos.js'
 /** `<Link>` can include `<a>`. */
 export class Link<Events = any> extends Component<Events> {
 
-	static style = css`
+	static override style = css`
 		.link.primary{
 			a{
 				color: var(--primary-color);
@@ -15,7 +15,7 @@ export class Link<Events = any> extends Component<Events> {
 	/** Whether be primary link. */
 	primary: boolean = false
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="link" :class.primary=${this.primary} />
 		`

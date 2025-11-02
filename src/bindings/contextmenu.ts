@@ -21,7 +21,7 @@ const DefaultContextMenuOptions: Partial<PopupOptions> = {
  */
 export class contextmenu extends popup {
 
-	update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
+	override update(renderer: RenderResultRenderer, options: Partial<PopupOptions> = {}) {
 		options = {...DefaultContextMenuOptions, ...options}
 		super.update(renderer, options)
 	}

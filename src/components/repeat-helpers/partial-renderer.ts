@@ -1,0 +1,624 @@
+import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, IntersectionWatcher} from '@pucelle/ff'
+import {locateVisibleIndex} from './index-locator'
+import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
+import {PartialMeasurement} from './partial-measurement'
+import {untilFirstPaintCompleted} from '@pucelle/lupos'
+
+
+interface NeedToApply {
+
+	/** 
+	 * Latest `startIndex` property has changed and need to be applied.
+	 * Soon need to re-render according to the new start index.
+	 * Note it was initialized as `0`.
+	 * When `alignAt=start`, it must exist.
+	 */
+	startIndex: number | undefined
+
+	/** Latest `alignAt` property has changed and need to be applied. */
+	alignAt: 'start' | 'end'
+
+	/** 
+	 * Latest `endIndex` property has changed and need to be applied.
+	 * When `alignAt=end`, it must exist.
+	 */
+	endIndex: number | undefined
+
+	/** 
+	 * If is `true`, will try to persist current scroll position,
+	 * by adjusting `startIndex` or `endIndex`.
+	 */
+	tryPersistContinuous: boolean
+}
+
+
+/**
+ * What a visible renderer do:
+ *
+ * When initialize or update from applying start index:
+ * - Update indices.
+ * - Update placeholder height and scroll position.
+ * - Cause scroll event dispatched
+ * 
+ * When scrolling up or down / left or right:
+ * - Validate placeholder intersection ratio and adjust `startIndex`
+ *   or `endIndex` a little if not fully covered.
+ */
+export class PartialRenderer {
+
+	readonly scroller: HTMLElement
+	readonly slider: HTMLElement
+	readonly repeat: HTMLElement
+	readonly frontPlaceholder: HTMLDivElement | null
+	readonly backPlaceholder: HTMLDivElement | null
+	readonly updateCallback: () => void
+
+	/** Do rendered items measurement. */
+	readonly measurement: PartialMeasurement
+
+	/** Help to get and set based on overflow direction. */
+	readonly doa: DirectionalOverflowAccessor
+
+	/** How many pixels to reserve to reduce update frequency when scrolling. */
+	reservedPixels: number = 200
+
+	/** Total data count. */
+	dataCount: number = 0
+
+	/** 
+	 * Latest align direction.
+	 * If `start`, `sliderStartPosition` is prepared immediately, and `sliderEndPosition` is prepared after rendered.
+	 * Otherwise `sliderEndPosition` is prepared immediately, and `sliderStartPosition` is prepared after rendered.
+	 * Readonly outside.
+	 */
+	alignAt: 'start' | 'end' = 'start'
+
+	/** 
+	 * The start index of the first item in the whole data.
+	 * Readonly outside.
+	 */
+	startIndex: number = 0
+
+	/**
+	 * The end slicing index of the live data.
+	 * Readonly outside.
+	 */
+	endIndex: number = 0
+
+	/** Enqueue rendering. */
+	protected renderQueue: AsyncTaskQueue = new AsyncTaskQueue()
+
+	/** Indices and align direction that need to apply. */
+	protected needToApply: NeedToApply | null = {
+		startIndex: 0,
+		endIndex: undefined,
+		alignAt: 'start',
+		tryPersistContinuous: false,
+	}
+
+	constructor(
+		scroller: HTMLElement,
+		slider: HTMLElement,
+		repeat: HTMLElement,
+		frontPlaceholder: HTMLDivElement | null,
+		backPlaceholder: HTMLDivElement | null,
+		doa: DirectionalOverflowAccessor,
+		updateCallback: () => void
+	) {
+		this.scroller = scroller
+		this.slider = slider
+		this.repeat = repeat
+		this.frontPlaceholder = frontPlaceholder
+		this.backPlaceholder = backPlaceholder
+		this.doa = doa
+		this.updateCallback = updateCallback
+		this.measurement = this.initMeasurement()
+	}
+
+	protected initMeasurement() {
+		return new PartialMeasurement(this.scroller, this.slider, this.doa)
+	}
+
+	/** 
+	 * Guess an item size for first-time paint,
+	 * and avoid it checking for item-size and render twice.
+	 */
+	setGuessedItemSize(size: number) {
+		this.measurement.setGuessedItemSize(size)
+	}
+
+	/** 
+	 * Set start and end index of live data range,
+	 * and align direction to indicate how render part align with scroll viewport.
+	 * 
+	 * `startIndex` and `endIndex` may be adjusted, but would include original index range.
+	 * 
+	 * If `tryPersistContinuous` is true, will try to adjust render indices a little
+	 * to persist continuous rendering result, but still ensure to render required elements.
+	 */
+	setRenderIndices(
+		alignAt: 'start' | 'end',
+		startIndex: number | undefined,
+		endIndex: number | undefined = undefined,
+		tryPersistContinuous: boolean = false
+	) {
+		this.needToApply = {
+			alignAt,
+			startIndex,
+			endIndex,
+			tryPersistContinuous,
+		}
+	}
+
+	/** 
+	 * Locate start or after end index at which the item is visible in viewport.
+	 * Note it's returned index can be `0~list.length`.
+	 * Must after update complete.
+	 */
+	locateVisibleIndex(direction: 'start' | 'end', minimumRatio: number = 0): number {
+		let children: ArrayLike<Element> = this.repeat.children
+
+		let visibleIndex = locateVisibleIndex(
+			children as ArrayLike<HTMLElement>,
+			this.slider,
+			this.scroller,
+			this.doa,
+			this.measurement.sliderProperties.startOffset,
+			direction,
+			minimumRatio
+		)
+
+		return visibleIndex + this.startIndex
+	}
+
+	/** After component that use this renderer get connected. */
+	async connect() {
+		if (this.frontPlaceholder) {
+			IntersectionWatcher.watch(this.frontPlaceholder, this.onFrontPlaceholderIntersectionChange, this)
+		}
+
+		if (this.backPlaceholder) {
+			IntersectionWatcher.watch(this.backPlaceholder, this.onBackPlaceholderIntersectionChange, this)
+		}
+	}
+	
+	/** After component that use this renderer will get disconnected. */
+	async disconnect() {
+		if (this.frontPlaceholder) {
+			IntersectionWatcher.unwatch(this.frontPlaceholder, this.onFrontPlaceholderIntersectionChange, this)
+		}
+
+		if (this.backPlaceholder) {
+			IntersectionWatcher.unwatch(this.backPlaceholder, this.onBackPlaceholderIntersectionChange, this)
+		}
+	}
+
+	/** After scroll and front placeholder intersection ratio changed. */
+	protected onFrontPlaceholderIntersectionChange(entry: IntersectionObserverEntry) {
+		let ratio = entry.intersectionRatio
+		if (ratio <= 0) {
+			return
+		}
+
+		this.checkCoverage()
+	}
+
+	/** After scroll and back placeholder intersection ratio changed. */
+	protected onBackPlaceholderIntersectionChange(entry: IntersectionObserverEntry) {
+		let ratio = entry.intersectionRatio
+		if (ratio <= 0) {
+			return
+		}
+
+		this.checkCoverage()
+	}
+
+	/** Calls `updateCallback`. */
+	protected async updateRendering() {
+		await barrierDOMWriting()
+		this.updateCallback()
+	}
+
+	/** Update from applying start index or just update data. */
+	async update() {
+
+		// Don't want to force re-layout before first time paint.
+		await untilFirstPaintCompleted()
+
+		// Can only run only one updating each time.
+		await this.renderQueue.enqueue(() => this.doNormalUpdate())
+	}
+
+	/** Update after index applied, or data updated. */
+	protected async doNormalUpdate() {
+		let hasMeasuredBefore = this.measurement.hasMeasured()
+		let needToApply = this.needToApply
+
+		// Adjust scroll position by specified indices.
+		if (needToApply) {
+
+			// `continuouslyUpdated` means did `measureAfterRendered`.
+			await this.updateByApplying(needToApply)
+			this.needToApply = null
+		}
+
+		// Data changed, try persist start index and scroll position.
+		else {
+			await this.updateWithStartIndexPersist()
+		}
+
+		// May not measured yet.
+		if (hasMeasuredBefore) {
+			await this.updateBackPlaceholderSize()
+		}
+
+		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
+
+		// If newly measured, and render from a non-zero index, re-render after measured.
+		// Otherwise should at least update placeholder size.
+		if (!hasMeasuredBefore) {
+			if (needToApply?.startIndex) {
+				await this.updateByApplying(needToApply)
+				await this.updateBackPlaceholderSize()
+				await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
+			}
+			else {
+				await this.updateBackPlaceholderSize()
+			}
+		}
+
+		// If has not measured, no need to check, will soon update again by coverage checking.
+		else {
+			await this.checkEdgeCasesAfterMeasured()
+		}
+	}
+
+	/** Update when start index specified and need to apply. */
+	protected async updateByApplying(needToApply: NeedToApply) {
+		let {startIndex, endIndex, alignAt, tryPersistContinuous} = needToApply
+		let hasMeasured = this.measurement.hasMeasured()
+		let renderCount = this.endIndex - this.startIndex
+		let canPersistContinuous = false
+
+		// Adjust index and persist continuous.
+		if (tryPersistContinuous && renderCount > 0) {
+			await barrierDOMReading()
+	
+			let startVisibleIndex = this.locateVisibleIndex('start')
+			let endVisibleIndex = this.locateVisibleIndex('end')
+
+			if (alignAt === 'start') {
+
+				// Try persist visible part.
+				let renderCountToPersist = Math.max(endVisibleIndex, startIndex! + 1) - Math.min(startVisibleIndex, startIndex!)
+				if (renderCountToPersist <= renderCount) {
+					startIndex = Math.min(startVisibleIndex, startIndex!)
+					endIndex = startIndex + renderCount
+					canPersistContinuous = true
+				}
+
+				// Try keep most intersection.
+				else if (startIndex! > endVisibleIndex) {
+					endIndex = Math.max(endVisibleIndex, startIndex! + 1)
+					startIndex = endIndex - renderCount
+				}
+			}
+			else {
+
+				// Try persist visible part.
+				let renderCountToPersist = Math.max(endVisibleIndex, endIndex!) - Math.min(startVisibleIndex, endIndex!)
+				if (renderCountToPersist <= renderCount) {
+					endIndex = Math.max(endVisibleIndex, endIndex!)
+					startIndex = endIndex - renderCount
+					canPersistContinuous = true
+				}
+
+				// Try keep most intersection.
+				else if (endIndex! < startVisibleIndex) {
+					startIndex = endIndex! - 1
+					endIndex = startIndex + renderCount
+				}
+			}
+		}
+
+		// Update continuously.
+		if (canPersistContinuous) {
+			await this.updateContinuously(alignAt, startIndex!, endIndex)
+		}
+
+		// Reset scroll position, but will align item with index viewport edge.
+		else {
+			this.setIndices(startIndex, endIndex)
+			this.alignAt = alignAt ?? 'start'
+
+			await this.updateRendering()
+
+			await this.resetPositions(
+				hasMeasured,
+				tryPersistContinuous ? undefined : startIndex,
+				tryPersistContinuous ? undefined : endIndex
+			)
+		}
+	}
+
+	/** Update data normally, and try to keep indices and scroll position. */
+	protected async updateWithStartIndexPersist() {
+		let canPersist = true
+
+		// Can't persist old index and position.
+		if (this.endIndex > this.dataCount) {
+			canPersist = false
+		}
+		
+		// Required, may data count increase or decrease.
+		this.setIndices(this.startIndex)
+		this.alignAt = 'start'
+
+		await this.updateRendering()
+
+		// Reset scroll position when can't persist continuous.
+		if (!canPersist) {
+			await this.resetPositions(true)
+		}
+	}
+
+	/** Update start and end indices before rendering. */
+	protected setIndices(newStartIndex: number | undefined, newEndIndex: number | undefined = undefined) {
+		let currentRenderCount = this.endIndex - this.startIndex
+		let renderCount = this.measurement.getSafeRenderCount(this.reservedPixels, currentRenderCount)
+
+		if (newStartIndex === undefined) {
+			newStartIndex = newEndIndex! - renderCount
+		}
+
+		newStartIndex = Math.min(newStartIndex, this.dataCount - renderCount)
+		newStartIndex = Math.max(0, newStartIndex)
+
+		newEndIndex = newEndIndex ?? newStartIndex + renderCount
+		newEndIndex = Math.min(newEndIndex, this.dataCount)
+
+		this.startIndex = newStartIndex
+		this.endIndex = newEndIndex
+	}
+
+	/** 
+	 * Reset slider and scroll position, make first item appear in the start edge.
+	 * `alignAt` must have been updated.
+	 * 
+	 * `resetScroll`: specifies as `false` if current indices is not calculated from
+	 *   current scroll offset, Then will adjust scroll offset and align to `alignToStartIndex`.
+	 */
+	protected async resetPositions(
+		resetScroll: boolean,
+		alignToStartIndex: number = this.startIndex,
+		alignToEndIndex: number = this.endIndex
+	) {
+		let frontSize = this.measurement.getFrontPlaceholderSize(this.startIndex)
+		await this.setPosition(frontSize)
+
+		// If choose to break, you will find scroll thumb jump when scroll fast
+		// and item size is not stable.
+		// this.measurement.breakContinuousRenderRange()
+
+		// Scroll to align to specified index.
+		if (resetScroll) {
+			alignToStartIndex = Math.min(Math.max(alignToStartIndex, this.startIndex), this.endIndex - 1)
+			alignToEndIndex = Math.max(Math.min(alignToEndIndex, this.endIndex), this.startIndex)
+
+			let scrollPosition = this.measurement.calcScrollPosition(alignToStartIndex, this.alignAt)
+			await barrierDOMWriting()
+			this.doa.setScrolled(this.scroller, scrollPosition)
+		}
+	}
+
+	/** Update position of rendered result after setting new indices. */
+	protected async setPosition(position: number) {
+		this.measurement.setFrontPlaceholderSize(position, this.startIndex)
+
+		if (this.frontPlaceholder) {
+			await barrierDOMWriting()
+			this.doa.setSize(this.frontPlaceholder, this.measurement.placeholderProperties.frontSize)
+		}
+	}
+
+	/** Update size of placeholder progressive before next time rendering. */
+	protected async updateBackPlaceholderSize() {
+		if (this.backPlaceholder) {
+			let backSize = this.measurement.getBackPlaceholderSize(this.endIndex, this.dataCount)
+			this.setBackPlaceholderSize(backSize)
+		}
+	}
+
+	/** Set rest placeholder size. */
+	protected async setBackPlaceholderSize(size: number) {
+		this.measurement.setBackPlaceholderSize(size, this.endIndex, this.dataCount)
+
+		if (this.backPlaceholder) {
+			await barrierDOMWriting()
+			this.doa.setSize(this.backPlaceholder, this.measurement.placeholderProperties.backSize)
+		}
+	}
+
+	/** After update complete, and after `measureAfterRendered`, do more check for edge cases. */
+	protected async checkEdgeCasesAfterMeasured() {}
+
+	/** 
+	 * Check whether rendered result can cover scroll viewport,
+	 * and update if can't, and will also persist content continuous if possible.
+	 */
+	protected async checkCoverage() {
+
+		// Reach both start and end edge.
+		if (this.startIndex === 0 && this.endIndex === this.dataCount) {
+			return
+		}
+
+		// Can only run only one updating each time.
+		await this.renderQueue.enqueue(() => this.doCoverageUpdate())
+	}
+
+	protected async doCoverageUpdate() {
+
+		// Which direction is un-covered.
+		let unCoveredSituation = await this.measurement.checkUnCoveredDirection()
+		if (unCoveredSituation === null) {
+			return
+		}
+
+		// Update and try to keep same element with same position.
+		if (unCoveredSituation === 'end' || unCoveredSituation === 'start') {
+			await barrierDOMReading()
+
+			let alignAt: 'start' | 'end' = unCoveredSituation === 'end' ? 'start' : 'end'
+			let visibleIndex = this.locateVisibleIndex(alignAt)
+			let newStartIndex: number
+			let newEndIndex: number | undefined = undefined
+
+			// Scrolling down, render more at end.
+			if (alignAt === 'start') {
+				newStartIndex = visibleIndex
+				newEndIndex = newStartIndex + this.endIndex - this.startIndex
+
+				// First item may be very large and can't skip it, but we must render more at end.
+				if (newEndIndex === this.endIndex) {
+					newEndIndex++
+				}
+			}
+
+			// Scrolling up, render more at end.
+			else {
+				newEndIndex = visibleIndex
+				newStartIndex = this.startIndex - this.endIndex + newEndIndex
+
+				// Last item may be very large and can't skip it, but we must render more at start.
+				if (newStartIndex === this.startIndex) {
+					newStartIndex--
+				}
+			}
+
+			await this.updateContinuously(alignAt, newStartIndex, newEndIndex)
+		}
+
+		// No intersection, reset indices by current scroll position.
+		else if (unCoveredSituation === 'break') {
+			await this.updatePersistScrollPosition()
+		}
+		
+		await this.updateBackPlaceholderSize()
+		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
+		await this.checkEdgeCasesAfterMeasured()
+	}
+
+	/** Update and make render content continuous. */
+	protected async updateContinuously(
+		alignAt: 'start' | 'end',
+		newStartIndex: number,
+		newEndIndex: number | undefined
+	) {
+		// If edge index has not changed, no need to reset position, then its `null`.
+		let position: number | null = null
+
+		// Failed to do continuous updating, must re-render totally by current indices.
+		let needReset = false
+		let oldStartIndex = this.startIndex
+		let oldEndIndex = this.endIndex
+
+		this.setIndices(newStartIndex, newEndIndex)
+
+		// Has no intersection.
+		if (Math.min(this.endIndex, oldEndIndex) - Math.max(this.startIndex, oldStartIndex) <= 0) {
+			needReset = true
+		}
+
+		// Scrolling down, render more at end.
+		else if (alignAt === 'start') {
+			
+			// Rendered item count changed much, not rendering progressively.
+			if (this.startIndex < oldStartIndex) {
+				needReset = true
+			}
+
+			// Locate to the start position of the first element.
+			else if (this.startIndex !== oldStartIndex) {
+				let elIndex = this.startIndex - oldStartIndex
+				let el = this.repeat.children[elIndex] as HTMLElement
+
+				if (el.localName === 'slot') {
+					el = el.firstElementChild as HTMLElement
+				}
+
+				await barrierDOMReading()
+
+				// If el located at start, it will move by slider padding top,
+				// to keep it's position, should remove slider padding.
+				position = this.measurement.sliderProperties.startOffset
+					+ this.doa.getOuterOffset(el, this.slider)
+					- this.doa.getStartPadding(this.slider)
+			}
+		}
+
+		// Scrolling up, render more at end.
+		else {
+			
+			// Rendered item count changed much, not rendering progressively.
+			if (this.endIndex < oldStartIndex + 1 || this.endIndex > oldEndIndex) {
+				needReset = true
+			}
+
+			// Locate to the end position of the last element.
+			else if (this.endIndex !== oldEndIndex) {
+				let elIndex = this.endIndex - oldStartIndex - 1
+				let el = this.repeat.children[elIndex] as HTMLElement
+
+				if (el.localName === 'slot') {
+					el = el.firstElementChild as HTMLElement
+				}
+	
+				await barrierDOMReading()
+
+				// If el located at end, it will move up by slider padding bottom,
+				// to keep it's position, should add slider bottom padding.
+				position = this.measurement.sliderProperties.startOffset
+					+ this.doa.getEndOuterPosition(el, this.slider)
+					+ this.doa.getEndPadding(this.slider)
+			}
+		}
+
+		// Totally reset scroll position.
+		if (needReset) {
+			await this.updateByNewIndices()
+		}
+		
+		// Update continuously.
+		else {
+			await this.updateBySliderPosition(alignAt, position!)
+		}
+	}
+
+	/** Reset indices by current scroll position. */
+	protected async updatePersistScrollPosition() {
+		let newStartIndex = await this.measurement.calcStartIndexByScrolled()
+		this.setIndices(newStartIndex)
+		this.alignAt = 'start'
+
+		await this.updateRendering()
+		await this.resetPositions(false)
+	}
+
+	/** Reset scroll position by current indices. */
+	protected async updateByNewIndices() {
+		this.alignAt = 'start'
+		await this.updateRendering()
+		await this.resetPositions(true)
+	}
+
+	/** Update by specified slider position. */
+	protected async updateBySliderPosition(direction: 'start' | 'end', position: number | null) {
+		this.alignAt = direction
+		await this.updateRendering()
+
+		if (position !== null) {
+			await this.setPosition(position)
+		}
+	}
+}

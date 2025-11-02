@@ -4,13 +4,13 @@ import {DOMUtils, HVDirection} from '@pucelle/ff'
 /** It get and set overflow value by current overflow direction. */
 export class DirectionalOverflowAccessor {
 
-	private direction: HVDirection | null = null
+	private direction: HVDirection
 
-	constructor(d: HVDirection | null = null) {
+	constructor(d: HVDirection) {
 		this.direction = d
 	}
 
-	setDirection(d: HVDirection | null = null) {
+	setDirection(d: HVDirection) {
 		this.direction = d
 	}
 
@@ -144,12 +144,20 @@ export class DirectionalOverflowAccessor {
 	}
 
 	/** Offset value is not affected by scroll value. */
-	getOffset(el: HTMLElement): number {
+	getOffset(el: HTMLElement, container: HTMLElement): number {
+		return DOMUtils.getRelativeOffset(el, container, this.direction)
+	}
+
+	/** 
+	 * Get offset consider margin's affect.
+	 * Offset value is not affected by scroll value.
+	 */
+	getOuterOffset(el: HTMLElement, container: HTMLElement): number {
 		if (this.direction === 'vertical') {
-			return el.offsetTop
+			return this.getOffset(el, container) - DOMUtils.getNumericStyleValue(el, 'marginTop')
 		}
 		else if (this.direction === 'horizontal') {
-			return el.offsetLeft
+			return this.getOffset(el, container) - DOMUtils.getNumericStyleValue(el, 'marginLeft')
 		}
 		else {
 			return 0
@@ -157,15 +165,15 @@ export class DirectionalOverflowAccessor {
 	}
 
 	/** 
-	 * Get offset consider margin value.
+	 * Get end position consider margin's affect.
 	 * Offset value is not affected by scroll value.
 	 */
-	getOuterOffset(el: HTMLElement): number {
+	getEndOuterPosition(el: HTMLElement, container: HTMLElement): number {
 		if (this.direction === 'vertical') {
-			return el.offsetTop - DOMUtils.getNumericStyleValue(el, 'marginTop')
+			return this.getOffset(el, container) + el.offsetHeight + DOMUtils.getNumericStyleValue(el, 'marginBottom')
 		}
 		else if (this.direction === 'horizontal') {
-			return el.offsetLeft - DOMUtils.getNumericStyleValue(el, 'marginLeft')
+			return this.getOffset(el, container) + el.offsetWidth + DOMUtils.getNumericStyleValue(el, 'marginRight')
 		}
 		else {
 			return 0
@@ -173,15 +181,15 @@ export class DirectionalOverflowAccessor {
 	}
 
 	/** 
-	 * Get end offset consider margin value.
-	 * Offset value is not affected by scroll value.
+	 * Get binding rect top or left.
+	 * Value is affected by scroll value.
 	 */
-	getEndOuterOffset(el: HTMLElement): number {
+	getBoundingStart(el: HTMLElement): number {
 		if (this.direction === 'vertical') {
-			return el.offsetTop + el.offsetHeight + DOMUtils.getNumericStyleValue(el, 'marginBottom')
+			return el.getBoundingClientRect().top
 		}
 		else if (this.direction === 'horizontal') {
-			return el.offsetLeft + el.offsetWidth + DOMUtils.getNumericStyleValue(el, 'marginRight')
+			return el.getBoundingClientRect().left
 		}
 		else {
 			return 0

@@ -81,7 +81,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 	}
 
-	static style = css`
+	static override style = css`
 		.list{
 			display: block;
 			border-bottom: 1px solid color-mix(in srgb, var(--border-color) 30%, var(--background-color));
@@ -236,7 +236,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		this.keyNavigator.update(this.data, this.expanded)
 	}
 
-	protected render() {
+	protected override render() {
 		return html`
 			<template class="list">
 				${this.renderItems(this.data)}

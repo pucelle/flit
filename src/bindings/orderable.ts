@@ -29,7 +29,7 @@ export class orderable<T = any> extends DraggableBase<T> implements Binding, Par
 
 	readonly mode = 'order'
 
-	options: OrderableOptions = DefaultOrderableOptions
+	override options: OrderableOptions = DefaultOrderableOptions
 
 	/** Data item index within it's siblings. */
 	index: number = -1

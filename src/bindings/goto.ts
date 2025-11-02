@@ -49,7 +49,7 @@ export class goto implements Binding {
  */
 export class redirectTo extends goto{
 
-	protected onClick() {
+	protected override onClick() {
 		this.findRouter()?.redirectTo(this.path)
 	}
 }

@@ -88,7 +88,7 @@ export class OrderMovement extends DragMovement {
 		}
 	}
 
-	protected setAdditionalDraggingStyle() {
+	protected override setAdditionalDraggingStyle() {
 		super.setAdditionalDraggingStyle()
 
 		let elRect = this.draggingEl.getBoundingClientRect()
@@ -214,7 +214,7 @@ export class OrderMovement extends DragMovement {
 		}
 	}
 
-	onEnterDrag(drag: orderable) {
+	override onEnterDrag(drag: orderable) {
 		if (!this.activeDrop) {
 			return
 		}
@@ -295,7 +295,7 @@ export class OrderMovement extends DragMovement {
 		}
 	}
 
-	translateDraggingElement(moves: Coord) {
+	override translateDraggingElement(moves: Coord) {
 		this.translate = moves
 
 		if (this.dragging.options.slideOnly) {
@@ -349,13 +349,13 @@ export class OrderMovement extends DragMovement {
 		}
 	}
 
-	onEnterDrop(drop: droppable) {
+	override onEnterDrop(drop: droppable) {
 		this.activeDrop = drop
 		this.itemsAlignDirection = drop.options.itemsAlignDirection ?? 'vertical'
 		this.insertPlaceholder(drop, true)
 	}
 	
-	onLeaveDrop(drop: droppable) {
+	override onLeaveDrop(drop: droppable) {
 		if (drop !== this.activeDrop) {
 			return
 		}
@@ -370,7 +370,7 @@ export class OrderMovement extends DragMovement {
 		this.draggingToIndex = -1
 	}
 
-	canDrop(): boolean {
+	override canDrop(): boolean {
 		return !!(
 			this.draggingTo
 
@@ -380,11 +380,11 @@ export class OrderMovement extends DragMovement {
 	}
 
 	/** Get the index where in droppable to insert dragging item. */
-	getInsertIndex(): number {
+	override getInsertIndex(): number {
 		return this.draggingToIndex
 	}
 
-	async endDragging() {
+	override async endDragging() {
 
 		// Transition dragging element to drop area.
 		if (this.canDrop()) {

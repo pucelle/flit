@@ -1,40 +1,27 @@
-import {PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
-import {Repeat, RepeatRenderFn} from './repeat'
-import {LiveRenderer} from './repeat-helpers/live-renderer'
 import {effect, untilUpdateComplete} from '@pucelle/lupos'
-import {html} from '@pucelle/lupos.js'
-import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
+import {Repeat, RepeatRenderFn} from './repeat'
+import {html, PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
+import {PartialRenderer} from './repeat-helpers/partial-renderer'
 import {LowerIndexWithin} from '../tools'
+import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
 
 
 /** 
- * `<LiveRepeat>` dynamically renders visible portions of data in list format.
+ * This component will render partial repeat contents only within viewport.
+ * But not like `<PartialRepeat>`, it doesn't manage the whole scroller,
+ * and can be used to render part of the scrolling contents.
  * 
- * Compared to `<Repeat>`, `<LiveRepeat>` renders only visible data items and
- * dynamically updates them during user scrolling.
- * 
- * Some restrictions you need to know:
- * - `<LiveRepeat>` must be contained in a scroller element with `overflow: auto / scroll`.
- * - `<LiveRepeat>` must be the only child of the scroller element.
- * - `<LiveRepeat>` must in `absolute` position.
- * - `<LiveRepeat>` must have no margin, but can have padding set.
- * - The scroller element must not in `static` position.
+ * This makes it more flexible, but it's not as efficient as `<PartialRepeat>`,
+ * and may cause additional re-layout to adjust scroll position when scrolling up,
+ * especially when item sizes are different from each other.
  */
-export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
+export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/** 
 	 * Render function to generate render result by each item.
 	 * The second `index` will accept live index.
 	 */
 	declare renderFn: RepeatRenderFn<T>
-
-	/** 
-	 * Whether partial rendering content as follower,
-	 * so the partial renderer only renders by current scroll position,
-	 * and will never cause scroll position change.
-	 * Normally can use it at secondary columns of waterfall layout.
-	 */
-	readonly asFollower: boolean = false
 
 	/**
 	* How many pixels to reserve to reduce update frequency when scrolling.
@@ -45,33 +32,19 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	reservedPixels: number = 200
 
 	/** 
-	 * If provided, it specifies the suggested end position,
-	 * to indicate the size of each item.
-	 * The size has no need to represent real size,
-	 * only represents the mutable part would be enough.
-	 * Which means: can ignores shared paddings or margins.
-	 */
-	preEndPositions: number[] | null = null
-
-	/** If provided and not 0, will use it and partial renderer has no need to read scroller size. */
-	scrollSize: number = 0
-
-	/** 
 	 * Guess an item size for first-time paint,
 	 * and avoid it checking for item-size and render twice.
 	 */
 	guessedItemSize: number = 0
 
-	/** 
-	 * Placeholder element, sibling of slider.
-	 * Since here it renders only partial content,
-	 * slider element has no enough size to expand scrolling area,
-	 * so use this placeholder to expand scrolling area to full size.
-	 */
-	protected placeholder: HTMLDivElement | null = null
+	/** Placeholder at front. */
+	protected frontPlaceholder: HTMLDivElement | null = null
+
+	/** Placeholder at back. */
+	protected backPlaceholder: HTMLDivElement | null = null
 
 	/** Partial content renderer. */
-	protected renderer: LiveRenderer | null = null as any
+	protected renderer: PartialRenderer | null = null as any
 
 	/** The start index of the first item. */
 	get startIndex(): number {
@@ -93,12 +66,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.data.slice(this.startIndex, this.endIndex)
 	}
 
-	/** Apply `scrollSize` property to renderer. */
-	@effect
-	protected applyScrollSize() {
-		this.renderer!.setDirectScrollSize(this.scrollSize)
-	}
-
 	/** Apply `guessedItemSize` property to renderer. */
 	@effect
 	protected applyGuessedItemSize() {
@@ -116,12 +83,6 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	protected applyDataCount() {
 		this.renderer!.dataCount = this.data.length
 		this.willUpdate()
-	}
-
-	/** Apply `preEndPositions` to renderer. */
-	@effect
-	protected applyPreEndPositions() {
-		this.renderer!.setPreEndPositions(this.preEndPositions)
 	}
 
 	/** Update after data change. */
@@ -161,16 +122,16 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 		super.beforeDisconnectCallback(param)
 
 		// If remove current component from parent, remove placeholder also.
-		if (this.placeholder) {
-			if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) > 0 || this.asFollower) {
-				this.placeholder.remove()
-				this.placeholder = null
+		if (this.frontPlaceholder) {
+			if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) > 0) {
+				this.frontPlaceholder.remove()
+				this.frontPlaceholder = null
 				this.renderer = null
 			}
 		}
 	}
 
-	protected override onConnected(this: LiveRepeat<any, {}>) {
+	protected override onConnected(this: PartialRepeat<any, {}>) {
 		super.onConnected()
 
 		this.initPlaceholder()
@@ -185,17 +146,13 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	protected initPlaceholder() {
-		if (this.asFollower) {
+		if (this.frontPlaceholder) {
 			return
 		}
 
-		if (this.placeholder) {
-			return
-		}
-
-		this.placeholder = document.createElement('div')
-		this.placeholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
-		this.scroller!.prepend(this.placeholder)
+		this.frontPlaceholder = document.createElement('div')
+		this.frontPlaceholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
+		this.scroller!.prepend(this.frontPlaceholder)
 	}
 
 	/** Init renderer when connected. */
@@ -211,12 +168,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			slider = slider.parentElement!
 		}
 
-		this.renderer = new LiveRenderer(
+		this.renderer = new PartialRenderer(
 			this.scroller!,
 			slider,
 			this.el,
-			this.placeholder,
-			this.asFollower,
+			this.frontPlaceholder,
+			this.backPlaceholder,
 			this.doa,
 			this.updateLiveData.bind(this)
 		)
@@ -282,12 +239,12 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	/** To ensure item at index get rendered. */
-	protected async toRenderItemAtIndex(index: number, alignAt: 'start' | 'end') {
+	protected async toRenderItemAtIndex(index: number, alignDirection: 'start' | 'end') {
 		let startIndex: number | undefined
 		let endIndex: number | undefined
 		let renderCount = this.endIndex - this.startIndex
 
-		if (alignAt === 'start') {
+		if (alignDirection === 'start') {
 			startIndex = index
 		}
 		else {
@@ -302,7 +259,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 			}
 		}
 
-		this.renderer!.setRenderIndices(alignAt, startIndex, endIndex, true)
+		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
 		this.willUpdate()
 
 		// Wait for two loops, may check after first rendering and re-render.

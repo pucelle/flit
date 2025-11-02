@@ -10,8 +10,9 @@ import {LowerIndexWithin} from '../../tools'
  * Returned range is `0 ~ list.length`.
  */
 export function locateVisibleIndex(
-	scroller: HTMLElement,
 	els: ArrayLike<HTMLElement>,
+	slider: HTMLElement,
+	scroller: HTMLElement,
 	doa: DirectionalOverflowAccessor,
 	sliderStartPosition: number,
 	direction: 'start' | 'end',
@@ -29,7 +30,7 @@ export function locateVisibleIndex(
 	let translated = sliderStartPosition - scrolled
 
 	let index = ListUtils.quickBinaryFindInsertIndex(els, function(el) {
-		let start = doa.getOffset(el) + translated
+		let start = doa.getOffset(el, slider) + translated
 		let size = doa.getOffsetSize(el)
 		let end = start + size
 		let ratio = (Math.min(end, scrollerSize) - Math.max(start, 0)) / Math.min(size, scrollerSize)
@@ -62,8 +63,9 @@ export function locateVisibleIndex(
  * Returned index in range `0~els.length`.
  */
 export function locateVisibleIndexAtOffset(
-	scroller: HTMLElement,
 	els: ArrayLike<HTMLElement>,
+	slider: HTMLElement,
+	scroller: HTMLElement,
 	doa: DirectionalOverflowAccessor,
 	sliderStartPosition: number,
 	offset: number,
@@ -83,7 +85,7 @@ export function locateVisibleIndexAtOffset(
 	let within = false
 
 	function flag(el: HTMLElement) {
-		let start = doa.getOffset(el) + translated
+		let start = doa.getOffset(el, slider) + translated
 		let size = doa.getOffsetSize(el)
 		let end = start + size
 

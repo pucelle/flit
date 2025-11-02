@@ -45,13 +45,13 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 	private needsUpdateDataCount: boolean = true
 
 	/** Live data, rendering part of all the data. */
-	get liveData(): (T | null)[] {
+	override get liveData(): (T | null)[] {
 		return this.dataLoader.getImmediateData(this.startIndex, this.endIndex)
 	}
 
 	/** Do nothing because `data` is not used as data source any more. */
 	@effect
-	protected applyDataCount() {}
+	protected override applyDataCount() {}
 
 	/** Apply preload page count to page loader. */
 	@effect
@@ -65,7 +65,7 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 		this.reload()
 	}
 
-	onConnected(): void {
+	override onConnected(): void {
 		super.onConnected()
 
 		if (this.needsUpdateDataCount) {
@@ -81,7 +81,7 @@ export class AsyncLiveRepeat<T = any, E = {}> extends LiveRepeat<T | null, E & A
 		this.willUpdate()
 	}
 
-	protected async onUpdated(this: AsyncLiveRepeat) {
+	protected override async onUpdated(this: AsyncLiveRepeat) {
 		super.onUpdated()
 		
 		let dataFresh = this.dataLoader.isRangeFresh(this.startIndex, this.endIndex)

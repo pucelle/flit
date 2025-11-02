@@ -47,7 +47,7 @@ export class tooltip extends popup {
 
 	declare options: TooltipOptions
 
-	update(renderer: string | RenderResultRenderer | null, options: Partial<TooltipOptions> = {}) {
+	override update(renderer: string | RenderResultRenderer | null, options: Partial<TooltipOptions> = {}) {
 		options = {...DefaultTooltipOptions, ...options}
 		super.update(renderer ? this.popupRenderer.bind(this, renderer) : null, options)
 	}
@@ -66,7 +66,7 @@ export class tooltip extends popup {
 		`
 	}
 
-	protected shouldShowImmediately(): boolean {
+	protected override shouldShowImmediately(): boolean {
 		if (!this.renderer) {
 			return false
 		}
@@ -76,7 +76,7 @@ export class tooltip extends popup {
 			|| this.options.type === 'error'
 	}
 
-	protected shouldKeepVisible(): boolean {
+	protected override shouldKeepVisible(): boolean {
 		if (!this.renderer) {
 			return false
 		}
