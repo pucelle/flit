@@ -6,6 +6,7 @@ import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
 import {IconChecked, IconTriangleDown, IconTriangleRight} from '../icons'
 import {DOMScroll} from '../tools'
+import {PartialRepeat} from './partial-repeat'
 
 
 /** 
@@ -213,6 +214,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	/** Currently expanded items. */
 	expanded: T[] = []
 
+	/** If provided, will start partial rendering for large list. */
+	partialRenderingScrollerSelector: string | null = null
+
 	/** 
 	 * If specified, when this element get focus,
 	 * you can use keyboard arrow keys to navigate across current list.
@@ -250,12 +254,24 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				&& (item as ListItem<T>).children!.length > 0
 		})
 
-		return html`
-			<lu:for ${items}>${(item: ListItem<T> | {}) => {
-				return this.renderItemOrSplitter(item, anySiblingHaveChildren)
-			}
-		}</lu:for>
-		`
+		if (this.partialRenderingScrollerSelector && items.length > 50) {
+			return html`
+				<PartialRepeat
+					.data=${items}
+					.renderFn=${(item: ListItem<T> | {}) => this.renderItemOrSplitter(item, anySiblingHaveChildren)}
+					.overflowDirection="vertical"
+					.guessedItemSize=${25}
+					.scrollerSelector=${this.partialRenderingScrollerSelector}
+				/>
+			`
+		}
+		else {
+			return html`
+				<lu:for ${items}>${(item: ListItem<T> | {}) => {
+					return this.renderItemOrSplitter(item, anySiblingHaveChildren)
+				}}</lu:for>
+			`
+		}
 	}
 
 	protected renderItemOrSplitter(item: ListItem<T> | {}, anySiblingHaveChildren: boolean): RenderResult {

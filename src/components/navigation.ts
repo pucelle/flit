@@ -38,6 +38,8 @@ export class Navigation<T> extends List<T> {
 		}
 	`
 
+	override partialRenderingScrollerSelector: string | null = '.navigation'
+
 	/** Navigation title. */
 	title: string = ''
 

@@ -49,8 +49,8 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 	 */
 	@computed
 	get scroller(): HTMLElement {
-		return this.scrollerSelector !== null
-			? this.el.closest(this.scrollerSelector) ?? this.el.parentElement!
+		return this.scrollerSelector
+			? this.el.closest(this.scrollerSelector)!
 			: this.el.parentElement!
 	}
 

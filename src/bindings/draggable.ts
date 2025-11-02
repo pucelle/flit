@@ -100,7 +100,7 @@ export abstract class DraggableBase<T = any> implements Part {
 	}
 
 	beforeDisconnectCallback(param: PartCallbackParameterMask | 0) {
-		if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) === 0) {
+		if ((param & PartCallbackParameterMask.FromOwnStateChange) === 0) {
 			return
 		}
 

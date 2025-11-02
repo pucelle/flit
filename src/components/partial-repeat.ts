@@ -8,10 +8,10 @@ import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
 
 /** 
  * This component will render partial repeat contents only within viewport.
- * But not like `<PartialRepeat>`, it doesn't manage the whole scroller,
+ * But not like `<LiveRepeat>`, it doesn't manage the whole content of scroller,
  * and can be used to render part of the scrolling contents.
  * 
- * This makes it more flexible, but it's not as efficient as `<PartialRepeat>`,
+ * This makes it more flexible, but it's not as efficient as `<LiveRepeat>`,
  * and may cause additional re-layout to adjust scroll position when scrolling up,
  * especially when item sizes are different from each other.
  */
@@ -123,7 +123,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 		// If remove current component from parent, remove placeholder also.
 		if (this.frontPlaceholder) {
-			if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) > 0) {
+			if ((param & PartCallbackParameterMask.FromOwnStateChange) > 0) {
 				this.frontPlaceholder.remove()
 				this.frontPlaceholder = null
 				this.renderer = null
@@ -134,7 +134,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	protected override onConnected(this: PartialRepeat<any, {}>) {
 		super.onConnected()
 
-		this.initPlaceholder()
+		this.initPlaceholders()
 		this.initRenderer()
 
 		this.renderer!.connect()
@@ -145,14 +145,19 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.disconnect()
 	}
 
-	protected initPlaceholder() {
+	protected initPlaceholders() {
 		if (this.frontPlaceholder) {
 			return
 		}
 
 		this.frontPlaceholder = document.createElement('div')
 		this.frontPlaceholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
-		this.scroller!.prepend(this.frontPlaceholder)
+
+		this.backPlaceholder = document.createElement('div')
+		this.backPlaceholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
+
+		this.el.before(this.frontPlaceholder)
+		this.el.after(this.frontPlaceholder)
 	}
 
 	/** Init renderer when connected. */
@@ -161,12 +166,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 			return
 		}
 
-		let scroller = this.scroller
 		let slider = this.el
-
-		while (slider.parentElement !== scroller) {
-			slider = slider.parentElement!
-		}
 
 		this.renderer = new PartialRenderer(
 			this.scroller!,

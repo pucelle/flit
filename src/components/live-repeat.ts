@@ -13,6 +13,9 @@ import {LowerIndexWithin} from '../tools'
  * Compared to `<Repeat>`, `<LiveRepeat>` renders only visible data items and
  * dynamically updates them during user scrolling.
  * 
+ * Compared to `<PartialRepeat>`, `<LiveRepeat>` is more efficient but
+ * requires it's the only content of whole scroller.
+ * 
  * Some restrictions you need to know:
  * - `<LiveRepeat>` must be contained in a scroller element with `overflow: auto / scroll`.
  * - `<LiveRepeat>` must be the only child of the scroller element.
@@ -162,7 +165,7 @@ export class LiveRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 		// If remove current component from parent, remove placeholder also.
 		if (this.placeholder) {
-			if ((param & PartCallbackParameterMask.MoveFromOwnStateChange) > 0 || this.asFollower) {
+			if ((param & PartCallbackParameterMask.FromOwnStateChange) > 0 || this.asFollower) {
 				this.placeholder.remove()
 				this.placeholder = null
 				this.renderer = null
