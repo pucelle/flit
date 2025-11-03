@@ -1,4 +1,4 @@
-import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, ResizeWatcher, sleep} from '@pucelle/ff'
+import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, ResizeWatcher} from '@pucelle/ff'
 import {locateVisibleIndex} from './index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialMeasurement} from './partial-measurement'
@@ -11,16 +11,16 @@ export interface NeedToApply {
 	 * Latest `startIndex` property has changed and need to be applied.
 	 * Soon need to re-render according to the new start index.
 	 * Note it was initialized as `0`.
-	 * When `alignAt=start`, it must exist.
+	 * When `alignDirection=start`, it must exist.
 	 */
 	startIndex: number | undefined
 
-	/** Latest `alignAt` property has changed and need to be applied. */
-	alignAt: 'start' | 'end'
+	/** Latest `alignDirection` property has changed and need to be applied. */
+	alignDirection: 'start' | 'end'
 
 	/** 
 	 * Latest `endIndex` property has changed and need to be applied.
-	 * When `alignAt=end`, it must exist.
+	 * When `alignDirection=end`, it must exist.
 	 */
 	endIndex: number | undefined
 
@@ -80,7 +80,7 @@ export class PartialRenderer {
 	 * Otherwise `sliderEndPosition` is prepared immediately, and `sliderStartPosition` is prepared after rendered.
 	 * Readonly outside.
 	 */
-	alignAt: 'start' | 'end' = 'start'
+	alignDirection: 'start' | 'end' = 'start'
 
 	/** 
 	 * The start index of the first item in the whole data.
@@ -107,12 +107,13 @@ export class PartialRenderer {
 	protected needToApply: NeedToApply | null = {
 		startIndex: 0,
 		endIndex: undefined,
-		alignAt: 'start',
+		alignDirection: 'start',
 		tryPersistContinuous: false,
 	}
 
 	/** If need to align element in same position. */
 	protected needToAlign: NeedToAlign | null = null
+	protected readScrollerSizePromise: Promise<void> | null = null
 
 	constructor(
 		scroller: HTMLElement,
@@ -155,13 +156,13 @@ export class PartialRenderer {
 	 * to persist continuous rendering result, but still ensure to render required elements.
 	 */
 	setRenderIndices(
-		alignAt: 'start' | 'end',
+		alignDirection: 'start' | 'end',
 		startIndex: number | undefined,
 		endIndex: number | undefined = undefined,
 		tryPersistContinuous: boolean = false
 	) {
 		this.needToApply = {
-			alignAt,
+			alignDirection,
 			startIndex,
 			endIndex,
 			tryPersistContinuous,
@@ -196,7 +197,7 @@ export class PartialRenderer {
 
 		ResizeWatcher.watch(this.slider, this.onSliderSizeUpdated, this)
 
-		await this.readScrollerSize()
+		this.readScrollerSizePromise = this.readScrollerSize()
 		ResizeWatcher.watch(this.scroller, this.readScrollerSize, this)
 	}
 	
@@ -245,8 +246,11 @@ export class PartialRenderer {
 	/** Update from applying start index or just update data. */
 	async update() {
 
-		// Don't want to force re-layout before first time paint.
+		// Avoid following codes run later than `connect()`.
 		await untilFirstPaintCompleted()
+
+		// Must wait for scroller size read.
+		await this.readScrollerSizePromise
 
 		// Can only run only one updating each time.
 		await this.renderQueue.enqueue(() => this.doNormalUpdate())
@@ -275,7 +279,7 @@ export class PartialRenderer {
 
 		// May not measured yet.
 		if (hasMeasuredBefore) {
-			await this.updateBackPlaceholderSize()
+			await this.updateRestPlaceholderSize()
 		}
 
 		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
@@ -285,11 +289,11 @@ export class PartialRenderer {
 		if (!hasMeasuredBefore) {
 			if (needToApply?.startIndex) {
 				await this.updateByApplying(needToApply)
-				await this.updateBackPlaceholderSize()
+				await this.updateRestPlaceholderSize()
 				await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
 			}
 			else {
-				await this.updateBackPlaceholderSize()
+				await this.updateRestPlaceholderSize()
 			}
 		}
 
@@ -301,7 +305,7 @@ export class PartialRenderer {
 
 	/** Update when start index specified and need to apply. */
 	protected async updateByApplying(needToApply: NeedToApply) {
-		let {startIndex, endIndex, alignAt, tryPersistContinuous} = needToApply
+		let {startIndex, endIndex, alignDirection, tryPersistContinuous} = needToApply
 		let hasMeasured = this.measurement.hasMeasured()
 		let renderCount = this.endIndex - this.startIndex
 		let canPersistContinuous = false
@@ -313,7 +317,7 @@ export class PartialRenderer {
 			let startVisibleIndex = this.locateVisibleIndex('start')
 			let endVisibleIndex = this.locateVisibleIndex('end')
 
-			if (alignAt === 'start') {
+			if (alignDirection === 'start') {
 
 				// Try persist visible part.
 				let renderCountToPersist = Math.max(endVisibleIndex, startIndex! + 1) - Math.min(startVisibleIndex, startIndex!)
@@ -349,13 +353,13 @@ export class PartialRenderer {
 
 		// Update continuously.
 		if (canPersistContinuous) {
-			await this.updateContinuously(alignAt, startIndex!, endIndex)
+			await this.updateContinuously(alignDirection, startIndex!, endIndex)
 		}
 
 		// Reset scroll position, but will align item with index viewport edge.
 		else {
 			this.setIndices(startIndex, endIndex)
-			this.alignAt = alignAt ?? 'start'
+			this.alignDirection = alignDirection ?? 'start'
 
 			await this.updateRendering()
 
@@ -378,7 +382,7 @@ export class PartialRenderer {
 		
 		// Required, may data count increase or decrease.
 		this.setIndices(this.startIndex)
-		this.alignAt = 'start'
+		this.alignDirection = 'start'
 
 		await this.updateRendering()
 
@@ -409,7 +413,7 @@ export class PartialRenderer {
 
 	/** 
 	 * Reset slider and scroll position, make first item appear in the start edge.
-	 * `alignAt` must have been updated.
+	 * `alignDirection` must have been updated.
 	 * 
 	 * `resetScroll`: specifies as `false` if current indices is not calculated from
 	 *   current scroll offset, Then will adjust scroll offset and align to `alignToStartIndex`.
@@ -419,19 +423,18 @@ export class PartialRenderer {
 		alignToStartIndex: number = this.startIndex,
 		alignToEndIndex: number = this.endIndex
 	) {
-		let frontSize = this.measurement.getFrontPlaceholderSize(this.startIndex)
+		let frontSize = this.measurement.getNormalFrontPlaceholderSize(this.startIndex)
 		await this.setPosition(frontSize)
 
-		// If choose to break, you will find scroll thumb jump when scroll fast
-		// and item size is not stable.
-		// this.measurement.breakContinuousRenderRange()
+		// Break continuous render range.
+		this.measurement.breakContinuousRenderRange()
 
 		// Scroll to align to specified index.
 		if (resetScroll) {
 			alignToStartIndex = Math.min(Math.max(alignToStartIndex, this.startIndex), this.endIndex - 1)
 			alignToEndIndex = Math.max(Math.min(alignToEndIndex, this.endIndex), this.startIndex)
 
-			let scrollPosition = this.measurement.calcScrollPosition(alignToStartIndex, this.alignAt)
+			let scrollPosition = this.measurement.calcScrollPosition(alignToStartIndex, this.alignDirection)
 			await barrierDOMWriting()
 			this.doa.setScrolled(this.scroller, scrollPosition)
 		}
@@ -439,40 +442,44 @@ export class PartialRenderer {
 
 	/** Update position of rendered result after setting new indices. */
 	protected async setPosition(position: number) {
-		this.measurement.setFrontPlaceholderSize(position, this.startIndex)
+		this.measurement.setFrontPlaceholderSize(position)
 
 		if (this.frontPlaceholder) {
 			await barrierDOMWriting()
-			this.doa.setSize(this.frontPlaceholder, this.measurement.placeholderProperties.frontSize)
+			this.doa.setSize(this.frontPlaceholder, position)
 		}
 	}
 
 	/** Update size of placeholder progressive before next time rendering. */
-	protected async updateBackPlaceholderSize() {
-		if (this.backPlaceholder) {
-			let backSize = this.measurement.getBackPlaceholderSize(this.endIndex, this.dataCount)
-			this.setBackPlaceholderSize(backSize)
+	protected async updateRestPlaceholderSize() {
+		if (!this.backPlaceholder) {
+			return
 		}
-	}
 
-	/** Set rest placeholder size. */
-	protected async setBackPlaceholderSize(size: number) {
-		this.measurement.setBackPlaceholderSize(size, this.endIndex, this.dataCount)
+		let backSize = this.measurement.getNormalBackPlaceholderSize(this.endIndex, this.dataCount)
 
-		if (this.backPlaceholder) {
-			await barrierDOMWriting()
-			this.doa.setSize(this.backPlaceholder, this.measurement.placeholderProperties.backSize)
-		}
+		// Update back size only when have at least 50% difference.
+		await barrierDOMWriting()
+		this.doa.setSize(this.backPlaceholder, backSize)
+		this.measurement.setBackPlaceholderSize(backSize)
 	}
 
 	/** After update complete, and after `measureAfterRendered`, do more check or do element alignment. */
 	protected async afterMeasured() {
+		await this.doAlignAdjustment()
+	}
+
+	/** Do element alignment by adjusting scroll offset. */
+	protected async doAlignAdjustment() {
 		if (this.needToAlign) {
+			await barrierDOMReading()
 			let scrolled = this.doa.getScrolled(this.scroller)
 			let newOffset = this.doa.getOffset(this.needToAlign.el, this.scroller)
 
 			if (Math.abs(newOffset - this.needToAlign.offset) > 3) {
 				scrolled += newOffset - this.needToAlign.offset
+
+				await barrierDOMReading()
 				this.doa.setScrolled(this.scroller, scrolled)
 			}
 
@@ -498,7 +505,6 @@ export class PartialRenderer {
 
 		// Can only run only one updating each time.
 		await this.renderQueue.enqueue(() => this.doCoverageUpdate())
-		await sleep(0)
 		this.throttlingCoverageCheck = false
 	}
 
@@ -514,15 +520,15 @@ export class PartialRenderer {
 		if (unCoveredSituation === 'end' || unCoveredSituation === 'start') {
 			await barrierDOMReading()
 
-			let alignAt: 'start' | 'end' = unCoveredSituation === 'end' ? 'start' : 'end'
-			let visibleIndex = this.locateVisibleIndex(alignAt)
+			let alignDirection: 'start' | 'end' = unCoveredSituation === 'end' ? 'start' : 'end'
+			let visibleIndex = this.locateVisibleIndex(alignDirection)
 			let newStartIndex: number
 			let newEndIndex: number | undefined = undefined
 			let currentRenderCount = this.endIndex - this.startIndex
 			let renderCount = this.measurement.getSafeRenderCount(this.reservedPixels, currentRenderCount)
 
 			// Scrolling down, render more at end.
-			if (alignAt === 'start') {
+			if (alignDirection === 'start') {
 				newStartIndex = visibleIndex
 				newEndIndex = newStartIndex + renderCount
 
@@ -543,7 +549,7 @@ export class PartialRenderer {
 				}
 			}
 
-			await this.updateContinuously(alignAt, newStartIndex, newEndIndex)
+			await this.updateContinuously(alignDirection, newStartIndex, newEndIndex)
 		}
 
 		// No intersection, reset indices by current scroll position.
@@ -551,14 +557,14 @@ export class PartialRenderer {
 			await this.updatePersistScrollPosition()
 		}
 		
-		await this.updateBackPlaceholderSize()
+		await this.updateRestPlaceholderSize()
 		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
 		await this.afterMeasured()
 	}
 
 	/** Update and make render content continuous. */
 	protected async updateContinuously(
-		alignAt: 'start' | 'end',
+		alignDirection: 'start' | 'end',
 		newStartIndex: number,
 		newEndIndex: number | undefined
 	) {
@@ -578,7 +584,7 @@ export class PartialRenderer {
 		}
 
 		// Scrolling down, render more at end.
-		else if (alignAt === 'start') {
+		else if (alignDirection === 'start') {
 			
 			// Rendered item count changed much, not rendering progressively.
 			if (this.startIndex < oldStartIndex) {
@@ -587,7 +593,7 @@ export class PartialRenderer {
 
 			// Locate to the start position of the first element.
 			else if (this.startIndex !== oldStartIndex) {
-				position = await this.getContinuousPosition(oldStartIndex, alignAt)
+				position = await this.getContinuousPosition(oldStartIndex, alignDirection)
 			}
 		}
 
@@ -601,7 +607,7 @@ export class PartialRenderer {
 
 			// Locate to the end position of the last element.
 			else if (this.endIndex !== oldEndIndex) {
-				position = await this.getContinuousPosition(oldStartIndex, alignAt)
+				position = await this.getContinuousPosition(oldStartIndex, alignDirection)
 			}
 		}
 
@@ -612,12 +618,12 @@ export class PartialRenderer {
 		
 		// Update continuously.
 		else {
-			await this.updateBySliderPosition(alignAt, position!)
+			await this.updateBySliderPosition(alignDirection, position!)
 		}
 	}
 
 	/** Get new position for continuously update. */
-	protected async getContinuousPosition(oldStartIndex: number, _alignAt: 'start' | 'end') {
+	protected async getContinuousPosition(oldStartIndex: number, _alignDirection: 'start' | 'end') {
 		let position: number
 
 		// Can directly know the new position.
@@ -642,29 +648,36 @@ export class PartialRenderer {
 		else {
 			position = this.measurement.sliderProperties.startOffset
 				+ (this.startIndex - oldStartIndex) * this.measurement.getItemSize()
+			
+			// Fix position to make sure it doesn't have more that 50% difference than normal.
+			position = this.measurement.fixFrontPlaceholderSize(position, this.startIndex)
 
-			let alignEl = this.repeat.children[0] as HTMLElement
-			if (alignEl.localName === 'slot') {
-				alignEl = alignEl.firstElementChild as HTMLElement
-			}
-
-			await barrierDOMReading()
-
-			// To re-align element after measured.
-			this.needToAlign = {
-				el: alignEl,
-				offset: this.doa.getOffset(alignEl, this.scroller),
-			}
+			await this.fillNeedToAlign(this.repeat.children[0] as HTMLElement)
 		}
 	
 		return position
+	}
+
+	/** Fill `needToAlign` property. */
+	protected async fillNeedToAlign(el: HTMLElement) {
+		if (el.localName === 'slot') {
+			el = el.firstElementChild as HTMLElement
+		}
+
+		await barrierDOMReading()
+
+		// To re-align element after measured.
+		this.needToAlign = {
+			el,
+			offset: this.doa.getOffset(el, this.scroller),
+		}
 	}
 
 	/** Reset indices by current scroll position. */
 	protected async updatePersistScrollPosition() {
 		let newStartIndex = await this.measurement.calcStartIndexByScrolled()
 		this.setIndices(newStartIndex)
-		this.alignAt = 'start'
+		this.alignDirection = 'start'
 
 		await this.updateRendering()
 		await this.resetPositions(false)
@@ -672,14 +685,14 @@ export class PartialRenderer {
 
 	/** Reset scroll position by current indices. */
 	protected async updateByNewIndices() {
-		this.alignAt = 'start'
+		this.alignDirection = 'start'
 		await this.updateRendering()
 		await this.resetPositions(true)
 	}
 
 	/** Update by specified slider position. */
 	protected async updateBySliderPosition(direction: 'start' | 'end', position: number | null) {
-		this.alignAt = direction
+		this.alignDirection = direction
 		await this.updateRendering()
 
 		if (position !== null) {

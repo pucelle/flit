@@ -22,6 +22,7 @@ export class LiveRenderer extends PartialRenderer {
 
 	declare measurement: LiveMeasurement
 	declare readonly frontPlaceholder: null
+	declare readonly backPlaceholder: null
 
 	/** 
 	 * Whether partial rendering content as follower,
@@ -33,6 +34,9 @@ export class LiveRenderer extends PartialRenderer {
 	/** If provided and not 0, will use it forever and never read scroller size. */
 	private directScrollSize: number = 0
 
+	/** The only placeholder. */
+	private onlyPlaceholder: HTMLDivElement | null
+
 	constructor(
 		scroller: HTMLElement,
 		slider: HTMLElement,
@@ -42,7 +46,8 @@ export class LiveRenderer extends PartialRenderer {
 		doa: DirectionalOverflowAccessor,
 		updateCallback: () => void
 	) {
-		super(scroller, slider, repeat, null, placeholder, doa, updateCallback)
+		super(scroller, slider, repeat, null, null, doa, updateCallback)
+		this.onlyPlaceholder = placeholder
 		this.asFollower = asFollower
 	}
 
@@ -95,13 +100,12 @@ export class LiveRenderer extends PartialRenderer {
 		alignToEndIndex: number = this.endIndex
 	) {
 		// top or bottom position.
-		let newSliderPosition = this.measurement.calcScrollPosition(this.alignAt === 'start' ? this.startIndex : this.endIndex, this.alignAt)
+		let newSliderPosition = this.measurement.calcScrollPosition(this.alignDirection === 'start' ? this.startIndex : this.endIndex, this.alignDirection)
 		
 		await this.setPosition(newSliderPosition)
 
-		// We'd better not break continuous range here, or drag scroll thumb
-		// you will find scroll thumb jump when item size is not stable.
-		//this.measurement.breakContinuousRenderRange()
+		// Break continuous render range.
+		this.measurement.breakContinuousRenderRange()
 
 		if (resetScroll && !this.asFollower) {
 			alignToStartIndex = Math.min(Math.max(alignToStartIndex, this.startIndex), this.endIndex - 1)
@@ -109,12 +113,12 @@ export class LiveRenderer extends PartialRenderer {
 	
 			// Align scroller start with slider start.
 			let scrollPosition = this.measurement.calcScrollPosition(
-				this.alignAt === 'start' ? alignToStartIndex : alignToEndIndex,
-				this.alignAt
+				this.alignDirection === 'start' ? alignToStartIndex : alignToEndIndex,
+				this.alignDirection
 			)
 
 			// Align scroller end with slider end.
-			if (this.alignAt === 'end') {
+			if (this.alignDirection === 'end') {
 				scrollPosition -= this.measurement.scrollerSize
 			}
 
@@ -126,7 +130,7 @@ export class LiveRenderer extends PartialRenderer {
 	protected override async setPosition(position: number) {
 		await barrierDOMWriting()
 
-		if (this.alignAt === 'start') {
+		if (this.alignDirection === 'start') {
 			this.doa.setStartPosition(this.slider, position + 'px')
 			this.doa.setEndPosition(this.slider, 'auto')
 		}
@@ -136,94 +140,83 @@ export class LiveRenderer extends PartialRenderer {
 		}
 	}
 
-	protected override async updateBackPlaceholderSize() {
-		if (!this.backPlaceholder) {
+	protected override async updateRestPlaceholderSize() {
+		if (!this.onlyPlaceholder) {
+			return
+		}
+
+		// Not update when scrolling up.
+		if (this.alignDirection === 'end') {
 			return
 		}
 		
-		let shouldUpdate = this.measurement.shouldUpdateOnlyPlaceholderSize(this.endIndex, this.dataCount)
-		if (!shouldUpdate) {
-			return
-		}
+		// Calc back size by last time rendering result.
+		let oldBackSize = this.measurement.onlyPlaceholderProperties.size - this.measurement.sliderProperties.endOffset
+		let fixedBackSize = this.measurement.fixBackPlaceholderSize(oldBackSize, this.measurement.sliderProperties.endIndex, this.dataCount)
 
-		let placeholderSize = this.measurement.calcOnlyPlaceholderSize(this.dataCount)
-		await this.setBackPlaceholderSize(placeholderSize)
+		// Update back size only when have at least 50% difference.
+		if (fixedBackSize !== oldBackSize) {
+			await this.setOnlyPlaceholderSize(this.measurement.sliderProperties.endOffset + fixedBackSize)
+		}
 	}
 
-	protected override async setBackPlaceholderSize(size: number) {
-		if (!this.backPlaceholder) {
+	/** Set size for the only placeholder. */
+	protected async setOnlyPlaceholderSize(size: number) {
+		if (!this.onlyPlaceholder) {
 			return
 		}
 		
 		await barrierDOMWriting()
-		this.doa.setSize(this.backPlaceholder, size)
-		this.measurement.cachePlaceholderProperties(this.startIndex, this.endIndex, this.dataCount, size)
+		this.doa.setSize(this.onlyPlaceholder, size)
+		this.measurement.setOnlyPlaceholderSize(size)
 	}
 
 	protected override async afterMeasured() {
 
 		// When reach start index but may not reach scroll start.
-		if (this.startIndex === 0) {
-
-			// E.g., `sliderStartPosition` is `10`,
-			// means have 10px higher than start,
-			// reset to start position 0 cause this 10px get removed,
-			// And we need to scroll up (element down) for 10px.
-			let moreSize = -this.measurement.sliderProperties.startOffset
-			
-			if (moreSize !== 0) {
-				await barrierDOMReading()
-				let scrolled = this.doa.getScrolled(this.scroller) + moreSize
-
-				await barrierDOMWriting()
-				this.doa.setScrolled(this.scroller, scrolled)
-				this.alignAt = 'start'
-				await this.setPosition(0)
-			}
+		if (this.startIndex === 0 && this.endIndex > 0) {
+			this.alignDirection = 'start'
+			await this.fillNeedToAlign(this.repeat.children[0] as HTMLElement)
+			await this.setPosition(0)
+			await this.doAlignAdjustment()
 		}
 
-		// When reach scroll start but not start index.
-		else if (this.measurement.sliderProperties.startOffset <= 0) {
+		// Front placeholder is too much difference when scrolling up.
+		else if (this.alignDirection === 'end') {
+			let frontSize = this.measurement.sliderProperties.startOffset
+			let fixedFrontSize = this.measurement.fixFrontPlaceholderSize(frontSize, this.startIndex)
 
-			// Guess size of items before, and add missing size of current rendering.
-			let newPosition = this.measurement.calcScrollPosition(this.startIndex, 'start')
-			let moreSize = newPosition - this.measurement.sliderProperties.startOffset
-			let scrolled = this.doa.getScrolled(this.scroller) + moreSize
-
-			await barrierDOMWriting()
-			this.doa.setScrolled(this.scroller, scrolled)
-
-			await this.setBackPlaceholderSize(this.measurement.placeholderProperties.frontSize + moreSize)
-
-			this.alignAt = 'start'
-			await this.setPosition(newPosition)
+			if (fixedFrontSize !== frontSize) {
+				let newEndOffset = this.measurement.sliderProperties.endOffset + (fixedFrontSize - frontSize)
+				await this.fillNeedToAlign(this.repeat.children[0] as HTMLElement)
+				await this.setPosition(newEndOffset)
+				await this.doAlignAdjustment()
+			}
 		}
 
 		// When reach end index but not scroll end.
 		if (this.endIndex === this.dataCount) {
 
-			// Placeholder size is too large and should be shrink.
-			if (this.measurement.placeholderProperties.frontSize > this.measurement.sliderProperties.endOffset) {
-				await this.setBackPlaceholderSize(this.measurement.sliderProperties.endOffset)
-			}
+			// Placeholder size should be keep consistent with end position.
+			await this.setOnlyPlaceholderSize(this.measurement.sliderProperties.endOffset)
 		}
 
-		// When reach scroll end but not end index.
-		// Note `scrollTop` value may be float, but two heights are int.
-		else if (this.doa.getScrolled(this.scroller) + this.doa.getClientSize(this.scroller) >= this.doa.getScrollSize(this.scroller)) {
-			let moreSize = this.measurement.calcScrollPosition(this.dataCount, 'end')
-				- this.measurement.calcScrollPosition(this.endIndex, 'end')
-
-			await this.setBackPlaceholderSize(this.measurement.placeholderProperties.frontSize + moreSize)
+		// When scrolling down, and reach scroll end but not end index.
+		// This is very rare because we have updated placeholder size using previously measured.
+		else if (this.alignDirection === 'start') {
+			let oldBackSize = this.measurement.onlyPlaceholderProperties.size - this.measurement.sliderProperties.endOffset
+			if (oldBackSize < 0) {
+				await this.updateRestPlaceholderSize()
+			}
 		}
 	}
 
 	/** Get new position for continuously update. */
-	protected override async getContinuousPosition(oldStartIndex: number, alignAt: 'start' | 'end') {
+	protected override async getContinuousPosition(oldStartIndex: number, alignDirection: 'start' | 'end') {
 		await barrierDOMReading()
 		let position: number
 
-		if (alignAt === 'start') {
+		if (alignDirection === 'start') {
 			let elIndex = this.startIndex - oldStartIndex
 			let el = this.repeat.children[elIndex] as HTMLElement
 

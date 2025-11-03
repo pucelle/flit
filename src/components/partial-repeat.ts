@@ -58,7 +58,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/** Latest align direction. */
 	get alignDirection(): 'start' | 'end' | null {
-		return this.renderer!.alignAt
+		return this.renderer!.alignDirection
 	}
 
 	/** Live data, rendering part of all the data. */

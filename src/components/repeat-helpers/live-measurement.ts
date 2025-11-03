@@ -4,22 +4,9 @@ import {PartialMeasurement, UnCoveredDirection} from './partial-measurement'
 
 interface LatestOnlyPlaceholderProperties {
 
-	/** Latest start index when last time cache placeholder. */
-	startIndex: number
-
-	/** Latest end index when last time cache placeholder. */
-	endIndex: number
-
-	/** Latest average item size when last time cache placeholder. */
-	itemSize: number
-
-	/** Latest data count when last time cache placeholder. */
-	dataCount: number
-
-	/** Latest only placeholder size when last time cache placeholder. */
+	/** Latest front placeholder size when last time cache placeholder. */
 	size: number
 }
-
 
 /**
  * It help to do measurement for LiveRenderer,
@@ -42,10 +29,6 @@ export class LiveMeasurement extends PartialMeasurement {
 	 * Readonly outside.
 	 */
 	onlyPlaceholderProperties: LatestOnlyPlaceholderProperties = {
-		startIndex: 0,
-		endIndex: 0,
-		itemSize: 0,
-		dataCount: 0,
 		size: 0,
 	}
 
@@ -107,76 +90,37 @@ export class LiveMeasurement extends PartialMeasurement {
 		this.sliderProperties.endOffset = this.sliderProperties.startOffset + sliderClientSize
 	}
 
-	/** 
-	 * Not like two placeholders as pair which should always to be updated,
-	 * An only placeholder has no need to update at most time,
-	 * Only when scrolling down and item size changed much, need to update.
-	 */
-	shouldUpdateOnlyPlaceholderSize(endIndex: number, dataCount: number): boolean {
-
-		// Data count get changed.
-		if (dataCount !== this.onlyPlaceholderProperties.dataCount) {
-			return true
-		}
-
-		// Normally a line appears.
-		let newItemSize = this.getItemSize()
-		if (Math.abs(newItemSize - this.onlyPlaceholderProperties.itemSize) > 10) {
-			return true
-		}
-
-		// When scrolling up, no need to update.
-		let scrollingDown = endIndex > this.onlyPlaceholderProperties.endIndex
-		if (!scrollingDown) {
-			return false
-		}
-
-		let newPlaceholderSize = this.calcOnlyPlaceholderSize(dataCount)
-		let guessSizeAfterEnd = newPlaceholderSize - this.sliderProperties.endOffset
-		let currentSizeAfterEnd = this.onlyPlaceholderProperties.size - this.sliderProperties.endOffset
-		let sizeChangedMuch = Math.abs(guessSizeAfterEnd - currentSizeAfterEnd) / Math.max(guessSizeAfterEnd, currentSizeAfterEnd) > 0.333
-
-		return sizeChangedMuch
-	}
-
-	/** Calculate the only placeholder size */
-	calcOnlyPlaceholderSize(dataCount: number): number {
+	/** Calculate the back placeholder size as the only placeholder. */
+	getOnlyPlaceholderSize(dataCount: number): number {
 		if (this.preEndPositions) {
 			let end = this.preEndPositions.length > 0 ? this.preEndPositions[this.preEndPositions.length - 1] : 0
 			return end
 		}
 
 		let itemSize = this.getItemSize()
-		let positionProperties = this.sliderProperties
+		let sliderPs = this.sliderProperties
 
 		// Can reuse previous measured end slider position properties.
-		if (positionProperties.endIndex <= dataCount
-			&& positionProperties.endIndex > 0
-			&& positionProperties.endOffset > 0
+		if (sliderPs.endIndex <= dataCount
+			&& sliderPs.endIndex > 0
+			&& sliderPs.endOffset > 0
 		) {
-			return this.sliderProperties.endOffset + itemSize * (dataCount - positionProperties.endIndex)
+			return this.sliderProperties.endOffset + itemSize * (dataCount - sliderPs.endIndex)
 		}
 
 		// Can reuse previous measured start slider position properties.
-		if (positionProperties.startIndex <= dataCount
-			&& positionProperties.startIndex > 0
-			&& positionProperties.startOffset > 0
+		if (sliderPs.startIndex <= dataCount
+			&& sliderPs.startIndex > 0
+			&& sliderPs.startOffset > 0
 		) {
-			return this.sliderProperties.startOffset + itemSize * (dataCount - positionProperties.startIndex)
+			return this.sliderProperties.startOffset + itemSize * (dataCount - sliderPs.startIndex)
 		}
 
 		return itemSize * dataCount
 	}
 
-	/** Cache placeholder size and other properties. */
-	cachePlaceholderProperties(startIndex: number, endIndex: number, dataCount: number, size: number) {
-		this.onlyPlaceholderProperties = {
-			startIndex,
-			endIndex,
-			itemSize: this.getItemSize(),
-			dataCount,
-			size,
-		}
+	setOnlyPlaceholderSize(size: number) {
+		this.onlyPlaceholderProperties.size = size
 	}
 
 	/** Check cover situation and decide where to render more contents. */

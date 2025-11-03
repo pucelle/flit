@@ -136,7 +136,7 @@ export class PartialMeasurement {
 
 	/* Whether has measured. */
 	hasMeasured(): boolean {
-		return this.stat.getLatestSize() > 0
+		return this.getItemSize() > 0
 	}
 
 	/** Get item size. */
@@ -248,30 +248,45 @@ export class PartialMeasurement {
 	}
 
 	/** Calculate a rough front placeholder sizes. */
-	getFrontPlaceholderSize(startIndex: number): number {
+	getNormalFrontPlaceholderSize(startIndex: number): number {
 		let itemSize = this.getItemSize()
 		return itemSize * startIndex
 	}
 
 	/** Calculate a rough back placeholder sizes. */
-	getBackPlaceholderSize(endIndex: number, dataCount: number): number {
+	getNormalBackPlaceholderSize(endIndex: number, dataCount: number): number {
 		let itemSize = this.getItemSize()
 		return itemSize * (dataCount - endIndex)
 	}
 
-	/** Set front placeholder size to limit it in range. */
-	setFrontPlaceholderSize(frontSize: number, startIndex: number) {
-		let front = this.getFrontPlaceholderSize(startIndex)
-		frontSize = Math.min(Math.max(frontSize, front / 2), front * 2)
+	/** Fix front placeholder size to limit it in range. */
+	fixFrontPlaceholderSize(frontSize: number, startIndex: number): number {
+		let normalSize = this.getNormalFrontPlaceholderSize(startIndex)
 
+		if (frontSize < normalSize / 2 || frontSize > normalSize * 2) {
+			frontSize = normalSize
+		}
+
+		return frontSize
+	}
+
+	/** Fix back placeholder size to limit it in range. */
+	fixBackPlaceholderSize(backSize: number, endIndex: number, dataCount: number): number {
+		let normalSize = this.getNormalBackPlaceholderSize(endIndex, dataCount)
+		if (backSize < normalSize / 2 || backSize > normalSize * 2) {
+			backSize = normalSize
+		}
+
+		return backSize
+	}
+
+	/** Set front placeholder size. */
+	setFrontPlaceholderSize(frontSize: number) {
 		this.placeholderProperties.frontSize = frontSize
 	}
 
-	/** Set back placeholder size to limit it in range. */
-	setBackPlaceholderSize(backSize: number, endIndex: number, dataCount: number) {
-		let back = this.getBackPlaceholderSize(endIndex, dataCount)
-		backSize = Math.min(Math.max(backSize, back / 2), back * 2)
-
+	/** Set back placeholder size. */
+	setBackPlaceholderSize(backSize: number) {
 		this.placeholderProperties.backSize = backSize
 	}
 
@@ -292,12 +307,13 @@ export class PartialMeasurement {
 		}
 
 		// Can't cover and need to render more items at top/left.
-		else if (sliderStart > 0) {
+		// The `1px` is because sometimes close to edge but have 0.000px diff.
+		else if (sliderStart - 1 > 0) {
 			return 'start'
 		}
 
 		// Can't cover and need to render more items at bottom/right.
-		else if (sliderEnd < scrollerSize) {
+		else if (sliderEnd + 1 < scrollerSize) {
 			return 'end'
 		}
 
