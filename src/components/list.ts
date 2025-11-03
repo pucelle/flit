@@ -249,16 +249,11 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderItems(items: ListItem<T>[]): RenderResult {
-		let anySiblingHaveChildren = items.some(item => {
-			return (item as ListItem<T>).children
-				&& (item as ListItem<T>).children!.length > 0
-		})
-
 		if (this.partialRenderingScrollerSelector && items.length > 50) {
 			return html`
 				<PartialRepeat
 					.data=${items}
-					.renderFn=${(item: ListItem<T> | {}) => this.renderItemOrSplitter(item, anySiblingHaveChildren)}
+					.renderFn=${(item: ListItem<T> | {}) => this.renderItemOrSplitter(item)}
 					.overflowDirection="vertical"
 					.guessedItemSize=${25}
 					.scrollerSelector=${this.partialRenderingScrollerSelector}
@@ -268,22 +263,22 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else {
 			return html`
 				<lu:for ${items}>${(item: ListItem<T> | {}) => {
-					return this.renderItemOrSplitter(item, anySiblingHaveChildren)
+					return this.renderItemOrSplitter(item)
 				}}</lu:for>
 			`
 		}
 	}
 
-	protected renderItemOrSplitter(item: ListItem<T> | {}, anySiblingHaveChildren: boolean): RenderResult {
+	protected renderItemOrSplitter(item: ListItem<T> | {}): RenderResult {
 		if (!item.hasOwnProperty('value')) {
 			return html`<div class="list-splitter"></div>`
 		}
 		else {
-			return this.renderItem(item as ListItem<T>, anySiblingHaveChildren)
+			return this.renderItem(item as ListItem<T>)
 		}
 	}
 
-	protected renderItem(item: ListItem<T>, anySiblingHaveChildren: boolean): RenderResult {
+	protected renderItem(item: ListItem<T>): RenderResult {
 		let expanded = this.hasExpanded(item)
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
@@ -297,7 +292,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				?:contextmenu=${itemContextmenu, itemContextmenu!, {matchSelector: '.list-item'} as PopupOptions}
 				@click.prevent=${() => this.onClickItem(item)}
 			>
-				${this.renderItemPlaceholder(item, expanded, anySiblingHaveChildren)}
+				${this.renderItemPlaceholder(item, expanded)}
 				${this.renderIcon(item)}
 				${this.renderItemContent(item)}
 				${this.renderSelectedIcon(item)}
@@ -307,7 +302,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		`
 	}
 
-	protected renderItemPlaceholder(item: ListItem<T>, expanded: boolean, anySiblingHaveChildren: boolean) {
+	protected renderItemPlaceholder(item: ListItem<T>, expanded: boolean) {
 		let children = item.children
 		if (children && children.length > 0) {
 			return html`
@@ -318,11 +313,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 				</div>
 			`
 		}
-		else if (anySiblingHaveChildren) {
-			return html`<div class='list-toggle-placeholder' />`
-		}
 		else {
-			return null
+			return html`<div class='list-toggle-placeholder' />`
 		}
 	}
 
