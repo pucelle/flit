@@ -126,11 +126,6 @@ export class PartialMeasurement {
 		this.scrollerSize = this.doa.getClientSize(this.scroller)
 	}
 
-	/** Directly set but not read scroller size. */
-	setScrollerSize(size: number) {
-		this.scrollerSize = size
-	}
-
 	/** 
 	 * Guess an item size for first-time paint,
 	 * and avoid it checking for item-size and render twice when initialization.
@@ -145,7 +140,7 @@ export class PartialMeasurement {
 	}
 
 	/** Get item size. */
-	protected getItemSize(): number {
+	getItemSize(): number {
 		return this.stat.getLatestSize() || this.guessedItemSize
 	}
 
@@ -180,7 +175,7 @@ export class PartialMeasurement {
 		this.continuousRenderRange = null
 	}
 
-	/** Calc scroll position by specified index and aligning at start or end. */
+	/** Calc scroll position by aligning specified index at start or end. */
 	calcScrollPosition(index: number, alignAt: 'start' | 'end'): number {
 		if (alignAt === 'start') {
 			return this.getItemSize() * index + this.sliderProperties.initialOffset
@@ -267,7 +262,7 @@ export class PartialMeasurement {
 	/** Set front placeholder size to limit it in range. */
 	setFrontPlaceholderSize(frontSize: number, startIndex: number) {
 		let front = this.getFrontPlaceholderSize(startIndex)
-		frontSize = Math.max(Math.min(frontSize, front / 2), front * 2)
+		frontSize = Math.min(Math.max(frontSize, front / 2), front * 2)
 
 		this.placeholderProperties.frontSize = frontSize
 	}
@@ -275,7 +270,7 @@ export class PartialMeasurement {
 	/** Set back placeholder size to limit it in range. */
 	setBackPlaceholderSize(backSize: number, endIndex: number, dataCount: number) {
 		let back = this.getBackPlaceholderSize(endIndex, dataCount)
-		backSize = Math.max(Math.min(backSize, back / 2), back * 2)
+		backSize = Math.min(Math.max(backSize, back / 2), back * 2)
 
 		this.placeholderProperties.backSize = backSize
 	}
@@ -297,12 +292,12 @@ export class PartialMeasurement {
 		}
 
 		// Can't cover and need to render more items at top/left.
-		else if (sliderStart - 1 > 0) {
+		else if (sliderStart > 0) {
 			return 'start'
 		}
 
 		// Can't cover and need to render more items at bottom/right.
-		else if (sliderEnd + 1 < scrollerSize) {
+		else if (sliderEnd < scrollerSize) {
 			return 'end'
 		}
 

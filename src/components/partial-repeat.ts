@@ -118,19 +118,6 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		return this.renderFn(item, this.startIndex + index)
 	}
 
-	override beforeDisconnectCallback(param: PartCallbackParameterMask): void {
-		super.beforeDisconnectCallback(param)
-
-		// If remove current component from parent, remove placeholder also.
-		if (this.frontPlaceholder) {
-			if ((param & PartCallbackParameterMask.FromOwnStateChange) > 0) {
-				this.frontPlaceholder.remove()
-				this.frontPlaceholder = null
-				this.renderer = null
-			}
-		}
-	}
-
 	protected override onConnected(this: PartialRepeat<any, {}>) {
 		super.onConnected()
 
@@ -139,25 +126,42 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 		this.renderer!.connect()
 	}
-	
-	protected override onWillDisconnect() {
-		super.onWillDisconnect()
-		this.renderer!.disconnect()
+
+	override async beforeDisconnectCallback(param: PartCallbackParameterMask): Promise<void> {
+		super.beforeDisconnectCallback(param)
+		
+		if (this.renderer) {
+			await this.renderer!.disconnect()
+			this.renderer = null
+		}
+
+		// If remove current component from parent, remove placeholder also.
+		if ((param & PartCallbackParameterMask.FromOwnStateChange) > 0) {
+			if (this.frontPlaceholder) {
+				this.frontPlaceholder.remove()
+				this.frontPlaceholder = null
+			}
+
+			if (this.backPlaceholder) {
+				this.backPlaceholder.remove()
+				this.backPlaceholder = null
+			}
+		}
 	}
 
 	protected initPlaceholders() {
-		if (this.frontPlaceholder) {
+		if (this.backPlaceholder) {
 			return
 		}
 
 		this.frontPlaceholder = document.createElement('div')
-		this.frontPlaceholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
+		this.frontPlaceholder.style.cssText = 'width: 100%; visibility: hidden;'
 
 		this.backPlaceholder = document.createElement('div')
-		this.backPlaceholder.style.cssText = 'position: absolute; left: 0; top: 0; width: 1px; visibility: hidden;'
+		this.backPlaceholder.style.cssText = 'width: 100%; visibility: hidden;'
 
 		this.el.before(this.frontPlaceholder)
-		this.el.after(this.frontPlaceholder)
+		this.el.after(this.backPlaceholder)
 	}
 
 	/** Init renderer when connected. */
@@ -166,11 +170,9 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 			return
 		}
 
-		let slider = this.el
-
 		this.renderer = new PartialRenderer(
 			this.scroller!,
-			slider,
+			this.el,
 			this.el,
 			this.frontPlaceholder,
 			this.backPlaceholder,

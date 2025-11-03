@@ -49,6 +49,11 @@ export class LiveMeasurement extends PartialMeasurement {
 		size: 0,
 	}
 
+	/** Directly set but not read scroller size. */
+	setScrollerSize(size: number) {
+		this.scrollerSize = size
+	}
+
 	/** Set `preEndPositions` before updating. */
 	setPreEndPositions(positions: number[] | null) {
 		this.preEndPositions = positions
