@@ -202,7 +202,7 @@ export class PartialRenderer {
 	}
 	
 	/** After component that use this renderer will get disconnected. */
-	async disconnect() {
+	disconnect() {
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
 		ResizeWatcher.unwatch(this.slider, this.onSliderSizeUpdated, this)
 		ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)

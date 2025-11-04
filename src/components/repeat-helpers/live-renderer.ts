@@ -72,11 +72,12 @@ export class LiveRenderer extends PartialRenderer {
 		}
 	}
 
-	override async disconnect() {
+	override disconnect() {
 
 		// For restoring scroll position later.
+		// Here can't `barrierDOMReading`, or it delays node removing,
+		// can cause element existing with it's toggling content at same time.
 		if (!this.asFollower) {
-			await barrierDOMReading()
 			this.setRenderIndices('start', this.locateVisibleIndex('start'))
 		}
 

@@ -127,11 +127,11 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.connect()
 	}
 
-	override async beforeDisconnectCallback(param: PartCallbackParameterMask): Promise<void> {
+	override beforeDisconnectCallback(param: PartCallbackParameterMask) {
 		super.beforeDisconnectCallback(param)
 		
 		if (this.renderer) {
-			await this.renderer!.disconnect()
+			this.renderer!.disconnect()
 			this.renderer = null
 		}
 
