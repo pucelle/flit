@@ -81,6 +81,11 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return index >= this.getStartVisibleIndex(minimumRatio) && index <= this.getEndVisibleIndex(minimumRatio)
 	}
 	
+	/** Get element at specified index. */
+	getElementAtIndex(index: number): HTMLElement | undefined {
+		return this.el.children[index] as HTMLElement | undefined
+	}
+
 	/** 
 	 * Get the index of the first visible item.
 	 * Note it's returned index can be `0~list.length`.

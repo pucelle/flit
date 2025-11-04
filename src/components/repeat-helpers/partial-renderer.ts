@@ -29,6 +29,9 @@ export interface NeedToApply {
 	 * by adjusting `startIndex` or `endIndex`.
 	 */
 	tryPersistContinuous: boolean
+
+	/** Whether will reset scroll position, normally it's true. */
+	resetScroll: boolean
 }
 
 
@@ -61,6 +64,7 @@ export class PartialRenderer {
 	readonly frontPlaceholder: HTMLDivElement | null
 	readonly backPlaceholder: HTMLDivElement | null
 	readonly updateCallback: () => void
+	readonly onUpdatedCallback: () => void
 
 	/** Do rendered items measurement. */
 	readonly measurement: PartialMeasurement
@@ -109,6 +113,7 @@ export class PartialRenderer {
 		endIndex: undefined,
 		alignDirection: 'start',
 		tryPersistContinuous: false,
+		resetScroll: true,
 	}
 
 	/** If need to align element in same position. */
@@ -122,7 +127,8 @@ export class PartialRenderer {
 		frontPlaceholder: HTMLDivElement | null,
 		backPlaceholder: HTMLDivElement | null,
 		doa: DirectionalOverflowAccessor,
-		updateCallback: () => void
+		updateCallback: () => void,
+		onUpdatedCallback: () => void
 	) {
 		this.scroller = scroller
 		this.slider = slider
@@ -131,6 +137,7 @@ export class PartialRenderer {
 		this.backPlaceholder = backPlaceholder
 		this.doa = doa
 		this.updateCallback = updateCallback
+		this.onUpdatedCallback = onUpdatedCallback
 		this.measurement = this.initMeasurement()
 	}
 
@@ -159,13 +166,15 @@ export class PartialRenderer {
 		alignDirection: 'start' | 'end',
 		startIndex: number | undefined,
 		endIndex: number | undefined = undefined,
-		tryPersistContinuous: boolean = false
+		tryPersistContinuous: boolean = false,
+		resetScroll: boolean = true
 	) {
 		this.needToApply = {
 			alignDirection,
 			startIndex,
 			endIndex,
 			tryPersistContinuous,
+			resetScroll,
 		}
 	}
 
@@ -301,6 +310,8 @@ export class PartialRenderer {
 		else {
 			await this.afterMeasured()
 		}
+
+		this.onUpdatedCallback()
 	}
 
 	/** Update when start index specified and need to apply. */
@@ -560,6 +571,8 @@ export class PartialRenderer {
 		await this.updateRestPlaceholderSize()
 		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
 		await this.afterMeasured()
+
+		this.onUpdatedCallback
 	}
 
 	/** Update and make render content continuous. */

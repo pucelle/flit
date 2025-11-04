@@ -44,9 +44,10 @@ export class LiveRenderer extends PartialRenderer {
 		placeholder: HTMLDivElement | null,
 		asFollower: boolean,
 		doa: DirectionalOverflowAccessor,
-		updateCallback: () => void
+		updateCallback: () => void,
+		onUpdatedCallback: () => void
 	) {
-		super(scroller, slider, repeat, null, null, doa, updateCallback)
+		super(scroller, slider, repeat, null, null, doa, updateCallback, onUpdatedCallback)
 		this.onlyPlaceholder = placeholder
 		this.asFollower = asFollower
 	}

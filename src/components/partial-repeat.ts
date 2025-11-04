@@ -1,9 +1,16 @@
-import {effect, untilUpdateComplete} from '@pucelle/lupos'
+import {effect, promiseWithResolves} from '@pucelle/lupos'
 import {Repeat, RepeatRenderFn} from './repeat'
 import {html, PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
 import {LowerIndexWithin} from '../tools'
 import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
+
+
+interface PartialRepeatEvents {
+
+	/** After partial updated, */
+	'partial-updated': () => void
+}
 
 
 /** 
@@ -15,7 +22,7 @@ import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
  * and may cause additional re-layout to adjust scroll position when scrolling up,
  * especially when item sizes are different from each other.
  */
-export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
+export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatEvents> {
 
 	/** 
 	 * Render function to generate render result by each item.
@@ -86,7 +93,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	/** Update after data change. */
-	override update() {
+	override async update() {
 
 		// `this.$needsUpdate` here is required.
 		// component map disconnect and connect soon, so will be enqueued for multiple times.
@@ -132,7 +139,6 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		
 		if (this.renderer) {
 			this.renderer!.disconnect()
-			this.renderer = null
 		}
 
 		// If remove current component from parent, remove placeholder also.
@@ -177,13 +183,26 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.frontPlaceholder,
 			this.backPlaceholder,
 			this.doa,
-			this.updateLiveData.bind(this)
+			this.updateLiveData.bind(this),
+			this.onPartialUpdated.bind(this)
 		)
+
+		this.renderer
+	}
+
+	/** After partial content updated. */
+	protected onPartialUpdated(this: PartialRepeat) {
+		this.fire('partial-updated')
 	}
 
 	/** Check whether item at specified index is rendered. */
 	isIndexRendered(index: number): boolean {
 		return index >= this.startIndex && index < this.endIndex
+	}
+
+	/** Get element at specified index. */
+	override getElementAtIndex(index: number): HTMLElement | undefined {
+		return this.el.children[index - this.startIndex] as HTMLElement | undefined
 	}
 
 	/** 
@@ -231,23 +250,23 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	override async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		// No need to worry about coverage, set scroll position cause scroll event emitted.
-
-		if (!this.isIndexRendered(index)) {
-			await this.toRenderItemAtIndex(index, 'start')
-		}
-
+		await this.toRenderItemAtIndex(index, 'start', true)
 		return super.scrollIndexToStart(index - this.startIndex, gap, duration, easing)
 	}
 
 	/** To ensure item at index get rendered. */
-	protected async toRenderItemAtIndex(index: number, alignDirection: 'start' | 'end') {
+	async toRenderItemAtIndex(this: PartialRepeat, index: number, alignDirection: 'start' | 'end', resetScroll: boolean = true) {
+		if (this.isIndexRendered(index)) {
+			return
+		}
+
 		let startIndex: number | undefined
 		let endIndex: number | undefined
 		let renderCount = this.endIndex - this.startIndex
 
 		if (alignDirection === 'start') {
-			startIndex = index
+			let startVisibleIndex = this.getStartVisibleIndex()
+			startIndex = startVisibleIndex
 		}
 		else {
 			let endVisibleIndex = this.getEndVisibleIndex()
@@ -261,19 +280,18 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 			}
 		}
 
-		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
+		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true, resetScroll)
 		this.willUpdate()
 
-		// Wait for two loops, may check after first rendering and re-render.
-		await untilUpdateComplete()
-		await untilUpdateComplete()
+		// Until partial content updated.
+		let {promise, resolve} = promiseWithResolves()
+		this.once('partial-updated', resolve)
+		await promise
 	}
 
 	override async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		if (!this.isIndexRendered(index)) {
-			let alignDirection: 'start' | 'end' = index >= this.startIndex ? 'start' : 'end'
-			await this.toRenderItemAtIndex(index, alignDirection)
-		}
+		let alignDirection: 'start' | 'end' = index >= this.startIndex ? 'start' : 'end'
+		await this.toRenderItemAtIndex(index, alignDirection, true)
 
 		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)
 	}
