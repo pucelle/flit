@@ -17,7 +17,10 @@ export interface RouterHistoryState {
 	/** An unique auto increment id. */
 	index: number
 
-	/** State path, normally starts with `/`. */
+	/** 
+	 * State path, normally starts with `/`.
+	 * It's the path after uri component decoded.
+	 */
 	path: string
 }
 
@@ -89,10 +92,10 @@ export class Router<E = {}> extends Component<RouterEvents & E> {
 
 		if (!this.path) {
 			if (this.hashMode) {
-				this.path = location.hash.slice(1) || '/'
+				this.path = decodeURIComponent(location.hash.slice(1)) || '/'
 			}
 			else {
-				this.path = location.pathname || '/'
+				this.path = decodeURIComponent(location.pathname) || '/'
 			}
 		}
 

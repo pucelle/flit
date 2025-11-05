@@ -1,7 +1,7 @@
-import {barrierDOMReading, barrierDOMWriting, ResizeWatcher} from '@pucelle/ff'
+import {ResizeWatcher} from '@pucelle/ff'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {LiveMeasurement} from './live-measurement'
-import {DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
+import {barrierDOMReading, barrierDOMWriting, DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
 import {PartialRenderer} from './partial-renderer'
 
 
@@ -44,10 +44,9 @@ export class LiveRenderer extends PartialRenderer {
 		placeholder: HTMLDivElement | null,
 		asFollower: boolean,
 		doa: DirectionalOverflowAccessor,
-		updateCallback: () => void,
-		onUpdatedCallback: () => void
+		updateCallback: () => void
 	) {
-		super(scroller, slider, repeat, null, null, doa, updateCallback, onUpdatedCallback)
+		super(scroller, slider, repeat, null, null, doa, updateCallback)
 		this.onlyPlaceholder = placeholder
 		this.asFollower = asFollower
 	}
@@ -62,6 +61,12 @@ export class LiveRenderer extends PartialRenderer {
 	}
 
 	override async connect() {
+		if (this.connected) {
+			return
+		}
+
+		this.connected = true
+
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
 		await untilFirstPaintCompleted()
 
@@ -74,6 +79,11 @@ export class LiveRenderer extends PartialRenderer {
 	}
 
 	override disconnect() {
+		if (!this.connected) {
+			return
+		}
+
+		this.connected = false
 
 		// For restoring scroll position later.
 		// Here can't `barrierDOMReading`, or it delays node removing,
@@ -153,7 +163,7 @@ export class LiveRenderer extends PartialRenderer {
 		}
 		
 		// Calc back size by last time rendering result.
-		let oldBackSize = this.measurement.onlyPlaceholderProperties.size - this.measurement.sliderProperties.endOffset
+		let oldBackSize = this.measurement.placeholderProperties.backSize - this.measurement.sliderProperties.endOffset
 		let fixedBackSize = this.measurement.fixBackPlaceholderSize(oldBackSize, this.measurement.sliderProperties.endIndex, this.dataCount)
 
 		// Update back size only when have at least 50% difference.
@@ -206,7 +216,7 @@ export class LiveRenderer extends PartialRenderer {
 		// When scrolling down, and reach scroll end but not end index.
 		// This is very rare because we have updated placeholder size using previously measured.
 		else if (this.alignDirection === 'start') {
-			let oldBackSize = this.measurement.onlyPlaceholderProperties.size - this.measurement.sliderProperties.endOffset
+			let oldBackSize = this.measurement.placeholderProperties.backSize - this.measurement.sliderProperties.endOffset
 			if (oldBackSize < 0) {
 				await this.updateRestPlaceholderSize()
 			}

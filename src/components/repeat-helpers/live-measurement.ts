@@ -1,12 +1,7 @@
-import {barrierDOMReading, ValueListUtils} from '@pucelle/ff'
+import {ValueListUtils} from '@pucelle/ff'
 import {PartialMeasurement, UnCoveredDirection} from './partial-measurement'
+import {barrierDOMReading} from '@pucelle/lupos'
 
-
-interface LatestOnlyPlaceholderProperties {
-
-	/** Latest front placeholder size when last time cache placeholder. */
-	size: number
-}
 
 /**
  * It help to do measurement for LiveRenderer,
@@ -23,14 +18,6 @@ export class LiveMeasurement extends PartialMeasurement {
 	 * Which means: can ignores shared paddings or margins.
 	 */
 	private preEndPositions: number[] | null = null
-
-	/** 
-	 * The only placeholder properties.
-	 * Readonly outside.
-	 */
-	onlyPlaceholderProperties: LatestOnlyPlaceholderProperties = {
-		size: 0,
-	}
 
 	/** Directly set but not read scroller size. */
 	setScrollerSize(size: number) {
@@ -119,8 +106,9 @@ export class LiveMeasurement extends PartialMeasurement {
 		return itemSize * dataCount
 	}
 
+	/** Use back size property to cache only size. */
 	setOnlyPlaceholderSize(size: number) {
-		this.onlyPlaceholderProperties.size = size
+		this.placeholderProperties.backSize = size
 	}
 
 	/** Check cover situation and decide where to render more contents. */

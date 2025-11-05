@@ -1,8 +1,8 @@
-import {AsyncTaskQueue, barrierDOMReading, barrierDOMWriting, ResizeWatcher} from '@pucelle/ff'
+import {AsyncTaskQueue, ResizeWatcher} from '@pucelle/ff'
 import {locateVisibleIndex} from './index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialMeasurement} from './partial-measurement'
-import {DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
+import {DOMEvents, untilFirstPaintCompleted, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
 
 
 export interface NeedToApply {
@@ -61,7 +61,6 @@ export class PartialRenderer {
 	readonly frontPlaceholder: HTMLDivElement | null
 	readonly backPlaceholder: HTMLDivElement | null
 	readonly updateCallback: () => void
-	readonly onUpdatedCallback: () => void
 
 	/** Do rendered items measurement. */
 	readonly measurement: PartialMeasurement
@@ -95,6 +94,9 @@ export class PartialRenderer {
 	 */
 	endIndex: number = 0
 
+	/** Whether connected. */
+	protected connected: boolean = false
+
 	/** Enqueue rendering. */
 	protected renderQueue: AsyncTaskQueue = new AsyncTaskQueue()
 
@@ -123,8 +125,7 @@ export class PartialRenderer {
 		frontPlaceholder: HTMLDivElement | null,
 		backPlaceholder: HTMLDivElement | null,
 		doa: DirectionalOverflowAccessor,
-		updateCallback: () => void,
-		onUpdatedCallback: () => void
+		updateCallback: () => void
 	) {
 		this.scroller = scroller
 		this.slider = slider
@@ -133,7 +134,6 @@ export class PartialRenderer {
 		this.backPlaceholder = backPlaceholder
 		this.doa = doa
 		this.updateCallback = updateCallback
-		this.onUpdatedCallback = onUpdatedCallback
 		this.measurement = this.initMeasurement()
 	}
 
@@ -195,6 +195,12 @@ export class PartialRenderer {
 
 	/** After component that use this renderer get connected. */
 	async connect() {
+		if (this.connected) {
+			return
+		}
+
+		this.connected = true
+
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
 		await untilFirstPaintCompleted()
 
@@ -206,6 +212,12 @@ export class PartialRenderer {
 	
 	/** After component that use this renderer will get disconnected. */
 	disconnect() {
+		if (!this.connected) {
+			return
+		}
+
+		this.connected = false
+
 		DOMEvents.off(this.scroller, 'scroll', this.onScrollerScroll, this)
 		ResizeWatcher.unwatch(this.slider, this.onSliderSizeUpdated, this)
 		ResizeWatcher.unwatch(this.scroller, this.readScrollerSize, this)
@@ -243,7 +255,13 @@ export class PartialRenderer {
 	/** Calls `updateCallback`. */
 	protected async updateRendering() {
 		await barrierDOMWriting()
-		this.updateCallback()
+
+		// Because we update parent and self in serialization,
+		// Parent updating will cause child disconnect even child is in updating.
+		// So need to check `connected` every time after `barrierDOMWriting`.
+		if (this.connected) {
+			this.updateCallback()
+		}
 	}
 
 	/** Update from applying start index or just update data. */
@@ -259,7 +277,9 @@ export class PartialRenderer {
 		await this.renderQueue.enqueue(() => this.doNormalUpdate())
 
 		// If item size become smaller much, may cause can't fully covered.
-		await this.checkCoverage()
+		if (this.connected) {
+			await this.checkCoverage()
+		}
 	}
 
 	/** Update after index applied, or data updated. */
@@ -280,32 +300,36 @@ export class PartialRenderer {
 			await this.updateWithStartIndexPersist()
 		}
 
-		// May not measured yet.
-		if (hasMeasuredBefore) {
-			await this.updateRestPlaceholderSize()
-		}
-
-		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
-
-		// If newly measured, and render from a non-zero index, re-render after measured.
-		// Otherwise should at least update placeholder size.
-		if (!hasMeasuredBefore) {
-			if (needToApply?.startIndex) {
-				await this.updateByApplying(needToApply)
+		if (this.connected) {
+			
+			// May not measured yet.
+			if (hasMeasuredBefore) {
 				await this.updateRestPlaceholderSize()
-				await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
 			}
+
+			await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
+
+			// If newly measured, and render from a non-zero index, re-render after measured.
+			// Otherwise should at least update placeholder size.
+			if (!hasMeasuredBefore) {
+				if (needToApply?.startIndex) {
+					await this.updateByApplying(needToApply)
+
+					if (this.connected) {
+						await this.updateRestPlaceholderSize()
+						await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
+					}
+				}
+				else {
+					await this.updateRestPlaceholderSize()
+				}
+			}
+
+			// If has not measured, no need to check, will soon update again by coverage checking.
 			else {
-				await this.updateRestPlaceholderSize()
+				await this.afterMeasured()
 			}
 		}
-
-		// If has not measured, no need to check, will soon update again by coverage checking.
-		else {
-			await this.afterMeasured()
-		}
-
-		this.onUpdatedCallback()
 	}
 
 	/** Update when start index specified and need to apply. */
@@ -368,11 +392,13 @@ export class PartialRenderer {
 
 			await this.updateRendering()
 
-			await this.resetPositions(
-				hasMeasured,
-				tryPersistContinuous ? undefined : startIndex,
-				tryPersistContinuous ? undefined : endIndex
-			)
+			if (this.connected) {
+				await this.resetPositions(
+					hasMeasured,
+					tryPersistContinuous ? undefined : startIndex,
+					tryPersistContinuous ? undefined : endIndex
+				)
+			}
 		}
 	}
 
@@ -392,7 +418,7 @@ export class PartialRenderer {
 		await this.updateRendering()
 
 		// Reset scroll position when can't persist continuous.
-		if (!canPersist) {
+		if (!canPersist && this.connected) {
 			await this.resetPositions(true)
 		}
 	}
@@ -441,7 +467,10 @@ export class PartialRenderer {
 
 			let scrollPosition = this.measurement.calcScrollPosition(alignToStartIndex, this.alignDirection)
 			await barrierDOMWriting()
-			this.doa.setScrolled(this.scroller, scrollPosition)
+
+			if (this.connected) {
+				this.doa.setScrolled(this.scroller, scrollPosition)
+			}
 		}
 	}
 
@@ -451,7 +480,10 @@ export class PartialRenderer {
 
 		if (this.frontPlaceholder) {
 			await barrierDOMWriting()
-			this.doa.setSize(this.frontPlaceholder, position)
+
+			if (this.connected) {
+				this.doa.setSize(this.frontPlaceholder, position)
+			}
 		}
 	}
 
@@ -465,8 +497,11 @@ export class PartialRenderer {
 
 		// Update back size only when have at least 50% difference.
 		await barrierDOMWriting()
-		this.doa.setSize(this.backPlaceholder, backSize)
-		this.measurement.setBackPlaceholderSize(backSize)
+
+		if (this.connected) {
+			this.doa.setSize(this.backPlaceholder, backSize)
+			this.measurement.setBackPlaceholderSize(backSize)
+		}
 	}
 
 	/** After update complete, and after `measureAfterRendered`, do more check or do element alignment. */
@@ -562,11 +597,11 @@ export class PartialRenderer {
 			await this.updatePersistScrollPosition()
 		}
 		
-		await this.updateRestPlaceholderSize()
-		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
-		await this.afterMeasured()
-
-		this.onUpdatedCallback()
+		if (this.connected) {
+			await this.updateRestPlaceholderSize()
+			await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
+			await this.afterMeasured()
+		}
 	}
 
 	/** Update and make render content continuous. */
@@ -687,14 +722,20 @@ export class PartialRenderer {
 		this.alignDirection = 'start'
 
 		await this.updateRendering()
-		await this.resetPositions(false)
+
+		if (this.connected) {
+			await this.resetPositions(false)
+		}
 	}
 
 	/** Reset scroll position by current indices. */
 	protected async updateByNewIndices() {
 		this.alignDirection = 'start'
 		await this.updateRendering()
-		await this.resetPositions(true)
+
+		if (this.connected) {
+			await this.resetPositions(true)
+		}
 	}
 
 	/** Update by specified slider position. */
@@ -702,7 +743,7 @@ export class PartialRenderer {
 		this.alignDirection = direction
 		await this.updateRendering()
 
-		if (position !== null) {
+		if (position !== null && this.connected) {
 			await this.setPosition(position)
 		}
 	}

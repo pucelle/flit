@@ -1,16 +1,9 @@
-import {effect, promiseWithResolves} from '@pucelle/lupos'
+import {effect, untilUpdateComplete} from '@pucelle/lupos'
 import {Repeat, RepeatRenderFn} from './repeat'
 import {html, PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
 import {LowerIndexWithin} from '../tools'
 import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
-
-
-interface PartialRepeatEvents {
-
-	/** After partial updated, */
-	'partial-updated': () => void
-}
 
 
 /** 
@@ -22,7 +15,7 @@ interface PartialRepeatEvents {
  * and may cause additional re-layout to adjust scroll position when scrolling up,
  * especially when item sizes are different from each other.
  */
-export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatEvents> {
+export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 	/** 
 	 * Render function to generate render result by each item.
@@ -92,7 +85,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatE
 		this.willUpdate()
 	}
 
-	/** Update after data change. */
+	/** Update after data change, and also wait for renderer render complete. */
 	override async update() {
 
 		// `this.$needsUpdate` here is required.
@@ -101,7 +94,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatE
 			return
 		}
 
-		this.renderer!.update()
+		await this.renderer!.update()
 
 		// `updateLiveData` may not call `updateLiveData()` below.
 		this.$needsUpdate = false
@@ -142,7 +135,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatE
 		}
 
 		// If remove current component from parent, remove placeholder also.
-		if ((param & PartCallbackParameterMask.FromOwnStateChange) > 0) {
+		if ((param & PartCallbackParameterMask.AsDirectNode) > 0) {
 			if (this.frontPlaceholder) {
 				this.frontPlaceholder.remove()
 				this.frontPlaceholder = null
@@ -183,16 +176,10 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatE
 			this.frontPlaceholder,
 			this.backPlaceholder,
 			this.doa,
-			this.updateLiveData.bind(this),
-			this.onPartialUpdated.bind(this)
+			this.updateLiveData.bind(this)
 		)
 
 		this.renderer
-	}
-
-	/** After partial content updated. */
-	protected onPartialUpdated(this: PartialRepeat) {
-		this.fire('partial-updated')
 	}
 
 	/** Check whether item at specified index is rendered. */
@@ -273,10 +260,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatE
 		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
 		this.willUpdate()
 
-		// Until partial content updated.
-		let {promise, resolve} = promiseWithResolves()
-		this.once('partial-updated', resolve)
-		await promise
+		await untilUpdateComplete()
 	}
 
 	override async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {

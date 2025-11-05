@@ -1,7 +1,7 @@
-import {barrierDOMReading, barrierDOMWriting, DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
+import {DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
 import {html, render} from '@pucelle/lupos.js'
-import {DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
+import {DOMEvents, untilFirstPaintCompleted, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
 
 
 /** For `<f-table>` to resize column widths. */

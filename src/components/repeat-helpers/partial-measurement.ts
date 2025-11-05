@@ -1,6 +1,6 @@
 import {PartialSizeStat} from './partial-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {barrierDOMReading} from '@pucelle/ff'
+import {barrierDOMReading} from '@pucelle/lupos'
 
 
 export type UnCoveredDirection =
