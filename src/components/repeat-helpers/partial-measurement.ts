@@ -190,7 +190,7 @@ export class PartialMeasurement {
 		await barrierDOMReading()
 		
 		let scrolled = this.doa.getScrolled(this.scroller)
-		let sliderInitialOffset = this.doa.getOffset(this.slider, this.scroller)
+		let sliderInitialOffset = this.doa.getOffset(this.slider.previousElementSibling as HTMLElement, this.scroller)
 		let itemSize = this.getItemSize()
 		let startIndex = itemSize > 0 ? Math.floor((scrolled - sliderInitialOffset) / itemSize) : 0
 
@@ -238,7 +238,7 @@ export class PartialMeasurement {
 
 	/** Update current slider positions. */
 	protected updateSliderProperties(startIndex: number, endIndex: number, sliderClientSize: number) {
-		this.sliderProperties.initialOffset = this.doa.getOffset(this.slider, this.scroller)
+		this.sliderProperties.initialOffset = this.doa.getOffset(this.slider.previousElementSibling as HTMLElement, this.scroller)
 
 		this.sliderProperties.startIndex = startIndex
 		this.sliderProperties.endIndex = endIndex

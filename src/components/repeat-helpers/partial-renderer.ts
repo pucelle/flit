@@ -29,9 +29,6 @@ export interface NeedToApply {
 	 * by adjusting `startIndex` or `endIndex`.
 	 */
 	tryPersistContinuous: boolean
-
-	/** Whether will reset scroll position, normally it's true. */
-	resetScroll: boolean
 }
 
 
@@ -113,7 +110,6 @@ export class PartialRenderer {
 		endIndex: undefined,
 		alignDirection: 'start',
 		tryPersistContinuous: false,
-		resetScroll: true,
 	}
 
 	/** If need to align element in same position. */
@@ -166,15 +162,13 @@ export class PartialRenderer {
 		alignDirection: 'start' | 'end',
 		startIndex: number | undefined,
 		endIndex: number | undefined = undefined,
-		tryPersistContinuous: boolean = false,
-		resetScroll: boolean = true
+		tryPersistContinuous: boolean = false
 	) {
 		this.needToApply = {
 			alignDirection,
 			startIndex,
 			endIndex,
 			tryPersistContinuous,
-			resetScroll,
 		}
 	}
 
@@ -572,7 +566,7 @@ export class PartialRenderer {
 		await this.measurement.measureAfterRendered(this.startIndex, this.endIndex)
 		await this.afterMeasured()
 
-		this.onUpdatedCallback
+		this.onUpdatedCallback()
 	}
 
 	/** Update and make render content continuous. */

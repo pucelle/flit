@@ -18,6 +18,7 @@
 
 ::-webkit-scrollbar-thumb{
 	background: color-mix(in srgb, var(--background-color) 80%, var(--text-color));
+	border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover{
@@ -26,25 +27,6 @@
 
 ::-webkit-scrollbar-thumb:active{
 	background: color-mix(in srgb, var(--background-color) 60%, var(--text-color));
-}
-
-/* Scrollbar which will become visible when hover. */
-.scrollbar-overlay{
-	scrollbar-gutter: stable;
-
-	&::-webkit-scrollbar, &::-webkit-scrollbar-thumb{
-		background:rgba(0, 0, 0, 0);
-	}
-
-	&::-webkit-scrollbar{
-		height: 6px;
-		width: 6px;
-	}
-
-	&:hover::-webkit-scrollbar-thumb{
-		background: color-mix(in srgb, var(--text-color) 16%, rgba(0, 0, 0, 0));
-		border-radius: 4px;
-	}
 }
 
 @supports not selector(::-webkit-scrollbar) {

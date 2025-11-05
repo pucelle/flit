@@ -250,37 +250,27 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatE
 	}
 
 	override async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		await this.toRenderItemAtIndex(index, 'start', true)
+		await this.toRenderItemAtIndex(index, 'start')
 		return super.scrollIndexToStart(index - this.startIndex, gap, duration, easing)
 	}
 
 	/** To ensure item at index get rendered. */
-	async toRenderItemAtIndex(this: PartialRepeat, index: number, alignDirection: 'start' | 'end', resetScroll: boolean = true) {
+	async toRenderItemAtIndex(this: PartialRepeat, index: number, alignDirection: 'start' | 'end') {
 		if (this.isIndexRendered(index)) {
 			return
 		}
 
 		let startIndex: number | undefined
 		let endIndex: number | undefined
-		let renderCount = this.endIndex - this.startIndex
 
 		if (alignDirection === 'start') {
-			let startVisibleIndex = this.getStartVisibleIndex()
-			startIndex = startVisibleIndex
+			startIndex = index
 		}
 		else {
-			let endVisibleIndex = this.getEndVisibleIndex()
-
-			// Can't persist continuous.
-			if (endVisibleIndex - index > renderCount) {
-				startIndex = index
-			}
-			else {
-				endIndex = endVisibleIndex
-			}
+			endIndex = index + 1
 		}
 
-		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true, resetScroll)
+		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
 		this.willUpdate()
 
 		// Until partial content updated.
@@ -291,7 +281,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E & PartialRepeatE
 
 	override async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		let alignDirection: 'start' | 'end' = index >= this.startIndex ? 'start' : 'end'
-		await this.toRenderItemAtIndex(index, alignDirection, true)
+		await this.toRenderItemAtIndex(index, alignDirection)
 
 		return super.scrollIndexToView(index - this.startIndex, gap, duration, easing)
 	}

@@ -1,12 +1,19 @@
 import {css, Component, html, RenderResult, RenderResultRenderer, fold, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, Observed, effect} from '@pucelle/lupos'
+import {DOMEvents, EventKeys, Observed, effect, untilUpdateComplete} from '@pucelle/lupos'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
 import {IconChecked, IconTriangleDown, IconTriangleRight} from '../icons'
 import {DOMScroll} from '../tools'
 import {PartialRepeat} from './partial-repeat'
+
+
+/** List item and index. */
+export interface ItemPath<T> {
+	item: ListItem<T>
+	index: number
+}
 
 
 /** 
@@ -17,7 +24,7 @@ import {PartialRepeat} from './partial-repeat'
 export interface ListItem<T = any> extends Observed {
 
 	/** Unique value to identify current item. */
-	value?: T
+	value: T
 
 	/** 
 	 * List item content, can be a pre-generated template result.
@@ -93,6 +100,11 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			background: color-mix(in srgb, var(--border-color) 50%, var(--background-color));
 			margin: 2px 0;
 		}
+
+		/* Contains list item and subsection. */
+		.list-each{
+
+		}
 		
 		.list-item{
 			position: relative;
@@ -142,6 +154,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		.list-selected-icon{
 			margin: 0 0 0 0.2em;
 		}
+
+		.list-partial-repeat{}
 
 		.list-subsection{
 			padding-left: 1.6em;
@@ -230,10 +244,10 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	protected readonly keyNavigator: ListDataNavigator<T> = new ListDataNavigator()
 
 	/** For only latest expanded or collapsed can play transition. */
-	private latestExpandedOrCollapsed: T | null = null
+	protected latestExpandedOrCollapsed: T | null = null
 
 	/** Whether watching keyboard navigation events. */
-	private inKeyNavigating: boolean = false
+	protected inKeyNavigating: boolean = false
 
 	@effect
 	protected applyKeyNavigatorProperties() {
@@ -249,9 +263,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderItems(items: ListItem<T>[]): RenderResult {
-		if (this.partialRenderingScrollerSelector && items.length > 50) {
+		if (this.shouldRenderPartialRepeat(items)) {
 			return html`
-				<PartialRepeat
+				<PartialRepeat class="list-partial-repeat"
 					.data=${items}
 					.renderFn=${(item: ListItem<T> | {}) => this.renderItemOrSplitter(item)}
 					.overflowDirection="vertical"
@@ -269,6 +283,10 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 	}
 
+	protected shouldRenderPartialRepeat(items: ListItem<T>[]) {
+		return this.partialRenderingScrollerSelector && items.length > 50
+	}
+
 	protected renderItemOrSplitter(item: ListItem<T> | {}): RenderResult {
 		if (!item.hasOwnProperty('value')) {
 			return html`<div class="list-splitter"></div>`
@@ -279,26 +297,28 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderItem(item: ListItem<T>): RenderResult {
-		let expanded = this.hasExpanded(item)
+		let expanded = this.hasExpanded(item.value)
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
 
 		return html`
-			<div
-				class="list-item"
-				:class.selected=${this.hasSelected(item)}
-				:class.arrow-selected=${item === this.keyNavigator.current}
-				?:tooltip=${itemTooltip, itemTooltip!}
-				?:contextmenu=${itemContextmenu, itemContextmenu!, {matchSelector: '.list-item'} as PopupOptions}
-				@click.prevent=${() => this.onClickItem(item)}
-			>
-				${this.renderItemPlaceholder(item, expanded)}
-				${this.renderIcon(item)}
-				${this.renderItemContent(item)}
-				${this.renderSelectedIcon(item)}
-			</div>
+			<div class="list-each">
+				<div
+					class="list-item"
+					:class.selected=${this.hasSelected(item.value)}
+					:class.arrow-selected=${item === this.keyNavigator.current}
+					?:tooltip=${itemTooltip, itemTooltip!}
+					?:contextmenu=${itemContextmenu, itemContextmenu!, {matchSelector: '.list-item'} as PopupOptions}
+					@click.prevent=${() => this.onClickItem(item)}
+				>
+					${this.renderItemPlaceholder(item, expanded)}
+					${this.renderIcon(item)}
+					${this.renderItemContent(item)}
+					${this.renderSelectedIcon(item)}
+				</div>
 
-			${this.renderSubsection(item, expanded)}
+				${this.renderSubsection(item, expanded)}
+			</div>
 		`
 	}
 
@@ -307,7 +327,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		if (children && children.length > 0) {
 			return html`
 				<div class='list-toggle-placeholder'
-					@click.stop=${() => this.toggleExpanded(item)}
+					@click.stop=${() => this.toggleExpanded(item.value)}
 				>
 					<Icon .icon=${expanded ? IconTriangleDown : IconTriangleRight} .size="inherit" />
 				</div>
@@ -363,7 +383,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderSelectedIcon(item: ListItem<T>) {
-		if (!this.hasSelected(item)) {
+		if (!this.hasSelected(item.value)) {
 			return null
 		}
 
@@ -392,25 +412,25 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	/** Whether an item has been selected.  */
-	protected hasSelected(item: ListItem<T>): boolean {
-		return this.selected.includes(item.value!)
+	protected hasSelected(value: T): boolean {
+		return this.selected.includes(value)
 	}
 
 	/** Whether an item has been expanded.  */
-	protected hasExpanded(item: ListItem<T>): boolean {
-		return this.expanded.includes(item.value!)
+	protected hasExpanded(value: T): boolean {
+		return this.expanded.includes(value)
 	}
 
 	/** Toggle expanded state. */
-	protected toggleExpanded(item: ListItem<T>) {
-		if (this.hasExpanded(item)) {
-			this.expanded.splice(this.expanded.indexOf(item.value!), 1)
+	protected toggleExpanded(value: T) {
+		if (this.hasExpanded(value)) {
+			this.expanded.splice(this.expanded.indexOf(value), 1)
 		}
 		else {
-			this.expanded.push(item.value!)
+			this.expanded.push(value)
 		}
 
-		this.latestExpandedOrCollapsed = item.value!
+		this.latestExpandedOrCollapsed = value
 	}
 
 	/** Do selection or navigation. */
@@ -438,66 +458,168 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	 * If get contained in a scroller, scroll first selected item to topmost or leftmost of scroll viewport.
 	 * Returns a promise which will be resolved after scrolling end,
 	 * and resolve by whether scrolled.
-	 * Must after update complete.
 	 */
 	async scrollSelectedToStart(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
-		let el = this.el.querySelector('.list-item.selected') as HTMLElement | null
-		if (!el) {
+		if (this.selected.length !== 1) {
 			return false
 		}
 
-		return DOMScroll.scrollToStart(el, null, gap, duration, easing)
+		let el = this.el.querySelector('.list-item.selected') as HTMLElement | null
+		if (!el) {
+			let selected = this.selected[0]
+			let itemPath = this.findItemPathsTo(selected)
+			if (!itemPath) {
+				return false
+			}
+			
+			if (!await this.ensureItemPathsRendered(itemPath)) {
+				return false
+			}
+
+			el = this.el.querySelector('.list-item.selected') as HTMLElement | null
+		}
+		
+		if (el) {
+			return DOMScroll.scrollToStart(el, null, gap, duration, easing)
+		}
+		else {
+			return false
+		}
 	}
 
 	/** 
 	 * If get contained in a scroller, scroll to view first selected item.
 	 * Returns a promise which will be resolved after scrolling end,
 	 * and resolve by whether scrolled.
-	 * Must after update complete.
 	 */
 	async scrollSelectedToView(gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
 		let el = this.el.querySelector('.list-item.selected') as HTMLElement | null
 		if (!el) {
+			let selected = this.selected[0]
+			let itemPath = this.findItemPathsTo(selected)
+			if (!itemPath) {
+				return false
+			}
+			
+			if (!await this.ensureItemPathsRendered(itemPath)) {
+				return false
+			}
+
+			el = this.el.querySelector('.list-item.selected') as HTMLElement | null
+		}
+
+		if (el) {
+			return DOMScroll.scrollToView(el, null, gap, duration, easing)
+		}
+		else {
+			return false
+		}
+	}
+
+	private async ensureItemPathsRendered(itemPaths: ItemPath<T>[]): Promise<boolean> {
+
+		// Expand all but not last.
+		if (this.expandByItemPaths(itemPaths)) {
+			await untilUpdateComplete()
+		}
+
+		return await this.ensureEachItemPathRendered(this.el, 0, itemPaths)
+	}
+
+	private async ensureEachItemPathRendered(el: HTMLElement, depth: number, itemPaths: ItemPath<T>[]): Promise<boolean> {
+		let {index} = itemPaths[depth]
+		let childItemContainer: HTMLElement | null = null
+
+		let partialRepeatEl = el.querySelector(`:scope > .list-partial-repeat`)
+		if (partialRepeatEl) {
+			let partialRepeat = PartialRepeat.from(partialRepeatEl)
+			if (partialRepeat) {
+				await partialRepeat.toRenderItemAtIndex(index, 'start')
+				childItemContainer = partialRepeat.getElementAtIndex(index) ?? null
+			}
+		}
+		else {
+			childItemContainer = el.children[index] as HTMLElement | null
+		}
+
+		if (depth === itemPaths.length - 1) {
+			return true
+		}
+
+		let childSubsection = childItemContainer?.querySelector(':scope > .list-subsection') as HTMLElement | null | undefined
+		if (!childSubsection) {
 			return false
 		}
 
-		return DOMScroll.scrollToView(el, null, gap, duration, easing)
+		return await this.ensureEachItemPathRendered(childSubsection, depth + 1, itemPaths)
+	}
+
+	/** Looking for the all the ancestral list items for specified value. */
+	findItemPathsTo(value: T): ItemPath<T>[] | undefined {
+		for (let {path, dir} of this.walkForItemPath()) {
+			if (path.item.value === value) {
+				return [...dir, path]
+			}
+		}
+
+		return undefined
+	}
+
+	/** Walk for item and path. */
+	protected *walkForItemPath(): Iterable<{path: ItemPath<T>, dir: ItemPath<T>[]}> {
+		return yield* this.walkItemsForItemPath(this.data, [])
+	}
+
+	/** Walk for item and path. */
+	protected *walkItemsForItemPath(items: ListItem<T>[], paths: ItemPath<T>[]): Iterable<{path: ItemPath<T>, dir: ItemPath<T>[]}> {
+		for (let index = 0; index < items.length; index++) {
+			let item = items[index]
+
+			let path: ItemPath<T> = {
+				item,
+				index,
+			}
+
+			yield {path, dir: paths}
+
+			if (item.children) {
+				let childPaths = [...paths, path]
+				yield* this.walkItemsForItemPath(item.children, childPaths)
+			}
+		}
 	}
 
 	/** 
 	 * Expand item, and all of it's ancestors recursively.
 	 * This method will not visit dom properties, so no need update complete.
 	 * Note this method will walk all data items recursively.
+	 * Returns whether expanded state changed.
 	 */
-	expandDeeply(value: T) {
-		this.applyExpandedRecursively(this.data, value)
-	}
-
-	/** 
-	 * Make active item been expanded recursively.
-	 * Returns whether any of items has expanded descendants.
-	  */
-	private applyExpandedRecursively(items: ListItem<T>[], active: T): boolean {
-		return items.some(item => {
-			if (item === active) {
-				return true
-			}
-
-			if (item.children) {
-				let hasActiveChildItem = this.applyExpandedRecursively(item.children as ListItem<T>[], active)
-				if (hasActiveChildItem) {
-					if (!this.hasExpanded(item)) {
-						this.expanded.push(item.value!)
-					}
-				}
-			}
-
+	expandDeeply(value: T): boolean {
+		let itemPaths = this.findItemPathsTo(value)
+		if (!itemPaths) {
 			return false
-		})
+		}
+
+		return this.expandByItemPaths(itemPaths)
 	}
 
+	/** Returns whether expanded state changed. */
+	protected expandByItemPaths(itemPaths: ItemPath<T>[]): boolean {
+		let expandedChanged = false
 
-	private lastKeyComeFrom: HTMLElement | null = null
+		for (let index = 0; index < itemPaths.length - 1; index++) {
+			let item = itemPaths[index].item
+			if (!this.hasExpanded(item.value)) {
+				this.expanded.push(item.value)
+				expandedChanged = true
+			}
+		}
+
+		return expandedChanged
+	}
+
+	protected lastKeyComeFrom: HTMLElement | null = null
 
 	/** On `keyComeFrom` property change. */
 	@effect
@@ -546,8 +668,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else if (key === 'ArrowRight') {
 			if (this.inKeyNavigating) {
 				let item = this.keyNavigator.current
-				if (item && !this.hasExpanded(item) && item.children) {
-					this.toggleExpanded(item)
+				if (item && !this.hasExpanded(item.value) && item.children) {
+					this.toggleExpanded(item.value)
 					this.keyNavigator.moveRight()
 				}
 			}
