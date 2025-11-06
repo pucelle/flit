@@ -1,7 +1,7 @@
 import {DOMUtils, ListUtils, ValueListUtils} from '@pucelle/ff'
 import type {TableColumn} from '../table'
 import {html, render} from '@pucelle/lupos.js'
-import {DOMEvents, untilFirstPaintCompleted, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
+import {DOMEvents, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
 
 
 /** For `<f-table>` to resize column widths. */
@@ -51,7 +51,6 @@ export class ColumnWidthResizer {
 	async update(columns: TableColumn[], minColumnWidth: number) {
 		this.columns = columns
 		this.minColumnWidth = minColumnWidth
-
 		await this.updateColumnWidths()
 	}
 
@@ -60,10 +59,6 @@ export class ColumnWidthResizer {
 	 * Will check available column width and will cause page re-layout.
 	 */
 	async updateColumnWidths() {
-
-		// Don't want to force re-layout before first time paint.
-		await untilFirstPaintCompleted()
-
 		await barrierDOMReading()
 
 		let headAvailableWidth = this.head.clientWidth

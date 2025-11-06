@@ -2,7 +2,8 @@ import {AsyncTaskQueue, ResizeWatcher} from '@pucelle/ff'
 import {locateVisibleIndex} from './index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialMeasurement} from './partial-measurement'
-import {DOMEvents, untilFirstPaintCompleted, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
+import {DOMEvents, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
+import {Component} from '@pucelle/lupos.js'
 
 
 export interface NeedToApply {
@@ -58,6 +59,8 @@ export class PartialRenderer {
 	readonly scroller: HTMLElement
 	readonly slider: HTMLElement
 	readonly repeat: HTMLElement
+	readonly context: Component
+
 	readonly frontPlaceholder: HTMLDivElement | null
 	readonly backPlaceholder: HTMLDivElement | null
 	readonly updateCallback: () => void
@@ -122,6 +125,7 @@ export class PartialRenderer {
 		scroller: HTMLElement,
 		slider: HTMLElement,
 		repeat: HTMLElement,
+		context: Component,
 		frontPlaceholder: HTMLDivElement | null,
 		backPlaceholder: HTMLDivElement | null,
 		doa: DirectionalOverflowAccessor,
@@ -130,6 +134,7 @@ export class PartialRenderer {
 		this.scroller = scroller
 		this.slider = slider
 		this.repeat = repeat
+		this.context = context
 		this.frontPlaceholder = frontPlaceholder
 		this.backPlaceholder = backPlaceholder
 		this.doa = doa
@@ -138,7 +143,7 @@ export class PartialRenderer {
 	}
 
 	protected initMeasurement() {
-		return new PartialMeasurement(this.scroller, this.slider, this.doa)
+		return new PartialMeasurement(this.scroller, this.slider, this.repeat, this.context, this.doa)
 	}
 
 	/** 
@@ -202,8 +207,6 @@ export class PartialRenderer {
 		this.connected = true
 
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
-		await untilFirstPaintCompleted()
-
 		ResizeWatcher.watch(this.slider, this.onSliderSizeUpdated, this)
 
 		this.readScrollerSizePromise = this.readScrollerSize()
@@ -267,13 +270,10 @@ export class PartialRenderer {
 	/** Update from applying start index or just update data. */
 	async update() {
 
-		// Avoid following codes run later than `connect()`.
-		await untilFirstPaintCompleted()
-
 		// Must wait for scroller size read.
 		await this.readScrollerSizePromise
 
-		// Can only run only one updating each time.
+		// Can only run one update process each time.
 		await this.renderQueue.enqueue(() => this.doNormalUpdate())
 
 		// If item size become smaller much, may cause can't fully covered.
@@ -689,7 +689,7 @@ export class PartialRenderer {
 		// Can't know the new position, just guess it.
 		else {
 			position = this.measurement.sliderProperties.startOffset
-				+ (this.startIndex - oldStartIndex) * this.measurement.getItemSize()
+				+ (this.startIndex - oldStartIndex) * this.measurement.getAverageItemSize()
 			
 			// Fix position to make sure it doesn't have more that 50% difference than normal.
 			position = this.measurement.fixFrontPlaceholderSize(position, this.startIndex)

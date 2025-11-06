@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, RenderResultRenderer, fold, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, Observed, effect, untilUpdateComplete} from '@pucelle/lupos'
+import {DOMEvents, EventKeys, Observed, effect, untilChildUpdateComplete} from '@pucelle/lupos'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
@@ -24,7 +24,7 @@ export interface ItemPath<T> {
 export interface ListItem<T = any> extends Observed {
 
 	/** Unique value to identify current item. */
-	value: T
+	value?: T
 
 	/** 
 	 * List item content, can be a pre-generated template result.
@@ -267,7 +267,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			return html`
 				<PartialRepeat class="list-partial-repeat"
 					.data=${items}
-					.renderFn=${(item: ListItem<T> | {}) => this.renderItemOrSplitter(item)}
+					.renderFn=${(item: ListItem<T>) => this.renderItemOrSplitter(item)}
 					.overflowDirection="vertical"
 					.guessedItemSize=${25}
 					.scrollerSelector=${this.partialRenderingScrollerSelector}
@@ -276,7 +276,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 		else {
 			return html`
-				<lu:for ${items}>${(item: ListItem<T> | {}) => {
+				<lu:for ${items}>${(item: ListItem<T>) => {
 					return this.renderItemOrSplitter(item)
 				}}</lu:for>
 			`
@@ -287,7 +287,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		return this.partialRenderingScrollerSelector && items.length > 50
 	}
 
-	protected renderItemOrSplitter(item: ListItem<T> | {}): RenderResult {
+	protected renderItemOrSplitter(item: ListItem<T>): RenderResult {
 		if (!item.hasOwnProperty('value')) {
 			return html`<div class="list-splitter"></div>`
 		}
@@ -297,7 +297,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderItem(item: ListItem<T>): RenderResult {
-		let expanded = this.hasExpanded(item.value)
+		let expanded = this.hasExpanded(item.value!)
 		let itemTooltip = this.renderTooltip(item)
 		let itemContextmenu = this.renderContextmenu(item)
 
@@ -305,7 +305,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			<div class="list-each">
 				<div
 					class="list-item"
-					:class.selected=${this.hasSelected(item.value)}
+					:class.selected=${this.hasSelected(item.value!)}
 					:class.arrow-selected=${item === this.keyNavigator.current}
 					?:tooltip=${itemTooltip, itemTooltip!}
 					?:contextmenu=${itemContextmenu, itemContextmenu!, {matchSelector: '.list-item'} as PopupOptions}
@@ -327,7 +327,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		if (children && children.length > 0) {
 			return html`
 				<div class='list-toggle-placeholder'
-					@click.stop=${() => this.toggleExpanded(item.value)}
+					@click.stop=${() => this.toggleExpanded(item.value!)}
 				>
 					<Icon .icon=${expanded ? IconTriangleDown : IconTriangleRight} .size="inherit" />
 				</div>
@@ -383,7 +383,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 	}
 
 	protected renderSelectedIcon(item: ListItem<T>) {
-		if (!this.hasSelected(item.value)) {
+		if (!this.hasSelected(item.value!)) {
 			return null
 		}
 
@@ -520,7 +520,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 		// Expand all but not last.
 		if (this.expandByItemPaths(itemPaths)) {
-			await untilUpdateComplete()
+			await untilChildUpdateComplete(this)
 		}
 
 		return await this.ensureEachItemPathRendered(this.el, 0, itemPaths)
@@ -610,8 +610,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 		for (let index = 0; index < itemPaths.length - 1; index++) {
 			let item = itemPaths[index].item
-			if (!this.hasExpanded(item.value)) {
-				this.expanded.push(item.value)
+			if (!this.hasExpanded(item.value!)) {
+				this.expanded.push(item.value!)
 				expandedChanged = true
 			}
 		}
@@ -668,8 +668,8 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		else if (key === 'ArrowRight') {
 			if (this.inKeyNavigating) {
 				let item = this.keyNavigator.current
-				if (item && !this.hasExpanded(item.value) && item.children) {
-					this.toggleExpanded(item.value)
+				if (item && !this.hasExpanded(item.value!) && item.children) {
+					this.toggleExpanded(item.value!)
 					this.keyNavigator.moveRight()
 				}
 			}

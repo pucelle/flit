@@ -88,6 +88,7 @@ export class LiveRepeat<T = any, E = {}> extends PartialRepeat<T, E> {
 			this.scroller!,
 			slider,
 			this.el,
+			this,
 			this.backPlaceholder,
 			this.asFollower,
 			this.doa,

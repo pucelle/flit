@@ -1,8 +1,9 @@
 import {ResizeWatcher} from '@pucelle/ff'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {LiveMeasurement} from './live-measurement'
-import {barrierDOMReading, barrierDOMWriting, DOMEvents, untilFirstPaintCompleted} from '@pucelle/lupos'
+import {barrierDOMReading, barrierDOMWriting, DOMEvents} from '@pucelle/lupos'
 import {PartialRenderer} from './partial-renderer'
+import {Component} from '@pucelle/lupos.js'
 
 
 /**
@@ -41,18 +42,19 @@ export class LiveRenderer extends PartialRenderer {
 		scroller: HTMLElement,
 		slider: HTMLElement,
 		repeat: HTMLElement,
+		context: Component,
 		placeholder: HTMLDivElement | null,
 		asFollower: boolean,
 		doa: DirectionalOverflowAccessor,
 		updateCallback: () => void
 	) {
-		super(scroller, slider, repeat, null, null, doa, updateCallback)
+		super(scroller, slider, repeat, context, null, null, doa, updateCallback)
 		this.onlyPlaceholder = placeholder
 		this.asFollower = asFollower
 	}
 
 	protected override initMeasurement() {
-		return new LiveMeasurement(this.scroller, this.slider, this.doa)
+		return new LiveMeasurement(this.scroller, this.slider, this.repeat, this.context, this.doa)
 	}
 
 	/** Set `preEndPositions` before updating. */
@@ -68,8 +70,6 @@ export class LiveRenderer extends PartialRenderer {
 		this.connected = true
 
 		DOMEvents.on(this.scroller, 'scroll', this.onScrollerScroll, this, {passive: true})
-		await untilFirstPaintCompleted()
-
 		ResizeWatcher.watch(this.slider, this.onSliderSizeUpdated, this)
 
 		if (!this.directScrollSize) {
@@ -164,7 +164,7 @@ export class LiveRenderer extends PartialRenderer {
 		
 		// Calc back size by last time rendering result.
 		let oldBackSize = this.measurement.placeholderProperties.backSize - this.measurement.sliderProperties.endOffset
-		let fixedBackSize = this.measurement.fixBackPlaceholderSize(oldBackSize, this.measurement.sliderProperties.endIndex, this.dataCount)
+		let fixedBackSize = this.measurement.fixBackPlaceholderSize(oldBackSize, this.measurement.indices.endIndex, this.dataCount)
 
 		// Update back size only when have at least 50% difference.
 		if (fixedBackSize !== oldBackSize) {

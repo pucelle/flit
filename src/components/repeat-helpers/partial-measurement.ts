@@ -1,6 +1,7 @@
 import {PartialSizeStat} from './partial-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {barrierDOMReading} from '@pucelle/lupos'
+import {barrierDOMReading, untilChildUpdateComplete} from '@pucelle/lupos'
+import {Component} from '@pucelle/lupos.js'
 
 
 export type UnCoveredDirection =
@@ -9,6 +10,16 @@ export type UnCoveredDirection =
 	| 'break'	// Have no intersection, ust re-render totally by current scroll position.
 
 
+interface LatestIndices {
+	
+	/** Latest start index when last time measuring. */
+	startIndex: number
+
+	/** Latest end index when last time measuring. */
+	endIndex: number
+
+}
+
 interface LatestSliderPositionProperties {
 
 	/** 
@@ -16,12 +27,6 @@ interface LatestSliderPositionProperties {
 	 * Only affected by contents before slider.
 	 */
 	initialOffset: number
-
-	/** Latest start index when last time updating. */
-	startIndex: number
-
-	/** Latest end index when last time updating. */
-	endIndex: number
 
 	/** 
 	 * Latest offset position of visible part relative to scroller.
@@ -41,10 +46,10 @@ interface LatestSliderPositionProperties {
 
 interface LatestPlaceholderProperties {
 
-	/** Latest front placeholder size when last time cache placeholder. */
+	/** Latest front placeholder size when last time measuring. */
 	frontSize: number
 
-	/** Latest front placeholder size when last time cache placeholder. */
+	/** Latest front placeholder size when last time measuring. */
 	backSize: number
 }
 
@@ -70,6 +75,8 @@ export class PartialMeasurement {
 
 	protected readonly scroller: HTMLElement
 	protected readonly slider: HTMLElement
+	protected readonly repeat: HTMLElement
+	protected readonly context: Component
 
 	/** Do rendered item size statistic, guess item size. */
 	protected readonly stat: PartialSizeStat = new PartialSizeStat()
@@ -89,8 +96,14 @@ export class PartialMeasurement {
 	 */
 	scrollerSize: number = 0
 
+	/** Latest start and end indices when last time measuring. */
+	indices: LatestIndices = {
+		startIndex: 0,
+		endIndex: 0,
+	}
+
 	/** 
-	 * Latest placeholder properties when last time measure placeholder.
+	 * Latest placeholder properties when last time set placeholder sizes.
 	 * Thus, can use previous size to do continuously updating.
 	 */
 	placeholderProperties: LatestPlaceholderProperties = {
@@ -99,13 +112,11 @@ export class PartialMeasurement {
 	}
 
 	/** 
-	 * Latest slider position properties use when last time updating,
+	 * Latest slider position properties use when last time measuring,
 	 * thus, can reuse it to do continuous layout measurement.
 	 */
 	sliderProperties: LatestSliderPositionProperties = {
 		initialOffset: 0,
-		startIndex: 0,
-		endIndex: 0,
 		startOffset: 0,
 		endOffset: 0,
 	}
@@ -113,10 +124,14 @@ export class PartialMeasurement {
 	constructor(
 		scroller: HTMLElement,
 		slider: HTMLElement,
+		repeat: HTMLElement,
+		context: Component,
 		doa: DirectionalOverflowAccessor
 	) {
 		this.scroller = scroller
 		this.slider = slider
+		this.repeat = repeat
+		this.context = context
 		this.doa = doa
 	}
 
@@ -136,12 +151,17 @@ export class PartialMeasurement {
 
 	/* Whether has measured. */
 	hasMeasured(): boolean {
-		return this.getItemSize() > 0
+		return this.getAverageItemSize() > 0
 	}
 
 	/** Get item size. */
-	getItemSize(): number {
-		return this.stat.getLatestSize() || this.guessedItemSize
+	getAverageItemSize(): number {
+		return this.stat.getAverageSize() || this.guessedItemSize
+	}
+
+	/** Get median item size. */
+	getMedianItemSize(): number {
+		return this.stat.getMedianSize() || this.guessedItemSize
 	}
 
 	/** 
@@ -153,7 +173,7 @@ export class PartialMeasurement {
 			return 1
 		}
 
-		let itemSize = this.getItemSize()
+		let itemSize = this.getMedianItemSize()
 		if (itemSize === 0) {
 			return 1
 		}
@@ -178,10 +198,10 @@ export class PartialMeasurement {
 	/** Calc scroll position by aligning specified index at start or end. */
 	calcScrollPosition(index: number, alignAt: 'start' | 'end'): number {
 		if (alignAt === 'start') {
-			return this.getItemSize() * index + this.sliderProperties.initialOffset
+			return this.getAverageItemSize() * index + this.sliderProperties.initialOffset
 		}
 		else {
-			return this.getItemSize() * index + this.scrollerSize + this.sliderProperties.initialOffset
+			return this.getAverageItemSize() * index + this.scrollerSize + this.sliderProperties.initialOffset
 		}
 	}
 
@@ -191,7 +211,7 @@ export class PartialMeasurement {
 		
 		let scrolled = this.doa.getScrolled(this.scroller)
 		let sliderInitialOffset = this.doa.getOffset(this.slider.previousElementSibling as HTMLElement, this.scroller)
-		let itemSize = this.getItemSize()
+		let itemSize = this.getAverageItemSize()
 		let startIndex = itemSize > 0 ? Math.floor((scrolled - sliderInitialOffset) / itemSize) : 0
 
 		return startIndex
@@ -199,13 +219,19 @@ export class PartialMeasurement {
 
 	/** Every time after update complete, do measurement. */
 	async measureAfterRendered(startIndex: number, endIndex: number) {
+		await untilChildUpdateComplete(this.context)
 		await barrierDOMReading()
 
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
 		let sliderClientSize = this.doa.getClientSize(this.slider)
 		let paddingSize = sliderClientSize - sliderInnerSize
+		let oldStartIndex = this.indices.startIndex
+		let oldEndIndex = this.indices.endIndex
+		
+		this.indices.startIndex = startIndex
+		this.indices.endIndex = endIndex
 
-		this.updateSliderProperties(startIndex, endIndex, sliderClientSize)
+		this.updateSliderProperties(sliderClientSize)
 
 		if (this.continuousRenderRange) {
 			if (startIndex <= this.continuousRenderRange.startIndex) {
@@ -232,30 +258,52 @@ export class PartialMeasurement {
 
 		// Avoid update when hidden.
 		if (renderCount > 0 && renderSize > 0) {
-			this.stat.update(renderCount, renderSize)
+			this.stat.updateRange(renderCount, renderSize)
 		}
+
+		let newRenderedStartIndex = startIndex
+		let newRenderedEndIndex = endIndex
+
+		if (startIndex < oldStartIndex) {
+			newRenderedStartIndex = startIndex
+			newRenderedEndIndex = Math.min(oldStartIndex, endIndex)
+		}
+		else if (endIndex > oldEndIndex) {
+			newRenderedStartIndex = Math.max(oldEndIndex, startIndex)
+			newRenderedEndIndex = endIndex
+		}
+
+		let newRendered: HTMLElement[] = []
+		for (let i = newRenderedStartIndex - startIndex; i < newRenderedEndIndex - startIndex; i++) {
+			newRendered.push(this.repeat.children[i] as HTMLElement)
+		}
+
+		if (newRendered.length > 0 && newRendered[0].tagName === 'slot') {
+			for (let i = 0; i < newRendered.length; i++) {
+				newRendered[i] = newRendered[i].firstElementChild as HTMLElement
+			}
+		}
+
+		let newRenderedSizes = newRendered.map(el => this.doa.getClientSize(el))
+		this.stat.updateEach(newRenderedSizes)
 	}
 
 	/** Update current slider positions. */
-	protected updateSliderProperties(startIndex: number, endIndex: number, sliderClientSize: number) {
+	protected updateSliderProperties(sliderClientSize: number) {
 		this.sliderProperties.initialOffset = this.doa.getOffset(this.slider.previousElementSibling as HTMLElement, this.scroller)
-
-		this.sliderProperties.startIndex = startIndex
-		this.sliderProperties.endIndex = endIndex
-
 		this.sliderProperties.startOffset = this.placeholderProperties.frontSize
 		this.sliderProperties.endOffset = this.sliderProperties.startOffset + sliderClientSize
 	}
 
 	/** Calculate a rough front placeholder sizes. */
 	getNormalFrontPlaceholderSize(startIndex: number): number {
-		let itemSize = this.getItemSize()
+		let itemSize = this.getAverageItemSize()
 		return itemSize * startIndex
 	}
 
 	/** Calculate a rough back placeholder sizes. */
 	getNormalBackPlaceholderSize(endIndex: number, dataCount: number): number {
-		let itemSize = this.getItemSize()
+		let itemSize = this.getAverageItemSize()
 		return itemSize * (dataCount - endIndex)
 	}
 
@@ -297,7 +345,7 @@ export class PartialMeasurement {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)
 		let scrolled = this.doa.getScrolled(this.scroller)
-		let sliderStart = this.sliderProperties.startOffset - scrolled
+		let sliderStart = this.sliderProperties.startOffset + this.sliderProperties.initialOffset - scrolled
 		let sliderEnd = sliderStart + sliderSize
 	
 		// No intersection, reset indices by current scroll position.

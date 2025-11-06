@@ -51,7 +51,7 @@ export class DropList<T> extends List<T> {
 		return html`
 			<div
 				class="list-item"
-				:class.selected=${this.hasSelected(item.value) || this.hasExpanded(item.value)}
+				:class.selected=${this.hasSelected(item.value!) || this.hasExpanded(item.value!)}
 				:class.arrow-selected=${item === this.keyNavigator.current}
 				?:tooltip=${itemTooltip, itemTooltip!}
 				?:contextmenu=${itemContextmenu, itemContextmenu!}

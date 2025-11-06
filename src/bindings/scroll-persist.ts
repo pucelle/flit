@@ -1,5 +1,5 @@
 import {ScrollUtils} from '@pucelle/ff'
-import {untilUpdateComplete} from '@pucelle/lupos'
+import {untilAllUpdateComplete} from '@pucelle/lupos'
 import {Binding, Part} from '@pucelle/lupos.js'
 
 
@@ -21,7 +21,7 @@ export class scrollPersist implements Binding, Part {
 
 	afterConnectCallback() {
 		if (this.direction === null) {
-			untilUpdateComplete().then(this.readScrollDirection.bind(this))
+			untilAllUpdateComplete().then(this.readScrollDirection.bind(this))
 		}
 		else if (this.position !== null) {
 			if (this.direction === 'horizontal') {

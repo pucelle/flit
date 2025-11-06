@@ -1,6 +1,6 @@
 import {Binding, Component, render, RenderedComponentLike, RenderResultRenderer} from '@pucelle/lupos.js'
 import {BoxOffsets, DOMUtils, MouseEventDelivery, RectWatcher, StylePropertyName} from '@pucelle/ff'
-import {DOMEvents, EventKeys, untilUpdateComplete} from '@pucelle/lupos'
+import {DOMEvents, EventKeys, untilChildUpdateComplete} from '@pucelle/lupos'
 import {Input, Popup, Select} from '../components'
 
 
@@ -94,7 +94,7 @@ export class editable<T> implements Binding {
 		}
 
 		// Wait for child Popup component get updated.
-		await untilUpdateComplete()
+		await untilChildUpdateComplete(rendered)
 
 		if (!this.opened) {
 			return

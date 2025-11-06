@@ -1,4 +1,4 @@
-import {effect, untilUpdateComplete} from '@pucelle/lupos'
+import {effect, untilChildUpdateComplete} from '@pucelle/lupos'
 import {Repeat, RepeatRenderFn} from './repeat'
 import {html, PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
@@ -90,14 +90,11 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 
 		// `this.$needsUpdate` here is required.
 		// component map disconnect and connect soon, so will be enqueued for multiple times.
-		if (!this.connected || !this.$needsUpdate) {
+		if (!this.connected) {
 			return
 		}
 
 		await this.renderer!.update()
-
-		// `updateLiveData` may not call `updateLiveData()` below.
-		this.$needsUpdate = false
 	}
 
 	/** 
@@ -105,7 +102,6 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * May be called for several times for each time updating.
 	 */
 	protected updateLiveData() {
-		this.$needsUpdate = true
 		super.update()
 	}
 
@@ -173,6 +169,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 			this.scroller!,
 			this.el,
 			this.el,
+			this,
 			this.frontPlaceholder,
 			this.backPlaceholder,
 			this.doa,
@@ -260,7 +257,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
 		this.willUpdate()
 
-		await untilUpdateComplete()
+		await untilChildUpdateComplete(this)
 	}
 
 	override async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {

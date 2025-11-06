@@ -42,10 +42,10 @@ export class LiveMeasurement extends PartialMeasurement {
 		}
 		else {
 			if (alignAt === 'start') {
-				return this.getItemSize() * index
+				return this.getAverageItemSize() * index
 			}
 			else {
-				return this.getItemSize() * index + this.scrollerSize
+				return this.getAverageItemSize() * index + this.scrollerSize
 			}
 		}
 	}
@@ -60,7 +60,7 @@ export class LiveMeasurement extends PartialMeasurement {
 			return startIndex
 		}
 		else {
-			let itemSize = this.getItemSize()
+			let itemSize = this.getAverageItemSize()
 			let startIndex = itemSize > 0 ? Math.floor(scrolled / itemSize) : 0
 
 			return startIndex
@@ -68,9 +68,7 @@ export class LiveMeasurement extends PartialMeasurement {
 	}
 
 	/** Update current slider positions. */
-	protected override updateSliderProperties(startIndex: number, endIndex: number, sliderClientSize: number) {
-		this.sliderProperties.startIndex = startIndex
-		this.sliderProperties.endIndex = endIndex
+	protected override updateSliderProperties(sliderClientSize: number) {
 
 		// offsetTop = top + marginTop, here ignores margin top.
 		this.sliderProperties.startOffset = this.doa.getOffset(this.slider, this.scroller)
@@ -84,23 +82,22 @@ export class LiveMeasurement extends PartialMeasurement {
 			return end
 		}
 
-		let itemSize = this.getItemSize()
-		let sliderPs = this.sliderProperties
+		let itemSize = this.getAverageItemSize()
 
 		// Can reuse previous measured end slider position properties.
-		if (sliderPs.endIndex <= dataCount
-			&& sliderPs.endIndex > 0
-			&& sliderPs.endOffset > 0
+		if (this.indices.endIndex <= dataCount
+			&& this.indices.endIndex > 0
+			&& this.sliderProperties.endOffset > 0
 		) {
-			return this.sliderProperties.endOffset + itemSize * (dataCount - sliderPs.endIndex)
+			return this.sliderProperties.endOffset + itemSize * (dataCount - this.indices.endIndex)
 		}
 
 		// Can reuse previous measured start slider position properties.
-		if (sliderPs.startIndex <= dataCount
-			&& sliderPs.startIndex > 0
-			&& sliderPs.startOffset > 0
+		if (this.indices.startIndex <= dataCount
+			&& this.indices.startIndex > 0
+			&& this.sliderProperties.startOffset > 0
 		) {
-			return this.sliderProperties.startOffset + itemSize * (dataCount - sliderPs.startIndex)
+			return this.sliderProperties.startOffset + itemSize * (dataCount - this.indices.startIndex)
 		}
 
 		return itemSize * dataCount
