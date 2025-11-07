@@ -1,6 +1,6 @@
 import {css, html, Component, fade, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
 import {AnchorAligner, t, translations} from '@pucelle/ff'
-import {DOMEvents, EventKeys, promiseWithResolves, untilChildUpdateComplete} from '@pucelle/lupos'
+import {DOMEvents, EventKeys, promiseWithResolves, UpdateQueue} from '@pucelle/lupos'
 import {Input} from './input'
 import {Textarea} from './textarea'
 import {Icon} from './icon'
@@ -300,7 +300,7 @@ export class Dialog<E = {}> extends Component<E> {
 	protected override onConnected() {
 		super.onConnected()
 		
-		untilChildUpdateComplete(this).then(() => {
+		UpdateQueue.untilChildComplete(this).then(() => {
 			if (this.maskEl && this.el.previousElementSibling !== this.maskEl) {
 				this.el.before(this.maskEl)
 			}
@@ -481,7 +481,7 @@ export class QuickDialog {
 			...options,
 		})
 
-		await untilChildUpdateComplete(this.dialog)
+		await UpdateQueue.untilChildComplete(this.dialog)
 		input!.focus()
 		input!.select()
 

@@ -1,6 +1,6 @@
 import {css, html, Component, RenderResult, fade} from '@pucelle/lupos.js'
 import {AnchorAligner} from '@pucelle/ff'
-import {DOMEvents, untilChildUpdateComplete} from '@pucelle/lupos'
+import {DOMEvents, UpdateQueue} from '@pucelle/lupos'
 import {Icon} from './icon'
 import {IconClose} from '../icons'
 
@@ -153,7 +153,7 @@ export class Modal<E = {}> extends Component<E> {
 	protected override onConnected() {
 		super.onConnected()
 		
-		untilChildUpdateComplete(this).then(() => {
+		UpdateQueue.untilChildComplete(this).then(() => {
 			if (this.maskEl && this.el.previousElementSibling !== this.maskEl) {
 				this.el.before(this.maskEl)
 			}

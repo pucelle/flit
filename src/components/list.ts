@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, RenderResultRenderer, fold, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, Observed, effect, untilChildUpdateComplete} from '@pucelle/lupos'
+import {DOMEvents, EventKeys, Observed, effect, UpdateQueue} from '@pucelle/lupos'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
@@ -520,7 +520,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 		// Expand all but not last.
 		if (this.expandByItemPaths(itemPaths)) {
-			await untilChildUpdateComplete(this)
+			await UpdateQueue.untilChildComplete(this)
 		}
 
 		return await this.ensureEachItemPathRendered(this.el, 0, itemPaths)

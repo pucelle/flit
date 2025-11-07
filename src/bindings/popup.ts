@@ -4,7 +4,7 @@ import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
 import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-binder'
-import {promiseWithResolves, untilChildUpdateComplete} from '@pucelle/lupos'
+import {promiseWithResolves, UpdateQueue} from '@pucelle/lupos'
 export {TriggerType}
 
 
@@ -458,7 +458,7 @@ export class popup implements Binding, Part {
 		}
 
 		// Wait for child Popup component get updated.
-		await untilChildUpdateComplete(rendered)
+		await UpdateQueue.untilChildComplete(rendered)
 
 		// Immediately hide.
 		if (!this.opened) {

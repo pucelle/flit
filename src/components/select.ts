@@ -1,4 +1,4 @@
-import {untilChildUpdateComplete} from '@pucelle/lupos'
+import {UpdateQueue} from '@pucelle/lupos'
 import {fade, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
@@ -178,7 +178,7 @@ export class Select<T = any, M extends boolean = false, E = {}> extends Dropdown
 
 		// Focus and scroll to view after opened popup.
 		else if (opened) {
-			await untilChildUpdateComplete(this)
+			await UpdateQueue.untilChildComplete(this)
 			this.mayFocusInput()
 			this.scrollToViewSelectedItem()
 		}
