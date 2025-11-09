@@ -1,4 +1,4 @@
-import {effect, untilChildUpdateComplete} from '@pucelle/lupos'
+import {effect, UpdateQueue} from '@pucelle/lupos'
 import {Repeat, RepeatRenderFn} from './repeat'
 import {html, PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
@@ -102,7 +102,9 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 * May be called for several times for each time updating.
 	 */
 	protected updateLiveData() {
+		UpdateQueue.onSyncUpdateStart(this)
 		super.update()
+		UpdateQueue.onSyncUpdateEnd()
 	}
 
 	protected override render() {
@@ -124,6 +126,10 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	override beforeDisconnectCallback(param: PartCallbackParameterMask) {
+		if (!this.connected) {
+			return
+		}
+
 		super.beforeDisconnectCallback(param)
 		
 		if (this.renderer) {
@@ -203,10 +209,8 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	override getIndexAtOffset(offset: number): LowerIndexWithin {
 		let indexAndWithin = locateVisibleIndexAtOffset(
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
-			this.el,
 			this.scroller,
 			this.doa,
-			this.renderer!.measurement.sliderProperties.startOffset,
 			offset
 		)
 
@@ -257,7 +261,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
 		this.willUpdate()
 
-		await untilChildUpdateComplete(this)
+		await UpdateQueue.untilChildComplete(this)
 	}
 
 	override async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {

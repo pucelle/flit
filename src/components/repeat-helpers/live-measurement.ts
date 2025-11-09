@@ -125,17 +125,17 @@ export class LiveMeasurement extends PartialMeasurement {
 		// No intersection, reset indices by current scroll position.
 		let hasNoIntersection = sliderEnd < 0 || sliderStart > scrollerSize
 		if (hasNoIntersection) {
-			return 'break'
+			return 'no-intersection'
 		}
 
 		// Can't cover and need to render more items at top/left.
 		else if (sliderStart - 1 > 0 || unexpectedScrollStart) {
-			return 'start'
+			return 'partial-start'
 		}
 
 		// Can't cover and need to render more items at bottom/right.
 		else if (sliderEnd + 1 < scrollerSize || unexpectedScrollEnd) {
-			return 'end'
+			return 'partial-end'
 		}
 
 		// No need to render more.

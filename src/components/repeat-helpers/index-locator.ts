@@ -11,10 +11,8 @@ import {LowerIndexWithin} from '../../tools'
  */
 export function locateVisibleIndex(
 	els: ArrayLike<HTMLElement>,
-	slider: HTMLElement,
 	scroller: HTMLElement,
 	doa: DirectionalOverflowAccessor,
-	sliderStartPosition: number,
 	direction: 'start' | 'end',
 	minimumRatio: number = 0
 ): number {
@@ -26,11 +24,8 @@ export function locateVisibleIndex(
 	let scrolled = doa.getScrolled(scroller)
 	let preferFlag = direction === 'end' ? -1 : 1
 
-	// Turn slider origin to scroller origin.
-	let translated = sliderStartPosition - scrolled
-
 	let index = ListUtils.quickBinaryFindInsertIndex(els, function(el) {
-		let start = doa.getOffset(el, slider) + translated
+		let start = doa.getOffset(el, scroller) - scrolled
 		let size = doa.getOffsetSize(el)
 		let end = start + size
 		let ratio = (Math.min(end, scrollerSize) - Math.max(start, 0)) / Math.min(size, scrollerSize)
@@ -64,10 +59,8 @@ export function locateVisibleIndex(
  */
 export function locateVisibleIndexAtOffset(
 	els: ArrayLike<HTMLElement>,
-	slider: HTMLElement,
 	scroller: HTMLElement,
 	doa: DirectionalOverflowAccessor,
-	sliderStartPosition: number,
 	offset: number,
 ): LowerIndexWithin {
 	if (els.length > 0 && els[0].localName === 'slot') {
@@ -79,13 +72,10 @@ export function locateVisibleIndexAtOffset(
 	// In scroller origin.
 	let position = offset - scrolled
 
-	// Turn slider origin to scroller origin.
-	let translated = sliderStartPosition - scrolled
-
 	let within = false
 
 	function flag(el: HTMLElement) {
-		let start = doa.getOffset(el, slider) + translated
+		let start = doa.getOffset(el, scroller) - scrolled
 		let size = doa.getOffsetSize(el)
 		let end = start + size
 

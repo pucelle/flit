@@ -1,13 +1,15 @@
 import {PartialSizeStat} from './partial-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {barrierDOMReading, untilChildUpdateComplete} from '@pucelle/lupos'
+import {barrierDOMReading, UpdateQueue} from '@pucelle/lupos'
 import {Component} from '@pucelle/lupos.js'
 
 
 export type UnCoveredDirection =
-	'start'		// Not fully covered at start
-	| 'end'		// Not fully covered at end
-	| 'break'	// Have no intersection, ust re-render totally by current scroll position.
+	'partial-start'		// Not fully covered at start
+	| 'partial-end'		// Not fully covered at end
+	| 'no-intersection'	// Have no intersection, ust re-render totally by current scroll position.
+	| 'out-view-start'	// Out-of-view at start.
+	| 'out-view-end'	// Out-of-view at end.
 
 
 interface LatestIndices {
@@ -29,15 +31,15 @@ interface LatestSliderPositionProperties {
 	initialOffset: number
 
 	/** 
-	 * Latest offset position of visible part relative to scroller.
-	 * update it before or after every time rendered.
+	 * Latest offset position of visible part relative to slider start position.
+	 * update it after every time rendered.
 	 * Readonly outside.
 	 */
 	startOffset: number
 
 	/** 
-	 * Latest offset position of visible part relative to scroller,
-	 * update it before or after every time rendered.
+	 * Latest offset position of visible part relative to slider start position,
+	 * update it after every time rendered.
 	 * Readonly outside.
 	 */
 	endOffset: number
@@ -219,7 +221,7 @@ export class PartialMeasurement {
 
 	/** Every time after update complete, do measurement. */
 	async measureAfterRendered(startIndex: number, endIndex: number) {
-		await untilChildUpdateComplete(this.context)
+		await UpdateQueue.untilChildComplete(this.context)
 		await barrierDOMReading()
 
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
@@ -303,15 +305,15 @@ export class PartialMeasurement {
 
 	/** Calculate a rough back placeholder sizes. */
 	getNormalBackPlaceholderSize(endIndex: number, dataCount: number): number {
-		let itemSize = this.getAverageItemSize()
+		let itemSize = this.getMedianItemSize()
 		return itemSize * (dataCount - endIndex)
 	}
 
 	/** Fix front placeholder size to limit it in range. */
-	fixFrontPlaceholderSize(frontSize: number, startIndex: number): number {
+	fixFrontPlaceholderSize(frontSize: number, startIndex: number, maxRateDiff: number = 2): number {
 		let normalSize = this.getNormalFrontPlaceholderSize(startIndex)
 
-		if (frontSize < normalSize / 2 || frontSize > normalSize * 2) {
+		if (frontSize < normalSize / maxRateDiff || frontSize > normalSize * maxRateDiff) {
 			frontSize = normalSize
 		}
 
@@ -319,9 +321,9 @@ export class PartialMeasurement {
 	}
 
 	/** Fix back placeholder size to limit it in range. */
-	fixBackPlaceholderSize(backSize: number, endIndex: number, dataCount: number): number {
+	fixBackPlaceholderSize(backSize: number, endIndex: number, dataCount: number, maxRateDiff: number = 2): number {
 		let normalSize = this.getNormalBackPlaceholderSize(endIndex, dataCount)
-		if (backSize < normalSize / 2 || backSize > normalSize * 2) {
+		if (backSize < normalSize / maxRateDiff || backSize > normalSize * maxRateDiff) {
 			backSize = normalSize
 		}
 
@@ -345,24 +347,37 @@ export class PartialMeasurement {
 		let scrollerSize = this.doa.getClientSize(this.scroller)
 		let sliderSize = this.doa.getClientSize(this.slider)
 		let scrolled = this.doa.getScrolled(this.scroller)
-		let sliderStart = this.sliderProperties.startOffset + this.sliderProperties.initialOffset - scrolled
+		let initialOffset = this.doa.getOffset(this.slider.previousElementSibling as HTMLElement, this.scroller)
+		let scrollerStart = initialOffset - scrolled
+		let sliderStart = this.placeholderProperties.frontSize + scrollerStart
 		let sliderEnd = sliderStart + sliderSize
+		let scrollerEnd = sliderEnd + this.placeholderProperties.backSize
+		
+		// Out-of-view at start.
+		if (scrollerEnd < 0) {
+			return 'out-view-start'
+		}
+
+		// Out-of-view at end.
+		if (scrollerStart > scrollerSize) {
+			return 'out-view-end'
+		}
 	
 		// No intersection, reset indices by current scroll position.
 		let hasNoIntersection = sliderEnd < 0 || sliderStart > scrollerSize
 		if (hasNoIntersection) {
-			return 'break'
+			return 'no-intersection'
 		}
 
 		// Can't cover and need to render more items at top/left.
 		// The `1px` is because sometimes close to edge but have 0.000px diff.
-		else if (sliderStart - 1 > 0) {
-			return 'start'
+		if (sliderStart - 1 > 0) {
+			return 'partial-start'
 		}
 
 		// Can't cover and need to render more items at bottom/right.
-		else if (sliderEnd + 1 < scrollerSize) {
-			return 'end'
+		if (sliderEnd + 1 < scrollerSize) {
+			return 'partial-end'
 		}
 
 		// No need to render more.

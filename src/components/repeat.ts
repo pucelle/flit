@@ -69,9 +69,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return locateVisibleIndexAtOffset(
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.scroller,
-			this.scroller,
 			this.doa,
-			0,
 			offset
 		)
 	}
@@ -94,9 +92,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return locateVisibleIndex(
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.scroller,
-			this.scroller,
 			this.doa,
-			0,
 			'start',
 			minimumRatio
 		)
@@ -110,9 +106,7 @@ export class Repeat<T = any, E = {}> extends Component<E> {
 		return locateVisibleIndex(
 			this.el.children as ArrayLike<Element> as ArrayLike<HTMLElement>,
 			this.scroller,
-			this.scroller,
 			this.doa,
-			0,
 			'end',
 			minimumRatio
 		)
