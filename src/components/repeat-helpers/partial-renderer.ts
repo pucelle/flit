@@ -1,10 +1,9 @@
-import {ResizeWatcher, sleep} from '@pucelle/ff'
+import {ResizeWatcher} from '@pucelle/ff'
 import {locateVisibleIndex} from './index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialMeasurement} from './partial-measurement'
 import {DOMEvents, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
 import {Component} from '@pucelle/lupos.js'
-import {inControl, loseControl, tryTakeControl} from './partial-control'
 
 
 export interface NeedToApply {
@@ -138,9 +137,6 @@ export class PartialRenderer {
 		this.doa = doa
 		this.updateCallback = updateCallback
 		this.measurement = this.initMeasurement()
-
-		// Take control if scroller is not in controlled.
-		tryTakeControl(this)
 	}
 
 	protected initMeasurement() {
@@ -346,7 +342,6 @@ export class PartialRenderer {
 	/** Update when start index specified and need to apply. */
 	protected async updateByApplying() {
 		let {startIndex, endIndex, alignDirection, tryPersistContinuous} = this.needToApply!
-		let hasMeasured = this.measurement.hasMeasured()
 		let renderCount = this.endIndex - this.startIndex
 		let canPersistContinuous = false
 
@@ -408,7 +403,7 @@ export class PartialRenderer {
 			}
 
 			await this.resetPositions(
-				hasMeasured,
+				true,
 				tryPersistContinuous ? undefined : startIndex,
 				tryPersistContinuous ? undefined : endIndex
 			)
@@ -449,9 +444,9 @@ export class PartialRenderer {
 			return
 		}
 
-		// Reset scroll position when can't persist continuous.
+		// Reset index by scroll position.
 		if (!canPersist) {
-			await this.resetPositions(true)
+			await this.updatePersistScrollPosition()
 		}
 	}
 
@@ -494,7 +489,7 @@ export class PartialRenderer {
 		this.measurement.breakContinuousRenderRange()
 
 		// Scroll to align to specified index.
-		if (resetScroll && inControl(this)) {
+		if (resetScroll) {
 			alignToStartIndex = Math.min(Math.max(alignToStartIndex, this.startIndex), this.endIndex - 1)
 			alignToEndIndex = Math.max(Math.min(alignToEndIndex, this.endIndex), this.startIndex)
 
@@ -603,11 +598,8 @@ export class PartialRenderer {
 		}
 
 		if (unCoveredSituation === 'out-view-start' || unCoveredSituation === 'out-view-end') {
-			loseControl(this)
 			return
 		}
-
-		tryTakeControl(this)
 
 		// Update and try to keep same element with same position.
 		if (unCoveredSituation === 'partial-end' || unCoveredSituation === 'partial-start') {
@@ -647,9 +639,6 @@ export class PartialRenderer {
 
 		// No intersection, reset indices by current scroll position.
 		else if (unCoveredSituation === 'no-intersection') {
-			if (this.context.iid === 11) {
-				sleep(0)
-			}
 			await this.updatePersistScrollPosition()
 		}
 		
@@ -713,7 +702,7 @@ export class PartialRenderer {
 
 		// Totally reset scroll position.
 		if (needReset) {
-			await this.updateByNewIndices()
+			await this.updatePersistScrollPosition()
 		}
 		
 		// Update continuously.
@@ -787,18 +776,6 @@ export class PartialRenderer {
 		}
 
 		await this.resetPositions(false)
-	}
-
-	/** Reset scroll position by current indices. */
-	protected async updateByNewIndices() {
-		this.alignDirection = 'start'
-		await this.updateRendering()
-
-		if (!this.connected) {
-			return
-		}
-
-		await this.resetPositions(true)
 	}
 
 	/** Update by specified slider position. */
