@@ -14,6 +14,7 @@ export class Navigation<T> extends List<T> {
 			border-bottom: none;
 			background: color-mix(in srgb, var(--background-color) 90%, var(--text-color));
 			overflow-y: auto;
+			overflow-anchor: none;
 
 			.list-item{
 				&.selected{

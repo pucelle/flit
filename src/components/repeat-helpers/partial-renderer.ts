@@ -1,4 +1,4 @@
-import {ResizeWatcher} from '@pucelle/ff'
+import {ResizeWatcher, sleep} from '@pucelle/ff'
 import {locateVisibleIndex} from './index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialMeasurement} from './partial-measurement'
@@ -545,24 +545,37 @@ export class PartialRenderer {
 
 	/** After update complete, and after `measureAfterRendered`, do more check or do element alignment. */
 	protected async afterMeasured() {
-		await this.doAlignAdjustment()
+		await this.alignByResettingFrontSize()
 	}
 
 	/** Do element alignment by adjusting scroll offset. */
-	protected async doAlignAdjustment() {
-		if (this.needToAlign && inControl(this)) {
-			await barrierDOMReading()
-			let scrolled = this.doa.getScrolled(this.scroller)
-			let newOffset = this.doa.getOffset(this.needToAlign.el, this.scroller)
-			let newScrolled = this.needToAlign.scrolled + newOffset - this.needToAlign.offset
-
-			if (Math.abs(newScrolled - scrolled) > 5) {
-				await barrierDOMWriting()
-				this.doa.setScrolled(this.scroller, newScrolled)
-			}
-
-			this.needToAlign = null
+	protected async alignByResettingFrontSize() {
+		if (!this.needToAlign) {
+			return
 		}
+
+		// Why we can't adjust scroll position to align?
+		// When mouse are dragging scrollbar thumb, if adjust scroll position,
+		// the adjusted difference will soon apply again to the scroll position
+		// when next time triggers scroll events.
+		// E.g.,
+		// Normally 100px per item, and one 1000px item existing at index 1.
+		// When new startIndex becomes 0, will firstly render 100px of each item,
+		// and cause -900px collapse, to restore it, you need to move scroll position
+		// by +900px, but when next time scroll, will add another +900px scroll.
+
+		await barrierDOMReading()
+		let newOffset = this.doa.getOffset(this.needToAlign.el, this.scroller)
+		let offsetDiff = newOffset - this.needToAlign.offset
+
+		await barrierDOMWriting()
+		let frontSize = this.measurement.placeholderProperties.frontSize
+		let newFrontSize = frontSize - offsetDiff
+
+		newFrontSize = this.measurement.fixFrontPlaceholderSize(newFrontSize, this.startIndex)
+		this.setPosition(newFrontSize)
+
+		this.needToAlign = null
 	}
 
 	/** 
@@ -634,6 +647,9 @@ export class PartialRenderer {
 
 		// No intersection, reset indices by current scroll position.
 		else if (unCoveredSituation === 'no-intersection') {
+			if (this.context.iid === 11) {
+				sleep(0)
+			}
 			await this.updatePersistScrollPosition()
 		}
 		
@@ -734,7 +750,7 @@ export class PartialRenderer {
 				+ (this.startIndex - oldStartIndex) * this.measurement.getMedianItemSize()
 			
 			// Fix position to make sure it doesn't have more that 10x difference than normal.
-			position = this.measurement.fixFrontPlaceholderSize(position, this.startIndex, 10)
+			//position = this.measurement.fixFrontPlaceholderSize(position, this.startIndex, 10)
 
 			await this.fillNeedToAlign(this.repeat.children[0] as HTMLElement)
 		}

@@ -310,20 +310,25 @@ export class PartialMeasurement {
 	}
 
 	/** Fix front placeholder size to limit it in range. */
-	fixFrontPlaceholderSize(frontSize: number, startIndex: number, maxRateDiff: number = 2): number {
+	fixFrontPlaceholderSize(frontSize: number, startIndex: number): number {
 		let normalSize = this.getNormalFrontPlaceholderSize(startIndex)
 
-		if (frontSize < normalSize / maxRateDiff || frontSize > normalSize * maxRateDiff) {
+		// Only limit minimum size.
+		if (frontSize < normalSize / 2) {
 			frontSize = normalSize
+		}
+
+		if (startIndex === 0) {
+			frontSize = 0
 		}
 
 		return frontSize
 	}
 
 	/** Fix back placeholder size to limit it in range. */
-	fixBackPlaceholderSize(backSize: number, endIndex: number, dataCount: number, maxRateDiff: number = 2): number {
+	fixBackPlaceholderSize(backSize: number, endIndex: number, dataCount: number): number {
 		let normalSize = this.getNormalBackPlaceholderSize(endIndex, dataCount)
-		if (backSize < normalSize / maxRateDiff || backSize > normalSize * maxRateDiff) {
+		if (backSize < normalSize / 2 || backSize > normalSize * 2) {
 			backSize = normalSize
 		}
 
@@ -352,7 +357,7 @@ export class PartialMeasurement {
 		let sliderStart = this.placeholderProperties.frontSize + scrollerStart
 		let sliderEnd = sliderStart + sliderSize
 		let scrollerEnd = sliderEnd + this.placeholderProperties.backSize
-		
+
 		// Out-of-view at start.
 		if (scrollerEnd < 0) {
 			return 'out-view-start'

@@ -190,7 +190,7 @@ export class LiveRenderer extends PartialRenderer {
 			this.alignDirection = 'start'
 			await this.fillNeedToAlign(this.repeat.children[0] as HTMLElement)
 			await this.setPosition(0)
-			await this.doAlignAdjustment()
+			await this.alignByResettingScroll()
 		}
 
 		// Front placeholder is too much difference when scrolling up.
@@ -202,7 +202,7 @@ export class LiveRenderer extends PartialRenderer {
 				let newEndOffset = this.measurement.sliderProperties.endOffset + (fixedFrontSize - frontSize)
 				await this.fillNeedToAlign(this.repeat.children[0] as HTMLElement)
 				await this.setPosition(newEndOffset)
-				await this.doAlignAdjustment()
+				await this.alignByResettingScroll()
 			}
 		}
 
@@ -221,6 +221,25 @@ export class LiveRenderer extends PartialRenderer {
 				await this.updateRestPlaceholderSize()
 			}
 		}
+	}
+
+	/** Do element alignment by adjusting scroll offset. */
+	protected async alignByResettingScroll() {
+		if (!this.needToAlign) {
+			return
+		}
+
+		await barrierDOMReading()
+		let newOffset = this.doa.getOffset(this.needToAlign.el, this.scroller)
+		let offsetDiff = newOffset - this.needToAlign.offset
+
+		if (Math.abs(offsetDiff) > 5) {
+			await barrierDOMWriting()
+			let scrolled = this.doa.getScrolled(this.scroller)
+			this.doa.setScrolled(this.scroller, scrolled + offsetDiff)
+		}
+
+		this.needToAlign = null
 	}
 
 	/** Get new position for continuously update. */
