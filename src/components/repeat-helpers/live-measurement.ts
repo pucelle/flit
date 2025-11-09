@@ -67,7 +67,6 @@ export class LiveMeasurement extends PartialMeasurement {
 		}
 	}
 
-	/** Update current slider positions. */
 	protected override updateSliderProperties(sliderClientSize: number) {
 
 		// offsetTop = top + marginTop, here ignores margin top.
@@ -108,8 +107,7 @@ export class LiveMeasurement extends PartialMeasurement {
 		this.placeholderProperties.backSize = size
 	}
 
-	/** Check cover situation and decide where to render more contents. */
-	async checkUnCoveredDirectionWithEdgeCases(startIndex: number, endIndex: number, dataCount: number): Promise<UnCoveredDirection | null> {
+	override async checkUnCoveredDirection(): Promise<UnCoveredDirection | null> {
 		await barrierDOMReading()
 
 		let scrollerSize = this.doa.getClientSize(this.scroller)
@@ -117,11 +115,7 @@ export class LiveMeasurement extends PartialMeasurement {
 		let scrolled = this.doa.getScrolled(this.scroller)
 		let sliderStart = this.sliderProperties.startOffset - scrolled
 		let sliderEnd = sliderStart + sliderSize
-		let unexpectedScrollStart = scrolled === 0 && startIndex > 0
-
-		let unexpectedScrollEnd = scrolled + scrollerSize === this.doa.getScrollSize(this.scroller)
-			&& endIndex < dataCount
-
+	
 		// No intersection, reset indices by current scroll position.
 		let hasNoIntersection = sliderEnd < 0 || sliderStart > scrollerSize
 		if (hasNoIntersection) {
@@ -129,12 +123,12 @@ export class LiveMeasurement extends PartialMeasurement {
 		}
 
 		// Can't cover and need to render more items at top/left.
-		else if (sliderStart - 1 > 0 || unexpectedScrollStart) {
+		else if (sliderStart - 1 > 0) {
 			return 'partial-start'
 		}
 
 		// Can't cover and need to render more items at bottom/right.
-		else if (sliderEnd + 1 < scrollerSize || unexpectedScrollEnd) {
+		else if (sliderEnd + 1 < scrollerSize) {
 			return 'partial-end'
 		}
 
