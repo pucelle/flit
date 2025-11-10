@@ -441,7 +441,6 @@ export class QuickDialog {
 	 */
 	async prompt(message: RenderResultRenderer, options: PromptDialogOptions = {}): Promise<string | undefined> {
 		let value: string = options.defaultValue ? String(options.defaultValue) : ''
-		let input: Input | Textarea
 
 		let messageOverwritten = () => html`
 			${typeof message === 'function' ? message() : message}
@@ -451,7 +450,6 @@ export class QuickDialog {
 					.placeholder=${options.placeholder ?? ''}
 					.validator=${options.validator ?? null}
 					.value=${value}
-					:ref=${input!}
 				/>
 			</lu:if>
 			<lu:else>
@@ -460,7 +458,6 @@ export class QuickDialog {
 					.validator=${options.validator ?? null}
 					.type=${options.inputType as 'text' | 'password' | 'text'}
 					.value=${value}
-					:ref=${input!}
 				/>
 			</lu:else>
 		`
@@ -482,6 +479,7 @@ export class QuickDialog {
 		})
 
 		await this.dialog.untilUpdated()
+		let input: Input | Textarea = Component.from(this.dialog.el.querySelector('.input')!) as Input | Textarea
 		input!.focus()
 		input!.select()
 
