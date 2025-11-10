@@ -700,7 +700,7 @@ export class PartialRenderer {
 			}
 		}
 
-		// Totally reset scroll position.
+		// Reset index and persist scroll position.
 		if (needReset) {
 			await this.updatePersistScrollPosition()
 		}
