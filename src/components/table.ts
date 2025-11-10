@@ -813,7 +813,7 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 */
 	async setStartVisibleIndex(startIndex: number) {
 		if (!this.live) {
-			throw new Error(`"setStartIndex(...)" only works in "live" mode.`)
+			throw new Error(`"setStartVisibleIndex(...)" only works in "live" mode.`)
 		}
 
 		if (!this.repeatRef) {
