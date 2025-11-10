@@ -259,9 +259,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		}
 
 		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
-		this.willUpdate()
-
-		await UpdateQueue.untilChildComplete(this)
+		await this.untilChildComplete()
 	}
 
 	override async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {

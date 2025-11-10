@@ -1,6 +1,6 @@
 import {PartialSizeStat} from './partial-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {barrierDOMReading, UpdateQueue} from '@pucelle/lupos'
+import {barrierDOMReading} from '@pucelle/lupos'
 import {Component} from '@pucelle/lupos.js'
 
 
@@ -221,7 +221,7 @@ export class PartialMeasurement {
 
 	/** Every time after update complete, do measurement. */
 	async measureAfterRendered(startIndex: number, endIndex: number) {
-		await UpdateQueue.untilChildComplete(this.context)
+		await this.context.untilChildComplete()
 		await barrierDOMReading()
 
 		let sliderInnerSize = this.doa.getInnerSize(this.slider)
