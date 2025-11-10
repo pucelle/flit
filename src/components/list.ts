@@ -1,6 +1,6 @@
 import {css, Component, html, RenderResult, RenderResultRenderer, fold, PerFrameTransitionEasingName, TransitionResult, FoldTransitionOptions} from '@pucelle/lupos.js'
 import {ThemeSize} from '../style'
-import {DOMEvents, EventKeys, Observed, effect} from '@pucelle/lupos'
+import {DOMEvents, EventKeys, Observed, UpdateQueue, effect} from '@pucelle/lupos'
 import {ListDataNavigator} from './list-helpers/list-data-navigator'
 import {Icon} from './icon'
 import {tooltip, contextmenu, PopupOptions} from '../bindings'
@@ -102,9 +102,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		}
 
 		/* Contains list item and subsection. */
-		.list-each{
-
-		}
+		.list-item-container{}
 		
 		.list-item{
 			position: relative;
@@ -302,7 +300,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 		let itemContextmenu = this.renderContextmenu(item)
 
 		return html`
-			<div class="list-each">
+			<div class="list-item-container">
 				<div
 					class="list-item"
 					:class.selected=${this.hasSelected(item.value!)}
@@ -518,9 +516,9 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 
 	private async ensureItemPathsRendered(itemPaths: ItemPath<T>[]): Promise<boolean> {
 
-		// Expand all but not last.
+		// Expand all but not last, and wait for rendered.
 		if (this.expandByItemPaths(itemPaths)) {
-			await this.untilUpdated()
+			await UpdateQueue.untilAllComplete()
 		}
 
 		return this.ensureEachItemPathRendered(this.el, 0, itemPaths)
