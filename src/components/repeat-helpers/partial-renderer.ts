@@ -257,6 +257,10 @@ export class PartialRenderer {
 		// Because we update parent and self in serialization,
 		// Parent updating will cause child disconnect even child is in updating.
 		// So need to check `connected` every time after `barrierDOMWriting`.
+		if (!this.connected) {
+			return
+		}
+
 		this.updateCallback()
 	}
 
