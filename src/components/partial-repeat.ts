@@ -99,18 +99,18 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		if (!this.connected) {
 			return
 		}
-
-		this.onUpdated()
-		this.fire('updated')
 	}
 
 	/** 
 	 * Update live data by new indices.
 	 * May be called for several times for each time updating.
 	 */
-	protected updateLiveData() {
+	protected updateLiveData(this: PartialRepeat) {
 		UpdateQueue.onSyncUpdateStart(this)
 		this.updateRendering()
+		
+		this.onUpdated()
+		this.fire('updated')
 		UpdateQueue.onSyncUpdateEnd()
 	}
 
