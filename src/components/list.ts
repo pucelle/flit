@@ -523,7 +523,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			await UpdateQueue.untilChildComplete(this)
 		}
 
-		return await this.ensureEachItemPathRendered(this.el, 0, itemPaths)
+		return this.ensureEachItemPathRendered(this.el, 0, itemPaths)
 	}
 
 	private async ensureEachItemPathRendered(el: HTMLElement, depth: number, itemPaths: ItemPath<T>[]): Promise<boolean> {
@@ -551,7 +551,7 @@ export class List<T = any, E = {}> extends Component<E & ListEvents<T>> {
 			return false
 		}
 
-		return await this.ensureEachItemPathRendered(childSubsection, depth + 1, itemPaths)
+		return this.ensureEachItemPathRendered(childSubsection, depth + 1, itemPaths)
 	}
 
 	/** Looking for the all the ancestral list items for specified value. */

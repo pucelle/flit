@@ -117,7 +117,7 @@ export async function scrollToView(
 				)
 
 				RunningScrollTransitions.set(wrapper, transition)
-				return await transition.untilEnd()
+				return transition.untilEnd()
 			}
 			else {
 				wrapper.scrollLeft = newScrollX
