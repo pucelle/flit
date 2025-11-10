@@ -809,18 +809,15 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	/** 
 	 * Set start visible index of rendered items.
 	 * The data item of this index will be renderer at the topmost or leftmost of the viewport.
-	 * You can safely call this before update complete, no additional rendering will cost.
 	 */
-	async setStartVisibleIndex(startIndex: number) {
+	setStartVisibleIndex(startIndex: number) {
 		if (!this.live) {
 			throw new Error(`"setStartVisibleIndex(...)" only works in "live" mode.`)
 		}
 
-		if (!this.repeatRef) {
-			await this.untilUpdated()
-		}
-		
-		(this.repeatRef as LiveRepeat).setStartVisibleIndex(startIndex)
+		this.whenUpdated(() => {
+			(this.repeatRef as LiveRepeat).setStartVisibleIndex(startIndex)
+		})
 	}
 
 	/** 
@@ -829,6 +826,10 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
 	 */
 	async scrollIndexToStart(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
+		if (!this.repeatRef) {
+			await this.untilUpdated()
+		}
+
 		return this.repeatRef.scrollIndexToStart(index, gap, duration, easing)
 	}
 
@@ -837,6 +838,10 @@ export class Table<T = any, E = {}> extends Component<TableEvents & E> {
 	 * Returns a promise, be resolved after scroll transition end, by whether scrolled.
 	 */
 	async scrollIndexToView(index: number, gap?: number, duration?: number, easing?: PerFrameTransitionEasingName): Promise<boolean> {
+		if (!this.repeatRef) {
+			await this.untilUpdated()
+		}
+
 		return this.repeatRef.scrollIndexToView(index, gap, duration, easing)
 	}
 }
