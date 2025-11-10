@@ -74,6 +74,16 @@ export class LiveMeasurement extends PartialMeasurement {
 		this.sliderProperties.endOffset = this.sliderProperties.startOffset + sliderClientSize
 	}
 
+	/** Normal limit in 0.5~2. */
+	override fixFrontPlaceholderSize(frontSize: number, startIndex: number): number {
+		let normalSize = this.getNormalFrontPlaceholderSize(startIndex)
+		if (frontSize < normalSize / 2 || frontSize > normalSize * 2) {
+			frontSize = normalSize
+		}
+
+		return frontSize
+	}
+
 	/** Calculate the back placeholder size as the only placeholder. */
 	getOnlyPlaceholderSize(dataCount: number): number {
 		if (this.preEndPositions) {
