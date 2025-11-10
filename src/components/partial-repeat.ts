@@ -86,7 +86,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	}
 
 	/** Update after data change, and also wait for renderer render complete. */
-	override async update() {
+	override async update(this: PartialRepeat<{}>) {
 
 		// `this.$needsUpdate` here is required.
 		// component map disconnect and connect soon, so will be enqueued for multiple times.
@@ -95,6 +95,13 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		}
 
 		await this.renderer!.update()
+
+		if (!this.connected) {
+			return
+		}
+
+		this.onUpdated()
+		this.fire('updated')
 	}
 
 	/** 
@@ -103,7 +110,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 	 */
 	protected updateLiveData() {
 		UpdateQueue.onSyncUpdateStart(this)
-		super.update()
+		this.updateRendering()
 		UpdateQueue.onSyncUpdateEnd()
 	}
 
@@ -259,6 +266,7 @@ export class PartialRepeat<T = any, E = {}> extends Repeat<T, E> {
 		}
 
 		this.renderer!.setRenderIndices(alignDirection, startIndex, endIndex, true)
+		this.willUpdate()
 		await this.untilChildComplete()
 	}
 
