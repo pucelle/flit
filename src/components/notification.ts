@@ -377,6 +377,11 @@ export class Notification<E = {}> extends Component<E> {
 		return this.items.findIndex(v => v.id === id) >= 0
 	}
 
+	/** Whether is showing any notification. */
+	get showing(): boolean {
+		return this.items.length > 0
+	}
+
 	/** Hide notification by it's id. */
 	hide(id: number): boolean {
 		let index = this.items.findIndex(v => v.id === id)
