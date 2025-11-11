@@ -219,8 +219,7 @@ export class editable<T> implements Binding {
 		let target = e.target as HTMLElement
 
 		if (!MouseEventDelivery.hasDeliveredFrom(this.el, target)) {
-			let value = this.inputSelectRef!.value
-			this.onValueChange(value)
+			this.hidePopup()
 		}
 	}
 
