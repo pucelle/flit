@@ -309,11 +309,6 @@ export class Notification<E = {}> extends Component<E> {
 		}
 	}
 
-	/** Generate a new id. */
-	newId(): number {
-		return this.seed++
-	}
-
 	/** 
 	 * Shows a notification and returns it's id.
 	 * You may use an existing id to overwrite options.
@@ -372,6 +367,16 @@ export class Notification<E = {}> extends Component<E> {
 		item.timeout.start()
 	}
 
+	/** Generate a new id. */
+	newId(): number {
+		return this.seed++
+	}
+
+	/** Whether has shown specified id. */
+	isShowing(id: number): boolean {
+		return this.items.findIndex(v => v.id === id) >= 0
+	}
+
 	/** Hide notification by it's id. */
 	hide(id: number): boolean {
 		let index = this.items.findIndex(v => v.id === id)
@@ -404,6 +409,11 @@ export class TypedNotification {
 	newId(): number {
 		this.ensureNotification()
 		return this.notification!.newId()
+	}
+
+	/** Whether has shown specified id. */
+	isShowing(id: number): boolean {
+		return this.notification ? this.notification.isShowing(id) : false
 	}
 
 	/** 
@@ -488,6 +498,11 @@ export class UniqueNotification {
 		if (this.id) {
 			options.id = this.id
 		}
+	}
+
+	/** Whether is showing notification. */
+	get showing(): boolean {
+		return this.raw && this.id !== null ? this.raw.isShowing(this.id) : false
 	}
 	
 	/** Shows info type notification, returns it's id. */
