@@ -309,6 +309,11 @@ export class Notification<E = {}> extends Component<E> {
 		}
 	}
 
+	/** Generate a new id. */
+	newId(): number {
+		return this.seed++
+	}
+
 	/** 
 	 * Shows a notification and returns it's id.
 	 * You may use an existing id to overwrite options.
@@ -395,6 +400,12 @@ export class TypedNotification {
 
 	protected notification: Notification | null = null
 
+	/** Generate a new id. */
+	newId(): number {
+		this.ensureNotification()
+		return this.notification!.newId()
+	}
+
 	/** 
 	 * Returns a unique notification instance,
 	 * all notification calls on it will share an unique notification item,
@@ -404,12 +415,15 @@ export class TypedNotification {
 		return new UniqueNotification(this)
 	}
 
-	protected showNotification(options: NotificationOptions): number {
+	protected ensureNotification() {
 		if (!this.notification) {
 			this.notification = new Notification()
 		}
+	}
 
-		return this.notification.show(options)
+	protected showNotification(options: NotificationOptions): number {
+		this.ensureNotification()
+		return this.notification!.show(options)
 	}
 
 	/** Shows info type notification, returns it's id. */
