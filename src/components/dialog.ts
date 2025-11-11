@@ -467,8 +467,8 @@ export class QuickDialog {
 			actions: [
 				{value: 'cancel', text: t('cancel')},
 				{value: 'ok', text: t('ok'), primary: true, handler() {
-					if (!input!.touched || input!.valid === false) {
-						input!.touched = true
+					if (!input.touched || input.valid === false) {
+						input.touched = true
 						return true
 					}
 
@@ -480,16 +480,16 @@ export class QuickDialog {
 
 		await this.dialog.untilUpdated()
 		let input: Input | Textarea = Component.from(this.dialog.el.querySelector('.input')!) as Input | Textarea
-		input!.focus()
-		input!.select()
+		input.focus()
+		input.select()
 
-		input!.on('change', () => {
+		input.on('change', () => {
 			this.dialog.triggerAction('ok')
 		})
 
 		let btn = await promise
 		if (btn === 'ok') {
-			return input!.value
+			return input.value
 		}
 
 		return undefined
