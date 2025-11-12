@@ -84,7 +84,7 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 			}
 		}
 		else if (this.sorter) {
-			data = data.sort(this.sorter)
+			data = data.toSorted(this.sorter)
 		}
 
 		return data
