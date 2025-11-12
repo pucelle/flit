@@ -20,6 +20,7 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 	
 	filter: ((item: T) => boolean) | null = null
 	orderRule: ListUtils.OrderRule<T> | null = null
+	sorter: ((a: T, b: T) => number) | null = null
 	data: T[] = []
 
 	constructor(options: Partial<StoreOptions<T>> = {}) {
@@ -44,6 +45,14 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 				ignoreCase,
 			}
 		}
+	}
+
+	/** 
+	 * Set common sorter to compare two items.
+	 * Use it when `setOrder` can't satisfy your requirement.
+	 */
+	setSorter(sorter: ((a: T, b: T) => number) | null) {
+		this.sorter = sorter
 	}
 
 	/** To do data items ordering. */
@@ -73,6 +82,9 @@ export class Store<T = any> implements StoreOptions<T>, Observed {
 			else {
 				data = this.order.toSorted(data)
 			}
+		}
+		else if (this.sorter) {
+			data = data.sort(this.sorter)
 		}
 
 		return data
