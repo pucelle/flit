@@ -18,8 +18,8 @@
 		"watch": "luc -e -w",
 		"build-docs": "cd docs && luc",
 		"watch-docs": "cd docs && luc -w",
-		"start-docs": "webpack serve",
-		"start-bundled-docs": "webpack serve --mode=\"production\"",
+		"dev-docs": "webpack serve",
+		"dev-bundled-docs": "webpack serve --mode=\"production\"",
 		"bundle-docs": "webpack --mode=\"production\"",
 		"prepublish": "npm run build && npm run build-docs"
 	},
