@@ -1,6 +1,6 @@
 {
 	"name": "ff-uix",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"description": "A light weight Web UI & UX Framework, based on lupos",
 	"author": "pucelle",
 	"license": "MIT",
@@ -24,9 +24,6 @@
 		"prepublish": "npm run build && npm run build-docs"
 	},
 	"dependencies": {
-		"@pucelle/ff": "^2.0.0",
-		"@pucelle/lupos": "^0.1.0",
-		"@pucelle/lupos.js": "^0.1.0",
 		"ff-kit": "^2.0.1",
 		"lupos": "^0.1.0",
 		"lupos.html": "^0.1.0"
