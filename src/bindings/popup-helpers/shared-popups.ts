@@ -1,5 +1,5 @@
-import {ListMap, MouseEventDelivery} from '@pucelle/ff'
-import {RenderedComponentLike} from '@pucelle/lupos.js'
+import {ListMap, MouseEventDelivery} from 'ff-kit'
+import {RenderedComponentLike} from 'lupos.html'
 import {Popup} from '../../components'
 import {popup} from '../popup'
 

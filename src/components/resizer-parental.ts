@@ -1,6 +1,6 @@
-import {Coord, NumberUtils, SizeLike} from '@pucelle/ff'
+import {Coord, NumberUtils, SizeLike} from 'ff-kit'
 import {Resizer} from './resizer'
-import {css, html} from '@pucelle/lupos.js'
+import {css, html} from 'lupos.html'
 
 
 /** `<Resizer>` will resize it's parent by dragging it. */

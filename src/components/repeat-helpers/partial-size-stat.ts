@@ -1,4 +1,4 @@
-import {MiniHeap} from "@pucelle/lupos"
+import {MiniHeap} from "lupos"
 
 export class PartialSizeStat {
 

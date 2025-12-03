@@ -1,5 +1,5 @@
 import {LiveRenderer} from './repeat-helpers/live-renderer'
-import {effect} from '@pucelle/lupos'
+import {effect} from 'lupos'
 import {PartialRepeat} from './partial-repeat'
 
 

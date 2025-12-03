@@ -1,4 +1,4 @@
-import {Component, css, html} from '@pucelle/lupos.js'
+import {Component, css, html} from 'lupos.html'
 import {tooltip, TooltipOptions} from '../bindings'
 
 

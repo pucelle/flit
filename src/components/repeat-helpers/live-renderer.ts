@@ -1,9 +1,9 @@
-import {ResizeWatcher} from '@pucelle/ff'
+import {ResizeWatcher} from 'ff-kit'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {LiveMeasurement} from './live-measurement'
-import {barrierDOMReading, barrierDOMWriting, DOMEvents} from '@pucelle/lupos'
+import {barrierDOMReading, barrierDOMWriting, DOMEvents} from 'lupos'
 import {PartialRenderer} from './partial-renderer'
-import {Component} from '@pucelle/lupos.js'
+import {Component} from 'lupos.html'
 
 
 /**

@@ -1,4 +1,4 @@
-import {Component, html, css} from '@pucelle/lupos.js'
+import {Component, html, css} from 'lupos.html'
 
 
 /** `<Link>` can include `<a>`. */

@@ -1,5 +1,5 @@
-import {css, html, Component, RenderResultRenderer, fold, fade} from '@pucelle/lupos.js'
-import {Timeout} from '@pucelle/ff'
+import {css, html, Component, RenderResultRenderer, fold, fade} from 'lupos.html'
+import {Timeout} from 'ff-kit'
 import {Icon} from './icon'
 import {Button} from './button'
 import {IconClose, IconError, IconInfo, IconSuccess, IconWarning} from '../icons'

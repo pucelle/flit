@@ -1,8 +1,8 @@
-import {Component, css, html} from '@pucelle/lupos.js'
+import {Component, css, html} from 'lupos.html'
 import {tooltip, TooltipOptions} from '../bindings'
 import {Icon} from './icon'
 import {ThemeSize} from '../style'
-import {DOMModifiableEvents, watch} from '@pucelle/lupos'
+import {DOMModifiableEvents, watch} from 'lupos'
 import {IconChecked} from '../icons'
 
 

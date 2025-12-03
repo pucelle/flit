@@ -1,4 +1,4 @@
-import {Component} from '@pucelle/lupos.js'
+import {Component} from 'lupos.html'
 import {Input} from './input'
 
 

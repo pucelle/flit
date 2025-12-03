@@ -1,8 +1,8 @@
 # flit
 
-A lightweight Web UI system based on [lupos.js](https://github.com/pucelle/lupos.js) and [lupos](https://github.com/pucelle/lupos).
+A lightweight Web UI system based on [lupos.html](https://github.com/pucelle/lupos.html) and [lupos](https://github.com/pucelle/lupos).
 
-Here is the [Live Preview](https://pucelle.github.io/flit/docs/).
+Here is the [Live Preview](https://pucelle.github.io/ff-ui/docs/).
 
 **flit** was highly inspired by [MorningStar Design System](http://designsystem.morningstar.com/index.html).
 
@@ -17,6 +17,7 @@ Here is the [Live Preview](https://pucelle.github.io/flit/docs/).
 	- `:contextmenu`: pops-up a context menu when right click bound element.
 	- `:draggable`: make current element draggable.
 	- `:droppable`: make current element droppable.
+	- `:editable`: after double click, shows a `<Input>` or `<Select>` as editor to edit content.
 	- `:goto`: click bound element will cause closest router goto specified path.
 	- `:loading`: shows a `<Loader>` and cover current element when value is `true`.
 	- `:orderable`: allow current to be dragged to swap order index among siblings.

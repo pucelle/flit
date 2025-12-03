@@ -1,6 +1,6 @@
-import {css, html, Component, RenderResult, fade} from '@pucelle/lupos.js'
-import {AnchorAligner} from '@pucelle/ff'
-import {DOMEvents} from '@pucelle/lupos'
+import {css, html, Component, RenderResult, fade} from 'lupos.html'
+import {AnchorAligner} from 'ff-kit'
+import {DOMEvents} from 'lupos'
 import {Icon} from './icon'
 import {IconClose} from '../icons'
 

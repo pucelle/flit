@@ -1,8 +1,8 @@
-import {Component, html, css} from '@pucelle/lupos.js'
+import {Component, html, css} from 'lupos.html'
 import {ThemeSize} from '../style'
 import {Icon} from './icon'
 import {RadioGroup} from './radio-group'
-import {DOMEvents, DOMModifiableEvents} from '@pucelle/lupos'
+import {DOMEvents, DOMModifiableEvents} from 'lupos'
 import {IconRadioChecked, IconRadioUnchecked} from '../icons'
 
 

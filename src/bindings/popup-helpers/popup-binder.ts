@@ -1,5 +1,5 @@
-import {MouseEventDelivery, EventUtils, MouseLeaveControl} from '@pucelle/ff'
-import {DOMEvents} from '@pucelle/lupos'
+import {MouseEventDelivery, EventUtils, MouseLeaveControl} from 'ff-kit'
+import {DOMEvents} from 'lupos'
 
 
 /** 

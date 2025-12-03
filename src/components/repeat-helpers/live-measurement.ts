@@ -1,6 +1,6 @@
-import {ValueListUtils} from '@pucelle/ff'
+import {ValueListUtils} from 'ff-kit'
 import {PartialMeasurement, UnCoveredDirection} from './partial-measurement'
-import {barrierDOMReading} from '@pucelle/lupos'
+import {barrierDOMReading} from 'lupos'
 
 
 /**

@@ -1,8 +1,8 @@
-import {computed} from '@pucelle/lupos'
-import {PerFrameTransitionEasingName, Component, html, RenderResult} from '@pucelle/lupos.js'
+import {computed} from 'lupos'
+import {PerFrameTransitionEasingName, Component, html, RenderResult} from 'lupos.html'
 import {locateVisibleIndex, locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'
 import {DirectionalOverflowAccessor} from './repeat-helpers/directional-overflow-accessor'
-import {HVDirection} from '@pucelle/ff'
+import {HVDirection} from 'ff-kit'
 import {DOMScroll, LowerIndexWithin} from '../tools'
 
 

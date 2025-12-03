@@ -1,4 +1,4 @@
-import {css, html} from '@pucelle/lupos.js'
+import {css, html} from 'lupos.html'
 import {List, ListItem} from './list'
 
 

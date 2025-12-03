@@ -1,5 +1,5 @@
-import {Binding} from '@pucelle/lupos.js'
-import {DOMEvents} from '@pucelle/lupos'
+import {Binding} from 'lupos.html'
+import {DOMEvents} from 'lupos'
 import {Router} from '../components'
 
 

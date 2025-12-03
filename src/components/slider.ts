@@ -1,6 +1,6 @@
-import {Component, html, css} from '@pucelle/lupos.js'
-import {NumberUtils} from '@pucelle/ff'
-import {DOMEvents} from '@pucelle/lupos'
+import {Component, html, css} from 'lupos.html'
+import {NumberUtils} from 'ff-kit'
+import {DOMEvents} from 'lupos'
 import {tooltip, TooltipOptions} from '../bindings'
 
 

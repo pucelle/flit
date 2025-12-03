@@ -1,10 +1,10 @@
-import {css, html, Component, RenderResultRenderer, RenderResult} from '@pucelle/lupos.js'
+import {css, html, Component, RenderResultRenderer, RenderResult} from 'lupos.html'
 import {popup, PopupOptions} from '../bindings'
 import {Icon} from './icon'
 import {Popup} from './popup'
 import {TriggerType} from '../bindings'
-import {AnchorPosition, HVDirection, ObjectUtils} from '@pucelle/ff'
-import {computed} from '@pucelle/lupos'
+import {AnchorPosition, HVDirection, ObjectUtils} from 'ff-kit'
+import {computed} from 'lupos'
 import {IconDown} from '../icons'
 
 

@@ -1,4 +1,4 @@
-import {html, RenderResultRenderer} from '@pucelle/lupos.js'
+import {html, RenderResultRenderer} from 'lupos.html'
 import {popup, PopupOptions} from './popup'
 import {TooltipType, Tooltip} from '../components'
 import {ThemeSize} from '../style'

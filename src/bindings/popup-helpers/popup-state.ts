@@ -1,4 +1,4 @@
-import {Timeout} from '@pucelle/ff'
+import {Timeout} from 'ff-kit'
 
 
 interface PopupStateCallbacks {

@@ -1,0 +1,8 @@
+node_modules
+.VSCodeCounter
+src
+docs
+*.tsbuildinfo
+*.config.cs
+*.config.cjs
+tsconfig.json

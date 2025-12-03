@@ -1,6 +1,6 @@
-import {effect, UpdateQueue} from '@pucelle/lupos'
+import {effect, UpdateQueue} from 'lupos'
 import {Repeat, RepeatRenderFn} from './repeat'
-import {html, PartCallbackParameterMask, PerFrameTransitionEasingName} from '@pucelle/lupos.js'
+import {html, PartCallbackParameterMask, PerFrameTransitionEasingName} from 'lupos.html'
 import {PartialRenderer} from './repeat-helpers/partial-renderer'
 import {LowerIndexWithin} from '../tools'
 import {locateVisibleIndexAtOffset} from './repeat-helpers/index-locator'

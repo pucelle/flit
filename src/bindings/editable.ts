@@ -1,6 +1,6 @@
-import {Binding, Component, render, RenderedComponentLike, RenderResultRenderer} from '@pucelle/lupos.js'
-import {BoxOffsets, DOMUtils, MouseEventDelivery, RectWatcher, StylePropertyName} from '@pucelle/ff'
-import {DOMEvents, EventKeys} from '@pucelle/lupos'
+import {Binding, Component, render, RenderedComponentLike, RenderResultRenderer} from 'lupos.html'
+import {BoxOffsets, DOMUtils, MouseEventDelivery, RectWatcher, StylePropertyName} from 'ff-kit'
+import {DOMEvents, EventKeys} from 'lupos'
 import {Input, Popup, Select} from '../components'
 
 

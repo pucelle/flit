@@ -1,9 +1,9 @@
-import {ResizeWatcher} from '@pucelle/ff'
+import {ResizeWatcher} from 'ff-kit'
 import {locateVisibleIndex} from './index-locator'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {PartialMeasurement} from './partial-measurement'
-import {DOMEvents, barrierDOMReading, barrierDOMWriting} from '@pucelle/lupos'
-import {Component} from '@pucelle/lupos.js'
+import {DOMEvents, barrierDOMReading, barrierDOMWriting} from 'lupos'
+import {Component} from 'lupos.html'
 
 
 export interface NeedToApply {

@@ -1,5 +1,5 @@
 ///<reference types="@pucelle/webpack-svg-loader" />
-import {BoxLike} from '@pucelle/ff'
+import {BoxLike} from 'ff-kit'
 
 export {default as IconCheckboxChecked} from '../../icons/checkbox-checked.svg'
 export {default as IconCheckboxIndeterminate} from '../../icons/checkbox-indeterminate.svg'

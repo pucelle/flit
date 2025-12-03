@@ -2,7 +2,6 @@ node_modules
 /out
 /docs/out
 /docs/js/*.js.map
-/dist
 /tests/**/*.js
 /tests/**/*.js.map
 .VSCodeCounter

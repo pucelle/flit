@@ -1,10 +1,10 @@
-import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from '@pucelle/lupos.js'
-import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, MouseEventDelivery} from '@pucelle/ff'
+import {Binding, render, RenderResultRenderer, RenderedComponentLike, Part} from 'lupos.html'
+import {AnchorAligner, AnchorPosition, AnchorAlignerOptions, MouseEventDelivery} from 'ff-kit'
 import {Popup} from '../components'
 import * as SharedPopups from './popup-helpers/shared-popups'
 import {PopupState} from './popup-helpers/popup-state'
 import {PopupTriggerBinder, TriggerType} from './popup-helpers/popup-binder'
-import {promiseWithResolves} from '@pucelle/lupos'
+import {promiseWithResolves} from 'lupos'
 export {TriggerType}
 
 

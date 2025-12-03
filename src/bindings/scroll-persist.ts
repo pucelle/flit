@@ -1,6 +1,6 @@
-import {ScrollUtils} from '@pucelle/ff'
-import {UpdateQueue} from '@pucelle/lupos'
-import {Binding, Part} from '@pucelle/lupos.js'
+import {ScrollUtils} from 'ff-kit'
+import {UpdateQueue} from 'lupos'
+import {Binding, Part} from 'lupos.html'
 
 
 /**

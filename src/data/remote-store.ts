@@ -1,5 +1,5 @@
-import {computed, effect, Observed} from '@pucelle/lupos'
-import {ListUtils} from '@pucelle/ff'
+import {computed, effect, Observed} from 'lupos'
+import {ListUtils} from 'ff-kit'
 import {PageDataLoader} from './page-data-loader'
 
 

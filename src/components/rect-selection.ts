@@ -1,7 +1,7 @@
-import {Box, Coord, EventUtils, HVDirection, NumberUtils, ScrollUtils} from '@pucelle/ff'
-import {Component, css, html, RenderResult} from '@pucelle/lupos.js'
+import {Box, Coord, EventUtils, HVDirection, NumberUtils, ScrollUtils} from 'ff-kit'
+import {Component, css, html, RenderResult} from 'lupos.html'
 import {EdgeMovementTimer} from './rect-selection-helpers/edge-movement-timer'
-import {DOMEvents} from '@pucelle/lupos'
+import {DOMEvents} from 'lupos'
 
 
 export interface RectSelectionEvents {

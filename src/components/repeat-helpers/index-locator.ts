@@ -1,4 +1,4 @@
-import {ListUtils} from '@pucelle/ff'
+import {ListUtils} from 'ff-kit'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
 import {LowerIndexWithin} from '../../tools'
 

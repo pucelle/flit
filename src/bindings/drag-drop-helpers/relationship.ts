@@ -1,9 +1,9 @@
-import {Coord, DOMUtils, EventUtils} from '@pucelle/ff'
+import {Coord, DOMUtils, EventUtils} from 'ff-kit'
 import {DraggableBase} from '../draggable'
 import {droppable} from '../droppable'
 import {OrderMovement} from './movement-of-order'
 import {DragMovement} from './movement-of-drag'
-import {render, RenderedComponentLike} from '@pucelle/lupos.js'
+import {render, RenderedComponentLike} from 'lupos.html'
 import {orderable} from '../orderable'
 
 

@@ -1,4 +1,4 @@
-import {css, Component, html} from '@pucelle/lupos.js'
+import {css, Component, html} from 'lupos.html'
 
 
 /** `<Triangle>` renders a small triangular indicator, typically used within `<Popup>` or `<Tooltip>`. */

@@ -1,4 +1,4 @@
-import {computed, Observed} from '@pucelle/lupos'
+import {computed, Observed} from 'lupos'
 import {ListItem} from '../list'
 
 

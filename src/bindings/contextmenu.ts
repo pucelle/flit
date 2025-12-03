@@ -1,4 +1,4 @@
-import {RenderResultRenderer} from '@pucelle/lupos.js'
+import {RenderResultRenderer} from 'lupos.html'
 import {popup, PopupOptions} from './popup'
 
 

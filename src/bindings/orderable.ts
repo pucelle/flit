@@ -1,4 +1,4 @@
-import {Binding, Part} from '@pucelle/lupos.js'
+import {Binding, Part} from 'lupos.html'
 import {DraggableBase, DraggableOptions} from './draggable'
 
 

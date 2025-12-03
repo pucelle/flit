@@ -1,4 +1,4 @@
-import {css, Component, html, RenderResult, fade} from '@pucelle/lupos.js'
+import {css, Component, html, RenderResult, fade} from 'lupos.html'
 import {SharedPopups} from '../bindings'
 import {Triangle} from './triangle'
 

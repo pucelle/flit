@@ -1,5 +1,5 @@
-import {Box, EventUtils, Vector} from '@pucelle/ff'
-import {FrameLoop} from '@pucelle/lupos.js'
+import {Box, EventUtils, Vector} from 'ff-kit'
+import {FrameLoop} from 'lupos.html'
 
 
 export interface EdgeMovementTimerOptions {

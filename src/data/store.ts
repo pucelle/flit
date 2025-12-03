@@ -1,5 +1,5 @@
-import {computed, Observed} from '@pucelle/lupos'
-import {ListUtils} from '@pucelle/ff'
+import {computed, Observed} from 'lupos'
+import {ListUtils} from 'ff-kit'
 
 
 export interface StoreOptions<T> {

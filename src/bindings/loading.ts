@@ -1,4 +1,4 @@
-import {fade, TransitionResult, Binding, render, html, Part, PartCallbackParameterMask} from '@pucelle/lupos.js'
+import {fade, TransitionResult, Binding, render, html, Part, PartCallbackParameterMask} from 'lupos.html'
 import {Loader} from '../components'
 
 

@@ -1,4 +1,4 @@
-import {css, html, RenderResult, fade} from '@pucelle/lupos.js'
+import {css, html, RenderResult, fade} from 'lupos.html'
 import {Popup} from './popup'
 
 

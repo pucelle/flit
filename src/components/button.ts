@@ -1,4 +1,4 @@
-import {Component, css, html, TemplateResult} from '@pucelle/lupos.js'
+import {Component, css, html, TemplateResult} from 'lupos.html'
 import {ThemeSize} from '../style'
 
 

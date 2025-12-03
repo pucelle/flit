@@ -1,5 +1,5 @@
-import {ListUtils} from '@pucelle/ff'
-import {Component, css, html} from '@pucelle/lupos.js'
+import {ListUtils} from 'ff-kit'
+import {Component, css, html} from 'lupos.html'
 
 
 /** 

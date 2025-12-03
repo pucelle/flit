@@ -1,4 +1,4 @@
-import {PerFrameTransition, PerFrameTransitionEasingName} from "@pucelle/lupos.js"
+import {PerFrameTransition, PerFrameTransitionEasingName} from "lupos.html"
 
 
 type HVDirection = 'horizontal' | 'vertical'

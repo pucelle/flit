@@ -1,7 +1,7 @@
 import {PartialSizeStat} from './partial-size-stat'
 import {DirectionalOverflowAccessor} from './directional-overflow-accessor'
-import {barrierDOMReading} from '@pucelle/lupos'
-import {Component} from '@pucelle/lupos.js'
+import {barrierDOMReading} from 'lupos'
+import {Component} from 'lupos.html'
 
 
 export type UnCoveredDirection =

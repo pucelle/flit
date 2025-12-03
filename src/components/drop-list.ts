@@ -1,4 +1,4 @@
-import {css, html, RenderResult, fade} from '@pucelle/lupos.js'
+import {css, html, RenderResult, fade} from 'lupos.html'
 import {List, ListItem} from './list'
 import {tooltip, contextmenu, popup, PopupOptions} from '../bindings'
 import {Popup} from './popup'

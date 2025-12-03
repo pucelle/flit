@@ -1,4 +1,4 @@
-import {Component, css, html, TemplateResult} from '@pucelle/lupos.js'
+import {Component, css, html, TemplateResult} from 'lupos.html'
 
 
 /** `<ButtonGroup>` can contain several `<Button>` elements as a button group. */

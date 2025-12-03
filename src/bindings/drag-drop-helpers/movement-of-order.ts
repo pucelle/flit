@@ -1,5 +1,5 @@
-import {Box, Coord, DOMUtils, HVDirection} from '@pucelle/ff'
-import {WebTransition, WebTransitionKeyFrame} from '@pucelle/lupos.js'
+import {Box, Coord, DOMUtils, HVDirection} from 'ff-kit'
+import {WebTransition, WebTransitionKeyFrame} from 'lupos.html'
 import {droppable} from '../droppable'
 import {getDraggableByElement} from './all-draggable'
 import {DragMovement} from './movement-of-drag'

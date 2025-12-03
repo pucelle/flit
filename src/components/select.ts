@@ -1,11 +1,11 @@
-import {fade, css, html, RenderResult, TemplateResult} from '@pucelle/lupos.js'
+import {fade, css, html, RenderResult, TemplateResult} from 'lupos.html'
 import {ThemeSize} from '../style'
 import {Dropdown} from './dropdown'
 import {ListItem, List} from './list'
 import {Popup} from './popup'
 import {Icon} from './icon'
 import {popup} from '../bindings'
-import {ScrollUtils} from '@pucelle/ff'
+import {ScrollUtils} from 'ff-kit'
 import {IconClose, IconDown} from '../icons'
 import {DOMScroll} from '../tools'
 

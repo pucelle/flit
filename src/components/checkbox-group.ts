@@ -1,7 +1,7 @@
-import {Component} from '@pucelle/lupos.js'
-import {ListUtils} from '@pucelle/ff'
+import {Component} from 'lupos.html'
+import {ListUtils} from 'ff-kit'
 import {Checkbox} from './checkbox'
-import {watch} from '@pucelle/lupos'
+import {watch} from 'lupos'
 
 
 interface CheckboxGroupEvents<T> {

@@ -1,7 +1,7 @@
-import {css, html} from '@pucelle/lupos.js'
+import {css, html} from 'lupos.html'
 import {Popup} from './popup'
-import {BoxOffsets, RectWatcher} from '@pucelle/ff'
-import {DOMEvents, EventKeys} from '@pucelle/lupos'
+import {BoxOffsets, RectWatcher} from 'ff-kit'
+import {DOMEvents, EventKeys} from 'lupos'
 import {tooltip, TooltipOptions} from '../bindings'
 
 

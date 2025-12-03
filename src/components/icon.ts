@@ -1,4 +1,4 @@
-import {Component, html, css} from '@pucelle/lupos.js'
+import {Component, html, css} from 'lupos.html'
 import {ThemeSize} from '../style'
 import {parseSVGCode} from '../icons'
 

@@ -1,6 +1,6 @@
-import {Component, html, css} from '@pucelle/lupos.js'
+import {Component, html, css} from 'lupos.html'
 import {ThemeSize} from '../style'
-import {DOMModifiableEvents} from '@pucelle/lupos'
+import {DOMModifiableEvents} from 'lupos'
 import {CheckboxGroup} from './checkbox-group'
 import {Icon} from './icon'
 import {IconCheckboxChecked, IconCheckboxIndeterminate, IconCheckboxUnchecked} from '../icons'
