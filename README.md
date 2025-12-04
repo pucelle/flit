@@ -2,7 +2,7 @@
 
 A lightweight Web UI & UX system based on [lupos.html](https://github.com/pucelle/lupos.html) and [lupos](https://github.com/pucelle/lupos).
 
-Here is the [Live Preview](https://pucelle.github.io/ff-ui/docs/).
+Here is the [Live Preview](https://pucelle.github.io/ff-uix/docs/).
 
 **ff-uix** was highly inspired by [MorningStar Design System](http://designsystem.morningstar.com/index.html).
 
